@@ -1,10 +1,29 @@
 /***********************
- * SEXTANT ENGINE v5.0
- * FULL SYSTEM: Cross-Domain + Time + World + Monte Carlo + Data Calibration
+ * SEXTANT ENGINE v7.0
+ * STEP 17: Multi-Market Systemic Risk Layer
+ * FULL COMPLETE ENGINE FILE
  ***********************/
 
 /* =========================
-   WORLD STATE
+   GLOBAL STATE
+========================= */
+let marketData = {
+  FX: {
+    SGD_IDR: null,
+    volatility: 0.2,
+    lastUpdate: null
+  }
+};
+
+let macroState = {
+  BONDS: { yieldStress: 0 },
+  LIQUIDITY: { stress: 0 },
+  BANKING: { stress: 0 },
+  SYSTEM: { contagionIndex: 0 }
+};
+
+/* =========================
+   WORLD STATE (DOMAINS)
 ========================= */
 let worldState = {
   FIN: "GREEN",
@@ -15,44 +34,12 @@ let worldState = {
 };
 
 /* =========================
-   ENTRY POINT (MASTER RUN)
+   MAIN ENTRY (STEP 17)
 ========================= */
-async function runSimulation(ruleIds, mode = "MONTE_CARLO", iterations = 100) {
+async function runSystemicSimulation(ruleIds, iterations = 50) {
 
-  if (mode === "MONTE_CARLO") {
-    return runMonteCarlo(ruleIds, iterations);
-  }
-
-  if (mode === "SINGLE") {
-    return runSingleScenario(ruleIds[0]);
-  }
-}
-
-/* =========================
-   SINGLE SCENARIO MODE
-========================= */
-async function runSingleScenario(ruleId) {
-
-  resetWorld();
-
-  const filePath = getRulePath(ruleId);
-  const ruleText = await fetch(filePath).then(r => r.text());
-
-  const parsed = parseRule(ruleText);
-  const result = evaluateDataCalibratedRule(ruleId, parsed);
-
-  worldState = applyScenarioToWorld(ruleId, result, worldState);
-  worldState = propagateInterScenarioEffects(worldState);
-
-  const metrics = calculateSystemMetrics(worldState);
-
-  renderFinal(worldState, metrics);
-}
-
-/* =========================
-   MONTE CARLO MODE
-========================= */
-async function runMonteCarlo(ruleIds, iterations) {
+  await updateMarketData();
+  await updateMacroMarkets();
 
   let results = [];
 
@@ -80,15 +67,18 @@ async function runMonteCarlo(ruleIds, iterations) {
       state = propagateInterScenarioEffects(state);
     }
 
+    state = applyMacroSystemOverlay(state);
+
     results.push({ ...state });
   }
 
   const analysis = analyzeMonteCarlo(results);
-  renderMonteCarlo(analysis);
+
+  renderFinalSystemOutput(results, analysis);
 }
 
 /* =========================
-   RESET SYSTEM
+   RESET WORLD
 ========================= */
 function resetWorld() {
   worldState = {
@@ -101,7 +91,7 @@ function resetWorld() {
 }
 
 /* =========================
-   RULE PATH MAPPING
+   RULE LOADER
 ========================= */
 function getRulePath(ruleId) {
   if (ruleId.startsWith("FIN")) return "FIN/" + ruleId + ".md";
@@ -111,7 +101,67 @@ function getRulePath(ruleId) {
 }
 
 /* =========================
-   PARSER
+   MARKET DATA (FX LAYER)
+========================= */
+async function updateMarketData() {
+
+  const fxResponse = await fetch("https://api.exchangerate.host/latest?base=SGD&symbols=IDR");
+  const fxData = await fxResponse.json();
+
+  const rate = fxData.rates.IDR;
+
+  marketData.FX.SGD_IDR = rate;
+  marketData.FX.lastUpdate = Date.now();
+  marketData.FX.volatility = estimateVolatility(rate);
+
+  return marketData;
+}
+
+function estimateVolatility(rate) {
+
+  const baseline = 13500;
+  const deviation = Math.abs(rate - baseline) / baseline;
+
+  return Math.min(1, deviation * 5);
+}
+
+/* =========================
+   MACRO MARKETS (STEP 17 CORE)
+========================= */
+async function updateMacroMarkets() {
+
+  macroState.BONDS.yieldStress = simulateBondStress();
+  macroState.LIQUIDITY.stress = computeLiquidityStress();
+  macroState.BANKING.stress = computeBankingStress();
+  macroState.SYSTEM.contagionIndex = computeContagionIndex();
+
+  return macroState;
+}
+
+function simulateBondStress() {
+  return 0.3 + Math.random() * 0.7;
+}
+
+function computeLiquidityStress() {
+  return (marketData.FX.volatility + macroState.BONDS.yieldStress) / 2;
+}
+
+function computeBankingStress() {
+  return (computeLiquidityStress() * 0.6) + (marketData.FX.volatility * 0.4);
+}
+
+function computeContagionIndex() {
+
+  const fx = marketData.FX.volatility;
+  const bonds = macroState.BONDS.yieldStress;
+  const liquidity = macroState.LIQUIDITY.stress;
+  const banking = macroState.BANKING.stress;
+
+  return Math.min(1, (fx + bonds + liquidity + banking) / 4);
+}
+
+/* =========================
+   RULE PARSER
 ========================= */
 function parseRule(text) {
   return {
@@ -123,19 +173,23 @@ function parseRule(text) {
 }
 
 /* =========================
-   STEP 13: DATA-CALIBRATED RISK MODEL
+   DATA CALIBRATED ENGINE
 ========================= */
 function evaluateDataCalibratedRule(ruleId, rule) {
 
-  const base = getBaseRiskFromDomain(ruleId);
-  const shock = generateMarketShock(ruleId);
+  let base = getBaseRiskFromDomain(ruleId);
+  let shock = generateMarketShock(ruleId);
+
+  if (ruleId.startsWith("FIN") && marketData.FX.SGD_IDR) {
+    base += computeFXStress(marketData.FX.SGD_IDR);
+  }
 
   const score = base + shock;
 
   return {
     risk: mapRiskLevel(score),
-    cascade: "data-calibrated cascade",
-    action: "model-driven response"
+    cascade: "multi-market calibrated cascade",
+    action: "systemic response model"
   };
 }
 
@@ -144,21 +198,34 @@ function evaluateDataCalibratedRule(ruleId, rule) {
 ========================= */
 function getBaseRiskFromDomain(ruleId) {
 
-  if (ruleId.startsWith("FIN")) return 0.50; // FX volatility
-  if (ruleId.startsWith("DC")) return 0.40;  // infra risk
-  if (ruleId.startsWith("CYB")) return 0.60; // cyber risk
-  if (ruleId.startsWith("INF")) return 0.45; // network risk
+  if (ruleId.startsWith("FIN")) return 0.50;
+  if (ruleId.startsWith("DC")) return 0.40;
+  if (ruleId.startsWith("CYB")) return 0.60;
+  if (ruleId.startsWith("INF")) return 0.45;
 
   return 0.30;
 }
 
 /* =========================
-   MARKET SHOCK (VOLATILITY MODEL)
+   FX STRESS MODEL
+========================= */
+function computeFXStress(rate) {
+
+  const lower = 13500;
+  const upper = 15000;
+
+  if (rate < lower) return 0.05;
+  if (rate > upper) return 0.25;
+
+  return 0.10;
+}
+
+/* =========================
+   MARKET SHOCK MODEL
 ========================= */
 function generateMarketShock(ruleId) {
 
   let volatility = 0.25;
-
   if (ruleId.startsWith("FIN")) volatility = 0.35;
 
   const u = Math.random();
@@ -182,14 +249,11 @@ function mapRiskLevel(score) {
 }
 
 /* =========================
-   WORLD INJECTION
+   WORLD ENGINE
 ========================= */
 function applyScenarioToWorld(ruleId, result, state) {
 
-  worldState.memory.push({
-    ruleId,
-    risk: result.risk
-  });
+  worldState.memory.push({ ruleId, risk: result.risk });
 
   if (ruleId.startsWith("FIN")) state.FIN = result.risk;
   if (ruleId.startsWith("DC")) state.DC = result.risk;
@@ -200,20 +264,18 @@ function applyScenarioToWorld(ruleId, result, state) {
 }
 
 /* =========================
-   CROSS-DOMAIN PROPAGATION
+   CROSS DOMAIN PROPAGATION
 ========================= */
 function propagateInterScenarioEffects(state) {
 
-  const history = worldState.memory;
-  const last = history[history.length - 1];
-
+  const last = worldState.memory[worldState.memory.length - 1];
   if (!last) return state;
 
   if (last.ruleId.startsWith("FIN") && last.risk === "RED") {
     state.CYB = escalate(state.CYB, "ORANGE");
   }
 
-  const dcCount = history.filter(h => h.ruleId.startsWith("DC")).length;
+  const dcCount = worldState.memory.filter(x => x.ruleId.startsWith("DC")).length;
 
   if (dcCount >= 2) {
     state.INF = escalate(state.INF, "YELLOW");
@@ -227,7 +289,28 @@ function propagateInterScenarioEffects(state) {
 }
 
 /* =========================
-   ESCALATION ENGINE
+   MACRO SYSTEM OVERLAY
+========================= */
+function applyMacroSystemOverlay(state) {
+
+  const c = macroState.SYSTEM.contagionIndex;
+
+  if (c > 0.7) {
+    state.FIN = escalate(state.FIN, "ORANGE");
+    state.DC = escalate(state.DC, "YELLOW");
+    state.CYB = escalate(state.CYB, "ORANGE");
+    state.INF = escalate(state.INF, "YELLOW");
+  }
+
+  if (c > 0.9) {
+    state.FIN = escalate(state.FIN, "RED");
+  }
+
+  return state;
+}
+
+/* =========================
+   ESCALATION
 ========================= */
 function escalate(current, next) {
 
@@ -282,43 +365,26 @@ function riskToScore(risk) {
 }
 
 /* =========================
-   OUTPUT RENDERERS
+   OUTPUT
 ========================= */
-function renderMonteCarlo(result) {
-  document.getElementById("output").innerHTML = `
-    <h2>Monte Carlo Results</h2>
-    <p>Collapse: ${result.collapseProbability}</p>
-    <p>Stress: ${result.highStressProbability}</p>
-    <p>Stable: ${result.stableProbability}</p>
-  `;
-}
+function renderFinalSystemOutput(results, analysis) {
 
-function renderFinal(state, metrics) {
   document.getElementById("output").innerHTML = `
-    <h2>Single Scenario Result</h2>
-    <p>FIN: ${state.FIN}</p>
-    <p>DC: ${state.DC}</p>
-    <p>CYB: ${state.CYB}</p>
-    <p>INF: ${state.INF}</p>
+    <h2>Step 17 — Multi-Market Systemic Engine</h2>
+
+    <p><b>Collapse Probability:</b> ${analysis.collapseProbability}</p>
+    <p><b>Stress Probability:</b> ${analysis.highStressProbability}</p>
+    <p><b>Stable Probability:</b> ${analysis.stableProbability}</p>
+
     <hr>
-    <p>Total Stress: ${metrics.totalStress}</p>
-    <p>Resilience Index: ${metrics.resilienceIndex}</p>
+
+    <h3>Latest System State</h3>
+    <pre>${JSON.stringify(results[results.length - 1], null, 2)}</pre>
+
+    <hr>
+
+    <h3>Macro System</h3>
+    <p>FX: ${marketData.FX.SGD_IDR}</p>
+    <p>Contagion: ${macroState.SYSTEM.contagionIndex.toFixed(2)}</p>
   `;
-}
-
-/* =========================
-   SYSTEM METRICS (FINAL)
-========================= */
-function calculateSystemMetrics(state) {
-
-  const total =
-    riskToScore(state.FIN) +
-    riskToScore(state.DC) +
-    riskToScore(state.CYB) +
-    riskToScore(state.INF);
-
-  return {
-    totalStress: total,
-    resilienceIndex: (1 - total / 12).toFixed(2)
-  };
 }
