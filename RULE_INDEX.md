@@ -17,7 +17,7 @@ It acts as the central routing layer between:
 ```text
 Scenario Selection
         ↓
-RULE_INDEX.md (this file)
+RULE_INDEX.md (routing layer)
         ↓
 Rule File (e.g. FIN-001.md)
         ↓
