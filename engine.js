@@ -1,8 +1,11 @@
 /***********************
- * SEXTANT ENGINE v1.0
- * Cross-Domain + Scoring
+ * SEXTANT ENGINE v1.1
+ * Cross-Domain + Scoring + Safe State
  ***********************/
 
+/* =========================
+   GLOBAL STATE
+========================= */
 let systemState = {
   FIN: "GREEN",
   DC: "GREEN",
@@ -15,29 +18,44 @@ let systemState = {
 ========================= */
 async function runScenario(ruleId) {
 
+  resetSystemState();
+
   const filePath = getRulePath(ruleId);
   const ruleText = await fetch(filePath).then(r => r.text());
 
   const parsed = parseRule(ruleText);
   const result = evaluateRule(parsed);
 
-  // STEP 8: Cross-domain propagation (persistent system)
   systemState = applyCrossDomainEffects(ruleId, result);
 
-  // STEP 9: System scoring
   const metrics = calculateSystemMetrics(systemState);
 
   renderOutput(ruleId, result, systemState, metrics);
 }
 
 /* =========================
+   RESET SYSTEM
+========================= */
+function resetSystemState() {
+  systemState = {
+    FIN: "GREEN",
+    DC: "GREEN",
+    CYB: "GREEN",
+    INF: "GREEN"
+  };
+}
+
+/* =========================
    RULE LOADER
 ========================= */
 function getRulePath(ruleId) {
+
   if (ruleId.startsWith("FIN")) return "FIN/" + ruleId + ".md";
   if (ruleId.startsWith("DC")) return "DC/" + ruleId + ".md";
   if (ruleId.startsWith("CYB")) return "CYB/" + ruleId + ".md";
   if (ruleId.startsWith("INF")) return "INF/" + ruleId + ".md";
+
+  throw new Error("Unknown rule ID: " + ruleId);
 }
 
 /* =========================
@@ -89,12 +107,10 @@ function evaluateRule(rule) {
 }
 
 /* =========================
-   CROSS-DOMAIN ENGINE (STEP 8)
-   STATEFUL SYSTEM MODEL
+   CROSS-DOMAIN ENGINE (STATEFUL)
 ========================= */
 function applyCrossDomainEffects(ruleId, result) {
 
-  // PRIMARY DOMAIN UPDATE
   if (ruleId.startsWith("FIN")) {
     systemState.FIN = result.risk;
 
@@ -153,7 +169,7 @@ function escalate(current, newLevel) {
 }
 
 /* =========================
-   STEP 9: SYSTEM SCORING ENGINE
+   SYSTEM SCORING ENGINE
 ========================= */
 function riskToScore(risk) {
   if (risk === "GREEN") return 0;
@@ -178,7 +194,7 @@ function calculateSystemMetrics(state) {
 
   return {
     totalStress,
-    resilienceIndex: resilienceIndex.toFixed(2)
+    resilienceIndex: Number(resilienceIndex.toFixed(2))
   };
 }
 
