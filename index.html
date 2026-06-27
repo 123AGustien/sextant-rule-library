@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sextant Simulation Console</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0f1a;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .panel {
+      border: 1px solid #2a2f3a;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      background: #111827;
+    }
+
+    button {
+      padding: 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .green { color: #00ff88; }
+    .yellow { color: #ffd000; }
+    .orange { color: #ff8800; }
+    .red { color: #ff3b3b; }
+  </style>
+</head>
+
+<body>
+
+<h1>Sextant Protocol Simulation Console</h1>
+
+<div class="panel">
+  <h2>Scenario Selection</h2>
+  <button onclick="runScenario('FIN-001')">FX Stress (FIN-001)</button>
+  <button onclick="runScenario('DC-001')">Cooling Failure (DC-001)</button>
+  <button onclick="runScenario('CYB-001')">Ransomware (CYB-001)</button>
+  <button onclick="runScenario('INF-001')">Network Outage (INF-001)</button>
+</div>
+
+<div class="panel">
+  <h2>Simulation Output</h2>
+  <div id="output">Select a scenario to begin simulation</div>
+</div>
+
+<script>
+function runScenario(id) {
+
+  let result = "";
+
+  if (id === "FIN-001") {
+    result = `
+      <h3>FIN-001 — FX Stress</h3>
+      <p class="orange">Risk Level: ORANGE</p>
+      <p>Currency pressure detected due to capital outflows.</p>
+      <p>Cascade: Inflation → Interest Rate Pressure → Liquidity Tightening</p>
+    `;
+  }
+
+  if (id === "DC-001") {
+    result = `
+      <h3>DC-001 — Cooling Failure</h3>
+      <p class="red">Risk Level: RED</p>
+      <p>Cooling system failure detected.</p>
+      <p>Cascade: Temperature Rise → Throttling → System Degradation</p>
+    `;
+  }
+
+  if (id === "CYB-001") {
+    result = `
+      <h3>CYB-001 — Ransomware</h3>
+      <p class="red">Risk Level: RED</p>
+      <p>Malware encryption activity detected.</p>
+      <p>Cascade: System Lockdown → Service Disruption → Data Risk</p>
+    `;
+  }
+
+  if (id === "INF-001") {
+    result = `
+      <h3>INF-001 — Network Outage</h3>
+      <p class="yellow">Risk Level: YELLOW</p>
+      <p>Connectivity degradation detected.</p>
+      <p>Cascade: Latency → Service Delay → Partial Outage</p>
+    `;
+  }
+
+  document.getElementById("output").innerHTML = result;
+}
+</script>
+
+</body>
+</html>
