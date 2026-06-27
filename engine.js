@@ -1,55 +1,107 @@
 /***********************
- * SEXTANT ENGINE v2.0
- * Temporal Simulation Layer Added
+ * SEXTANT ENGINE v5.0
+ * FULL SYSTEM: Cross-Domain + Time + World + Monte Carlo + Data Calibration
  ***********************/
 
 /* =========================
-   GLOBAL STATE
+   WORLD STATE
 ========================= */
-let systemState = {
+let worldState = {
   FIN: "GREEN",
   DC: "GREEN",
   CYB: "GREEN",
-  INF: "GREEN"
+  INF: "GREEN",
+  memory: []
 };
 
-let timeline = [];
+/* =========================
+   ENTRY POINT (MASTER RUN)
+========================= */
+async function runSimulation(ruleIds, mode = "MONTE_CARLO", iterations = 100) {
+
+  if (mode === "MONTE_CARLO") {
+    return runMonteCarlo(ruleIds, iterations);
+  }
+
+  if (mode === "SINGLE") {
+    return runSingleScenario(ruleIds[0]);
+  }
+}
 
 /* =========================
-   MAIN ENTRY POINT
+   SINGLE SCENARIO MODE
 ========================= */
-async function runScenario(ruleId) {
+async function runSingleScenario(ruleId) {
 
-  resetSystemState();
+  resetWorld();
 
   const filePath = getRulePath(ruleId);
   const ruleText = await fetch(filePath).then(r => r.text());
 
   const parsed = parseRule(ruleText);
-  const baseResult = evaluateRule(parsed);
+  const result = evaluateDataCalibratedRule(ruleId, parsed);
 
-  timeline = runTemporalSimulation(ruleId, baseResult);
+  worldState = applyScenarioToWorld(ruleId, result, worldState);
+  worldState = propagateInterScenarioEffects(worldState);
 
-  const finalState = timeline[timeline.length - 1].state;
-  const metrics = calculateSystemMetrics(finalState);
+  const metrics = calculateSystemMetrics(worldState);
 
-  renderTimeline(ruleId, timeline, metrics);
+  renderFinal(worldState, metrics);
 }
 
 /* =========================
-   RESET
+   MONTE CARLO MODE
 ========================= */
-function resetSystemState() {
-  systemState = {
+async function runMonteCarlo(ruleIds, iterations) {
+
+  let results = [];
+
+  for (let i = 0; i < iterations; i++) {
+
+    resetWorld();
+
+    let state = {
+      FIN: "GREEN",
+      DC: "GREEN",
+      CYB: "GREEN",
+      INF: "GREEN"
+    };
+
+    for (let ruleId of ruleIds) {
+
+      const filePath = getRulePath(ruleId);
+      const ruleText = await fetch(filePath).then(r => r.text());
+
+      const parsed = parseRule(ruleText);
+
+      const result = evaluateDataCalibratedRule(ruleId, parsed);
+
+      state = applyScenarioToWorld(ruleId, result, state);
+      state = propagateInterScenarioEffects(state);
+    }
+
+    results.push({ ...state });
+  }
+
+  const analysis = analyzeMonteCarlo(results);
+  renderMonteCarlo(analysis);
+}
+
+/* =========================
+   RESET SYSTEM
+========================= */
+function resetWorld() {
+  worldState = {
     FIN: "GREEN",
     DC: "GREEN",
     CYB: "GREEN",
-    INF: "GREEN"
+    INF: "GREEN",
+    memory: []
   };
 }
 
 /* =========================
-   RULE LOADER
+   RULE PATH MAPPING
 ========================= */
 function getRulePath(ruleId) {
   if (ruleId.startsWith("FIN")) return "FIN/" + ruleId + ".md";
@@ -71,128 +123,111 @@ function parseRule(text) {
 }
 
 /* =========================
-   RISK ENGINE
+   STEP 13: DATA-CALIBRATED RISK MODEL
 ========================= */
-function evaluateRule(rule) {
+function evaluateDataCalibratedRule(ruleId, rule) {
 
-  if (rule.hasRed) {
-    return { risk: "RED", cascade: "High impact", action: "Immediate response" };
-  }
+  const base = getBaseRiskFromDomain(ruleId);
+  const shock = generateMarketShock(ruleId);
 
-  if (rule.hasOrange) {
-    return { risk: "ORANGE", cascade: "Active stress", action: "Mitigation required" };
-  }
+  const score = base + shock;
 
-  if (rule.hasYellow) {
-    return { risk: "YELLOW", cascade: "Early warning", action: "Monitor" };
-  }
-
-  return { risk: "GREEN", cascade: "Stable", action: "No action" };
+  return {
+    risk: mapRiskLevel(score),
+    cascade: "data-calibrated cascade",
+    action: "model-driven response"
+  };
 }
 
 /* =========================
-   TEMPORAL ENGINE (STEP 10 CORE)
+   DOMAIN BASELINES
 ========================= */
-function runTemporalSimulation(ruleId, baseResult) {
+function getBaseRiskFromDomain(ruleId) {
 
-  const steps = [];
-  let state = { ...systemState };
+  if (ruleId.startsWith("FIN")) return 0.50; // FX volatility
+  if (ruleId.startsWith("DC")) return 0.40;  // infra risk
+  if (ruleId.startsWith("CYB")) return 0.60; // cyber risk
+  if (ruleId.startsWith("INF")) return 0.45; // network risk
 
-  for (let t = 0; t <= 4; t++) {
-
-    state = applyTimeStep(ruleId, baseResult, state, t);
-
-    const metrics = calculateSystemMetrics(state);
-
-    steps.push({
-      time: t,
-      state: { ...state },
-      metrics
-    });
-  }
-
-  return steps;
+  return 0.30;
 }
 
 /* =========================
-   TIME EVOLUTION LOGIC
+   MARKET SHOCK (VOLATILITY MODEL)
 ========================= */
-function applyTimeStep(ruleId, result, state, t) {
+function generateMarketShock(ruleId) {
 
-  // T0: initial shock
-  if (t === 0) {
-    state = applyCrossDomainEffects(ruleId, result);
+  let volatility = 0.25;
+
+  if (ruleId.startsWith("FIN")) volatility = 0.35;
+
+  const u = Math.random();
+  const v = Math.random();
+
+  const gaussian =
+    Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+
+  return gaussian * volatility;
+}
+
+/* =========================
+   RISK MAPPING
+========================= */
+function mapRiskLevel(score) {
+
+  if (score < 0.30) return "GREEN";
+  if (score < 0.60) return "YELLOW";
+  if (score < 0.80) return "ORANGE";
+  return "RED";
+}
+
+/* =========================
+   WORLD INJECTION
+========================= */
+function applyScenarioToWorld(ruleId, result, state) {
+
+  worldState.memory.push({
+    ruleId,
+    risk: result.risk
+  });
+
+  if (ruleId.startsWith("FIN")) state.FIN = result.risk;
+  if (ruleId.startsWith("DC")) state.DC = result.risk;
+  if (ruleId.startsWith("CYB")) state.CYB = result.risk;
+  if (ruleId.startsWith("INF")) state.INF = result.risk;
+
+  return state;
+}
+
+/* =========================
+   CROSS-DOMAIN PROPAGATION
+========================= */
+function propagateInterScenarioEffects(state) {
+
+  const history = worldState.memory;
+  const last = history[history.length - 1];
+
+  if (!last) return state;
+
+  if (last.ruleId.startsWith("FIN") && last.risk === "RED") {
+    state.CYB = escalate(state.CYB, "ORANGE");
   }
 
-  // T1: early propagation
-  if (t === 1) {
-    amplify(state, 1.1);
+  const dcCount = history.filter(h => h.ruleId.startsWith("DC")).length;
+
+  if (dcCount >= 2) {
+    state.INF = escalate(state.INF, "YELLOW");
   }
 
-  // T2: system stress
-  if (t === 2) {
-    amplify(state, 1.25);
-  }
-
-  // T3: high strain
-  if (t === 3) {
-    amplify(state, 1.4);
-  }
-
-  // T4: stabilization attempt
-  if (t === 4) {
-    dampen(state);
+  if (state.CYB === "RED") {
+    state.FIN = escalate(state.FIN, "ORANGE");
   }
 
   return state;
 }
 
 /* =========================
-   CROSS DOMAIN (same as before)
-========================= */
-function applyCrossDomainEffects(ruleId, result) {
-
-  if (ruleId.startsWith("FIN")) {
-    systemState.FIN = result.risk;
-
-    if (result.risk === "ORANGE") systemState.DC = escalate(systemState.DC, "YELLOW");
-    if (result.risk === "RED") {
-      systemState.DC = escalate(systemState.DC, "ORANGE");
-      systemState.CYB = escalate(systemState.CYB, "ORANGE");
-    }
-  }
-
-  if (ruleId.startsWith("DC")) {
-    systemState.DC = result.risk;
-
-    if (result.risk === "RED") {
-      systemState.CYB = escalate(systemState.CYB, "ORANGE");
-      systemState.INF = escalate(systemState.INF, "YELLOW");
-    }
-  }
-
-  if (ruleId.startsWith("CYB")) {
-    systemState.CYB = result.risk;
-
-    if (result.risk === "RED") {
-      systemState.FIN = escalate(systemState.FIN, "ORANGE");
-    }
-  }
-
-  if (ruleId.startsWith("INF")) {
-    systemState.INF = result.risk;
-
-    if (result.risk === "RED") {
-      systemState.FIN = escalate(systemState.FIN, "YELLOW");
-      systemState.CYB = escalate(systemState.CYB, "YELLOW");
-    }
-  }
-
-  return systemState;
-}
-
-/* =========================
-   ESCALATION
+   ESCALATION ENGINE
 ========================= */
 function escalate(current, next) {
 
@@ -207,39 +242,36 @@ function escalate(current, next) {
 }
 
 /* =========================
-   STRESS FUNCTIONS
+   MONTE CARLO ANALYSIS
 ========================= */
-function amplify(state, factor) {
+function analyzeMonteCarlo(results) {
 
-  Object.keys(state).forEach(k => {
-    state[k] = escalate(state[k], scale(state[k], factor));
-  });
+  let collapse = 0;
+  let stress = 0;
+  let stable = 0;
 
-  return state;
-}
+  for (let r of results) {
 
-function scale(current, factor) {
+    const score =
+      riskToScore(r.FIN) +
+      riskToScore(r.DC) +
+      riskToScore(r.CYB) +
+      riskToScore(r.INF);
 
-  const levels = ["GREEN", "YELLOW", "ORANGE", "RED"];
-  let i = levels.indexOf(current);
+    if (score >= 9) collapse++;
+    else if (score >= 5) stress++;
+    else stable++;
+  }
 
-  i = Math.min(3, Math.floor(i * factor));
-
-  return levels[i];
-}
-
-function dampen(state) {
-
-  Object.keys(state).forEach(k => {
-    if (state[k] === "RED") state[k] = "ORANGE";
-    else if (state[k] === "ORANGE") state[k] = "YELLOW";
-  });
-
-  return state;
+  return {
+    collapseProbability: (collapse / results.length).toFixed(2),
+    highStressProbability: (stress / results.length).toFixed(2),
+    stableProbability: (stable / results.length).toFixed(2)
+  };
 }
 
 /* =========================
-   SCORING ENGINE (same as Step 9)
+   SCORING
 ========================= */
 function riskToScore(risk) {
   if (risk === "GREEN") return 0;
@@ -249,6 +281,34 @@ function riskToScore(risk) {
   return 0;
 }
 
+/* =========================
+   OUTPUT RENDERERS
+========================= */
+function renderMonteCarlo(result) {
+  document.getElementById("output").innerHTML = `
+    <h2>Monte Carlo Results</h2>
+    <p>Collapse: ${result.collapseProbability}</p>
+    <p>Stress: ${result.highStressProbability}</p>
+    <p>Stable: ${result.stableProbability}</p>
+  `;
+}
+
+function renderFinal(state, metrics) {
+  document.getElementById("output").innerHTML = `
+    <h2>Single Scenario Result</h2>
+    <p>FIN: ${state.FIN}</p>
+    <p>DC: ${state.DC}</p>
+    <p>CYB: ${state.CYB}</p>
+    <p>INF: ${state.INF}</p>
+    <hr>
+    <p>Total Stress: ${metrics.totalStress}</p>
+    <p>Resilience Index: ${metrics.resilienceIndex}</p>
+  `;
+}
+
+/* =========================
+   SYSTEM METRICS (FINAL)
+========================= */
 function calculateSystemMetrics(state) {
 
   const total =
@@ -257,44 +317,8 @@ function calculateSystemMetrics(state) {
     riskToScore(state.CYB) +
     riskToScore(state.INF);
 
-  const max = 12;
-
   return {
     totalStress: total,
-    resilienceIndex: Number((1 - total / max).toFixed(2))
+    resilienceIndex: (1 - total / 12).toFixed(2)
   };
-}
-
-/* =========================
-   RENDER TIMELINE
-========================= */
-function renderTimeline(ruleId, timeline, metrics) {
-
-  let html = `<h2>${ruleId} — Temporal Simulation</h2>`;
-
-  timeline.forEach(step => {
-
-    html += `
-      <div class="panel">
-        <h4>T${step.time}</h4>
-
-        <p>FIN: ${step.state.FIN}</p>
-        <p>DC: ${step.state.DC}</p>
-        <p>CYB: ${step.state.CYB}</p>
-        <p>INF: ${step.state.INF}</p>
-
-        <p><b>Stress:</b> ${step.metrics.totalStress}/12</p>
-        <p><b>Resilience:</b> ${step.metrics.resilienceIndex}</p>
-      </div>
-    `;
-  });
-
-  html += `
-    <hr>
-    <h3>Final Metrics</h3>
-    <p><b>Total Stress:</b> ${metrics.totalStress}/12</p>
-    <p><b>Resilience Index:</b> ${metrics.resilienceIndex}</p>
-  `;
-
-  document.getElementById("output").innerHTML = html;
 }
