@@ -1,4 +1,163 @@
 /***********************
+ * SEXTANT ENGINE v8.0
+ * STEP 18: Explainability + Audit Trail Layer
+ ***********************/
+
+/* =========================
+   GLOBAL AUDIT LOG
+========================= */
+let auditLog = [];
+
+/* =========================
+   STEP 18: WRAPPER FOR ALL RISK EVENTS
+========================= */
+function logEvent(event) {
+
+  auditLog.push({
+    timestamp: Date.now(),
+    ...event
+  });
+}
+
+/* =========================
+   ENHANCED RISK EVALUATION (WITH EXPLANATION)
+========================= */
+function evaluateExplainableRisk(ruleId, rule, scoreComponents) {
+
+  const base = scoreComponents.base;
+  const shock = scoreComponents.shock;
+  const fx = scoreComponents.fx || 0;
+  const macro = scoreComponents.macro || 0;
+
+  const finalScore = base + shock + fx + macro;
+
+  const risk = mapRiskLevel(finalScore);
+
+  // 🔥 STEP 18: AUDIT TRACE ENTRY
+  logEvent({
+    type: "RISK_EVALUATION",
+    ruleId,
+    inputs: {
+      base,
+      shock,
+      fx,
+      macro
+    },
+    finalScore,
+    risk,
+    explanation: generateExplanation(ruleId, { base, shock, fx, macro }, risk)
+  });
+
+  return {
+    risk,
+    score: finalScore
+  };
+}
+
+/* =========================
+   EXPLANATION ENGINE (WHY LOGIC)
+========================= */
+function generateExplanation(ruleId, components, risk) {
+
+  let reasons = [];
+
+  if (components.fx > 0.1) {
+    reasons.push("FX volatility contributed to upward risk pressure");
+  }
+
+  if (components.macro > 0.2) {
+    reasons.push("Macro-system contagion increased systemic stress");
+  }
+
+  if (components.shock > 0.3) {
+    reasons.push("Random market shock amplified instability");
+  }
+
+  if (components.base > 0.5) {
+    reasons.push("High baseline risk inherent to domain " + ruleId.substring(0,3));
+  }
+
+  if (reasons.length === 0) {
+    reasons.push("System remains within stable baseline conditions");
+  }
+
+  return {
+    summary: `Risk classified as ${risk} due to multi-factor interaction.`,
+    factors: reasons
+  };
+}
+
+/* =========================
+   STEP 18: TRACE REPLAY ENGINE
+========================= */
+function replayAuditTrail() {
+
+  console.log("=== SEXTANT AUDIT TRAIL REPLAY ===");
+
+  auditLog.forEach((entry, index) => {
+
+    console.log(`\nEVENT ${index + 1}`);
+    console.log("Type:", entry.type);
+    console.log("Rule:", entry.ruleId);
+    console.log("Risk:", entry.risk);
+    console.log("Score:", entry.finalScore);
+
+    if (entry.explanation) {
+      console.log("Explanation:", entry.explanation.summary);
+      console.log("Factors:", entry.explanation.factors);
+    }
+  });
+
+  return auditLog;
+}
+
+/* =========================
+   STEP 18: EXPLAINABLE WRAPPER FOR ENGINE
+========================= */
+function evaluateDataCalibratedRuleExplainable(ruleId, rule, inputs) {
+
+  const result = evaluateDataCalibratedRule(ruleId, rule);
+
+  const explained = evaluateExplainableRisk(ruleId, rule, {
+    base: getBaseRiskFromDomain(ruleId),
+    shock: inputs.shock || 0,
+    fx: inputs.fxStress || 0,
+    macro: inputs.macroStress || 0
+  });
+
+  return {
+    ...result,
+    explanation: explained
+  };
+}
+
+/* =========================
+   STEP 18: DASHBOARD OUTPUT
+========================= */
+function renderExplainableOutput(state, metrics) {
+
+  document.getElementById("output").innerHTML = `
+    <h2>Step 18 — Explainability Layer</h2>
+
+    <h3>System State</h3>
+    <pre>${JSON.stringify(state, null, 2)}</pre>
+
+    <hr>
+
+    <h3>Audit Summary</h3>
+    <p>Total Events Logged: ${auditLog.length}</p>
+
+    <button onclick="replayAuditTrail()">Replay Audit Trail</button>
+
+    <hr>
+
+    <h3>System Metrics</h3>
+    <p>Total Stress: ${metrics.totalStress}</p>
+    <p>Resilience Index: ${metrics.resilienceIndex}</p>
+  `;
+}
+
+/***********************
  * SEXTANT ENGINE v7.0
  * STEP 17: Multi-Market Systemic Risk Layer
  * FULL COMPLETE ENGINE FILE
