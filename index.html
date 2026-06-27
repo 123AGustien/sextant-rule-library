@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sextant Simulation Console</title>
+  <title>Sextant Protocol Simulation Console v10</title>
 
   <style>
     body {
@@ -11,6 +11,8 @@
       margin: 0;
       padding: 20px;
     }
+
+    h1 { margin-bottom: 20px; }
 
     .panel {
       border: 1px solid #2a2f3a;
@@ -27,11 +29,17 @@
       background: #1f2937;
       color: white;
       border: 1px solid #374151;
-      border-radius: 5px;
+      border-radius: 6px;
     }
 
     button:hover {
       background: #374151;
+    }
+
+    pre {
+      background: #0a0f1f;
+      padding: 10px;
+      overflow-x: auto;
     }
 
     .green { color: #00ff88; }
@@ -43,24 +51,59 @@
 
 <body>
 
-<h1>Sextant Protocol Simulation Console</h1>
+<h1>🧠 Sextant Protocol Simulation Console (v10.0)</h1>
 
+<!-- ================= SCENARIO ENGINE ================= -->
 <div class="panel">
-  <h2>Scenario Selection</h2>
+  <h2>Scenario Engine (FIN / DC / CYB / INF)</h2>
 
-  <button onclick="runScenario('FIN-001')">FX Stress (FIN-001)</button>
-  <button onclick="runScenario('DC-001')">Cooling Failure (DC-001)</button>
-  <button onclick="runScenario('CYB-001')">Ransomware (CYB-001)</button>
-  <button onclick="runScenario('INF-001')">Network Outage (INF-001)</button>
-
+  <button onclick="runSystemicSimulation(['FIN-001'])">FX Stress</button>
+  <button onclick="runSystemicSimulation(['DC-001'])">Cooling Failure</button>
+  <button onclick="runSystemicSimulation(['CYB-001'])">Ransomware</button>
+  <button onclick="runSystemicSimulation(['INF-001'])">Network Outage</button>
 </div>
 
+<!-- ================= LIVE EVENTS ================= -->
 <div class="panel">
-  <h2>Simulation Output</h2>
-  <div id="output">Select a scenario to begin simulation</div>
+  <h2>Live Event Ingestion (Step 20)</h2>
+
+  <button onclick="ingestEvent({type:'FX_SPIKE'})">FX Spike</button>
+  <button onclick="ingestEvent({type:'BOND_STRESS'})">Bond Stress</button>
+  <button onclick="ingestEvent({type:'CYBER_ATTACK'})">Cyber Attack</button>
+  <button onclick="ingestEvent({type:'INFRA_FAILURE'})">Infra Failure</button>
+</div>
+
+<!-- ================= SYSTEM OUTPUT ================= -->
+<div class="panel">
+  <h2>System Output</h2>
+  <div id="output">Waiting for simulation...</div>
+</div>
+
+<!-- ================= AUDIT PANEL ================= -->
+<div class="panel">
+  <h2>Audit Trail (Step 18 Explainability)</h2>
+
+  <button onclick="showAudit()">Show Audit Log</button>
+  <button onclick="clearAudit()">Clear Audit Log</button>
+
+  <pre id="audit"></pre>
 </div>
 
 <script src="engine.js"></script>
+
+<script>
+function showAudit() {
+  document.getElementById("audit").textContent =
+    JSON.stringify(auditLog || [], null, 2);
+}
+
+function clearAudit() {
+  if (typeof auditLog !== "undefined") {
+    auditLog.length = 0;
+  }
+  document.getElementById("audit").textContent = "Audit cleared.";
+}
+</script>
 
 </body>
 </html>
