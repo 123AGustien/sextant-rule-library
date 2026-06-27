@@ -1,6 +1,6 @@
 /***********************
- * SEXTANT ENGINE v1.1
- * Cross-Domain + Scoring + Safe State
+ * SEXTANT ENGINE v2.0
+ * Temporal Simulation Layer Added
  ***********************/
 
 /* =========================
@@ -13,6 +13,8 @@ let systemState = {
   INF: "GREEN"
 };
 
+let timeline = [];
+
 /* =========================
    MAIN ENTRY POINT
 ========================= */
@@ -24,17 +26,18 @@ async function runScenario(ruleId) {
   const ruleText = await fetch(filePath).then(r => r.text());
 
   const parsed = parseRule(ruleText);
-  const result = evaluateRule(parsed);
+  const baseResult = evaluateRule(parsed);
 
-  systemState = applyCrossDomainEffects(ruleId, result);
+  timeline = runTemporalSimulation(ruleId, baseResult);
 
-  const metrics = calculateSystemMetrics(systemState);
+  const finalState = timeline[timeline.length - 1].state;
+  const metrics = calculateSystemMetrics(finalState);
 
-  renderOutput(ruleId, result, systemState, metrics);
+  renderTimeline(ruleId, timeline, metrics);
 }
 
 /* =========================
-   RESET SYSTEM
+   RESET
 ========================= */
 function resetSystemState() {
   systemState = {
@@ -49,17 +52,14 @@ function resetSystemState() {
    RULE LOADER
 ========================= */
 function getRulePath(ruleId) {
-
   if (ruleId.startsWith("FIN")) return "FIN/" + ruleId + ".md";
   if (ruleId.startsWith("DC")) return "DC/" + ruleId + ".md";
   if (ruleId.startsWith("CYB")) return "CYB/" + ruleId + ".md";
   if (ruleId.startsWith("INF")) return "INF/" + ruleId + ".md";
-
-  throw new Error("Unknown rule ID: " + ruleId);
 }
 
 /* =========================
-   RULE PARSER
+   PARSER
 ========================= */
 function parseRule(text) {
   return {
@@ -76,48 +76,86 @@ function parseRule(text) {
 function evaluateRule(rule) {
 
   if (rule.hasRed) {
-    return {
-      risk: "RED",
-      cascade: "High system impact",
-      action: "Immediate response required"
-    };
+    return { risk: "RED", cascade: "High impact", action: "Immediate response" };
   }
 
   if (rule.hasOrange) {
-    return {
-      risk: "ORANGE",
-      cascade: "Active stress propagation",
-      action: "Mitigation required"
-    };
+    return { risk: "ORANGE", cascade: "Active stress", action: "Mitigation required" };
   }
 
   if (rule.hasYellow) {
-    return {
-      risk: "YELLOW",
-      cascade: "Early warning signals",
-      action: "Monitor closely"
-    };
+    return { risk: "YELLOW", cascade: "Early warning", action: "Monitor" };
   }
 
-  return {
-    risk: "GREEN",
-    cascade: "Stable conditions",
-    action: "No action required"
-  };
+  return { risk: "GREEN", cascade: "Stable", action: "No action" };
 }
 
 /* =========================
-   CROSS-DOMAIN ENGINE (STATEFUL)
+   TEMPORAL ENGINE (STEP 10 CORE)
+========================= */
+function runTemporalSimulation(ruleId, baseResult) {
+
+  const steps = [];
+  let state = { ...systemState };
+
+  for (let t = 0; t <= 4; t++) {
+
+    state = applyTimeStep(ruleId, baseResult, state, t);
+
+    const metrics = calculateSystemMetrics(state);
+
+    steps.push({
+      time: t,
+      state: { ...state },
+      metrics
+    });
+  }
+
+  return steps;
+}
+
+/* =========================
+   TIME EVOLUTION LOGIC
+========================= */
+function applyTimeStep(ruleId, result, state, t) {
+
+  // T0: initial shock
+  if (t === 0) {
+    state = applyCrossDomainEffects(ruleId, result);
+  }
+
+  // T1: early propagation
+  if (t === 1) {
+    amplify(state, 1.1);
+  }
+
+  // T2: system stress
+  if (t === 2) {
+    amplify(state, 1.25);
+  }
+
+  // T3: high strain
+  if (t === 3) {
+    amplify(state, 1.4);
+  }
+
+  // T4: stabilization attempt
+  if (t === 4) {
+    dampen(state);
+  }
+
+  return state;
+}
+
+/* =========================
+   CROSS DOMAIN (same as before)
 ========================= */
 function applyCrossDomainEffects(ruleId, result) {
 
   if (ruleId.startsWith("FIN")) {
     systemState.FIN = result.risk;
 
-    if (result.risk === "ORANGE") {
-      systemState.DC = escalate(systemState.DC, "YELLOW");
-    }
-
+    if (result.risk === "ORANGE") systemState.DC = escalate(systemState.DC, "YELLOW");
     if (result.risk === "RED") {
       systemState.DC = escalate(systemState.DC, "ORANGE");
       systemState.CYB = escalate(systemState.CYB, "ORANGE");
@@ -154,9 +192,9 @@ function applyCrossDomainEffects(ruleId, result) {
 }
 
 /* =========================
-   ESCALATION LOGIC
+   ESCALATION
 ========================= */
-function escalate(current, newLevel) {
+function escalate(current, next) {
 
   const rank = {
     GREEN: 0,
@@ -165,11 +203,43 @@ function escalate(current, newLevel) {
     RED: 3
   };
 
-  return (rank[newLevel] > rank[current]) ? newLevel : current;
+  return rank[next] > rank[current] ? next : current;
 }
 
 /* =========================
-   SYSTEM SCORING ENGINE
+   STRESS FUNCTIONS
+========================= */
+function amplify(state, factor) {
+
+  Object.keys(state).forEach(k => {
+    state[k] = escalate(state[k], scale(state[k], factor));
+  });
+
+  return state;
+}
+
+function scale(current, factor) {
+
+  const levels = ["GREEN", "YELLOW", "ORANGE", "RED"];
+  let i = levels.indexOf(current);
+
+  i = Math.min(3, Math.floor(i * factor));
+
+  return levels[i];
+}
+
+function dampen(state) {
+
+  Object.keys(state).forEach(k => {
+    if (state[k] === "RED") state[k] = "ORANGE";
+    else if (state[k] === "ORANGE") state[k] = "YELLOW";
+  });
+
+  return state;
+}
+
+/* =========================
+   SCORING ENGINE (same as Step 9)
 ========================= */
 function riskToScore(risk) {
   if (risk === "GREEN") return 0;
@@ -181,47 +251,50 @@ function riskToScore(risk) {
 
 function calculateSystemMetrics(state) {
 
-  const fin = riskToScore(state.FIN);
-  const dc  = riskToScore(state.DC);
-  const cyb = riskToScore(state.CYB);
-  const inf = riskToScore(state.INF);
+  const total =
+    riskToScore(state.FIN) +
+    riskToScore(state.DC) +
+    riskToScore(state.CYB) +
+    riskToScore(state.INF);
 
-  const totalStress = fin + dc + cyb + inf;
-
-  const maxStress = 12;
-
-  const resilienceIndex = 1 - (totalStress / maxStress);
+  const max = 12;
 
   return {
-    totalStress,
-    resilienceIndex: Number(resilienceIndex.toFixed(2))
+    totalStress: total,
+    resilienceIndex: Number((1 - total / max).toFixed(2))
   };
 }
 
 /* =========================
-   RENDER OUTPUT
+   RENDER TIMELINE
 ========================= */
-function renderOutput(ruleId, result, systemState, metrics) {
+function renderTimeline(ruleId, timeline, metrics) {
 
-  document.getElementById("output").innerHTML = `
-    <h3>${ruleId}</h3>
+  let html = `<h2>${ruleId} — Temporal Simulation</h2>`;
 
-    <p><b>Main Risk:</b> ${result.risk}</p>
-    <p><b>Cascade:</b> ${result.cascade}</p>
-    <p><b>Action:</b> ${result.action}</p>
+  timeline.forEach(step => {
 
+    html += `
+      <div class="panel">
+        <h4>T${step.time}</h4>
+
+        <p>FIN: ${step.state.FIN}</p>
+        <p>DC: ${step.state.DC}</p>
+        <p>CYB: ${step.state.CYB}</p>
+        <p>INF: ${step.state.INF}</p>
+
+        <p><b>Stress:</b> ${step.metrics.totalStress}/12</p>
+        <p><b>Resilience:</b> ${step.metrics.resilienceIndex}</p>
+      </div>
+    `;
+  });
+
+  html += `
     <hr>
-
-    <h4>System State (Cross-Domain)</h4>
-    <p>FIN: ${systemState.FIN}</p>
-    <p>DC: ${systemState.DC}</p>
-    <p>CYB: ${systemState.CYB}</p>
-    <p>INF: ${systemState.INF}</p>
-
-    <hr>
-
-    <h4>System Metrics</h4>
-    <p><b>Total Stress:</b> ${metrics.totalStress} / 12</p>
+    <h3>Final Metrics</h3>
+    <p><b>Total Stress:</b> ${metrics.totalStress}/12</p>
     <p><b>Resilience Index:</b> ${metrics.resilienceIndex}</p>
   `;
+
+  document.getElementById("output").innerHTML = html;
 }
