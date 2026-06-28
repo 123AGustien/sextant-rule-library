@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD PILOT SYSTEM v10</title>
+<title>SPD v10 LIVE</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -10,16 +10,15 @@
 <body>
 
 <div class="header">
-🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE · LIVE EVALUATION ENVIRONMENT
+🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE
 </div>
 
 <div class="status-bar">
-● SYSTEM ONLINE | Simulation Kernel Active | Audit Logging Enabled
+● SYSTEM ONLINE | Simulation Kernel Active
 </div>
 
 <h1>🧠 SPD v10 Simulation Console</h1>
 
-<!-- CORE ENGINE -->
 <div class="panel">
   <h2>Core Engine</h2>
 
@@ -29,7 +28,6 @@
   <button onclick="runScenario('INF')">Network Outage</button>
 </div>
 
-<!-- EVENT LAYER -->
 <div class="panel">
   <h2>Event Injection</h2>
 
@@ -39,19 +37,16 @@
   <button onclick="injectEvent('INFRA_FAILURE')">Infra Failure</button>
 </div>
 
-<!-- OUTPUT -->
 <div class="panel">
   <h2>System Output</h2>
   <div id="output">Booting...</div>
 </div>
 
-<!-- CASCADE GRAPH (FIXED) -->
 <div class="panel">
   <h2>System Cascade Graph</h2>
   <canvas id="graph"></canvas>
 </div>
 
-<!-- AUDIT -->
 <div class="panel">
   <h2>Audit Log</h2>
 
