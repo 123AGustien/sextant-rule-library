@@ -1,24 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-  // 1. INIT GRAPH (safe check)
-  if (typeof initGraph === "function") {
-    initGraph();
+  initGraph();
+
+  const out = document.getElementById("output");
+  if (out) {
+    out.innerHTML = "🛰 SPD v10 READY — SELECT SCENARIO";
   }
 
-  // 2. READY STATE
-  const output = document.getElementById("output");
-  if (output) {
-    output.innerHTML = "🛰 SPD v10 READY — SELECT SCENARIO";
-  }
-
-  // 3. BOOT AUDIT (safe check)
-  if (typeof audit === "function") {
-    audit("BOOT", { status: "READY" });
-  }
+  audit("BOOT", { status: "READY" });
 
 });
-
-window.onerror = function(message, source, lineno, colno, error) {
-  document.getElementById("output").innerHTML =
-    "❌ ERROR: " + message;
-};
