@@ -18,19 +18,8 @@ Source code and workflow:
 
 👉 https://github.com/123AGustien/sextant-rule-library
 
-## 🛰 System Note
 
-This repository serves as the **single-source rule execution layer** for the Sextant Protocol simulation engine.
-🛰 Live System (Single Screen SPA)
-Sextant SPA Control System⁠�
-🧭 System Overview
-This repository now runs as a Single Page Application (SPA) control system.
-All functionality is contained in one unified interface:
-Submission Gateway (Entry Layer)
-Operations Console (Live Monitoring Layer)
-Scenario Simulator (Resilience Engine Layer)
-No multi-page routing is used. All transitions occur internally within a single runtime.
-🧠 System Architecture
+System Architecture
 ONE URL (index.html SPA)
         ↓
 ┌──────────────────────────────┐
