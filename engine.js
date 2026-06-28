@@ -1,6 +1,6 @@
 /***********************
- * SEXTANT ENGINE v2.0
- * Cross-Domain Propagation + System Scoring + Scenario Map Integration
+ * SEXTANT ENGINE v3.0
+ * Dynamic Simulation + Time Propagation + Scenario Map Engine
  ***********************/
 
 /* =========================
@@ -14,33 +14,80 @@ let systemState = {
   INF: "GREEN"
 };
 
+let activeSimulation = false;
+let simulationTick = 0;
+
 /* =========================
    MAIN ENTRY POINT
 ========================= */
 
 async function runScenario(ruleId) {
 
-  const filePath = getRulePath(ruleId);
-  const ruleText = await fetch(filePath).then(r => r.text());
+  resetSystem();
 
-  const parsed = parseRule(ruleText);
-  const result = evaluateRule(parsed);
+  activeSimulation = true;
+  simulationTick = 0;
 
-  // STEP 1: Apply base domain result
-  systemState = applyPrimaryImpact(ruleId, result);
+  const initialResult = await executeRule(ruleId);
 
-  // STEP 2: Apply cross-domain propagation (SCENARIO_MAP)
+  systemState = applyPrimaryImpact(ruleId, initialResult);
   systemState = applyScenarioPropagation(ruleId, systemState);
 
-  // STEP 3: Calculate system-wide metrics
-  const metrics = calculateSystemMetrics(systemState);
+  renderOutput(ruleId, initialResult, systemState);
 
-  // STEP 4: Render output
-  renderOutput(ruleId, result, systemState, metrics);
+  startSimulationLoop(ruleId);
 }
 
 /* =========================
-   RULE LOADER
+   SIMULATION LOOP (NEW CORE)
+========================= */
+
+function startSimulationLoop(ruleId) {
+
+  const interval = setInterval(() => {
+
+    if (!activeSimulation) {
+      clearInterval(interval);
+      return;
+    }
+
+    simulationTick++;
+
+    // decay + propagation reinforcement
+    systemState = applyDecay(systemState);
+    systemState = applyScenarioPropagation(ruleId, systemState);
+
+    const metrics = calculateSystemMetrics(systemState);
+
+    renderOutput(ruleId, { risk: "LIVE", cascade: "Evolving", action: "Monitoring" }, systemState, metrics);
+
+    audit("TICK", { simulationTick, systemState });
+
+    // auto-stop condition
+    if (metrics.totalStress >= 10) {
+      activeSimulation = false;
+      audit("SYSTEM_CRITICAL_STOP", { systemState });
+    }
+
+  }, 1500);
+}
+
+/* =========================
+   RULE EXECUTION
+========================= */
+
+async function executeRule(ruleId) {
+
+  const filePath = getRulePath(ruleId);
+  const text = await fetch(filePath).then(r => r.text());
+
+  const parsed = parseRule(text);
+
+  return evaluateRule(parsed);
+}
+
+/* =========================
+   ROUTER
 ========================= */
 
 function getRulePath(ruleId) {
@@ -51,7 +98,7 @@ function getRulePath(ruleId) {
 }
 
 /* =========================
-   RULE PARSER
+   PARSER + RISK ENGINE
 ========================= */
 
 function parseRule(text) {
@@ -62,10 +109,6 @@ function parseRule(text) {
     hasYellow: text.includes("YELLOW")
   };
 }
-
-/* =========================
-   RISK ENGINE
-========================= */
 
 function evaluateRule(rule) {
 
@@ -99,64 +142,76 @@ function applyPrimaryImpact(ruleId, result) {
 }
 
 /* =========================
-   SCENARIO MAP PROPAGATION
-========================= */
-
-function applyScenarioPropagation(ruleId, state) {
-
-  const map = getPropagationMap();
-
-  const triggers = map[ruleId] || [];
-
-  triggers.forEach(t => {
-    state[t.target] = escalate(state[t.target], t.level);
-  });
-
-  return state;
-}
-
-/* =========================
-   PROPAGATION MAP (FROM SCENARIO_MAP)
+   PROPAGATION MAP
 ========================= */
 
 function getPropagationMap() {
 
   return {
 
-    // FIN triggers
     "FIN-001": [
       { target: "DC", level: "YELLOW" },
       { target: "CYB", level: "ORANGE" }
     ],
 
-    // DC triggers
-    "DC-010": [
-      { target: "CYB", level: "ORANGE" },
+    "DC-001": [
       { target: "INF", level: "ORANGE" },
-      { target: "FIN", level: "ORANGE" }
+      { target: "CYB", level: "YELLOW" }
     ],
 
-    // CYB triggers
-    "CYB-010": [
-      { target: "DC", level: "RED" },
+    "CYB-001": [
       { target: "FIN", level: "ORANGE" },
-      { target: "INF", level: "ORANGE" }
+      { target: "DC", level: "ORANGE" }
     ],
 
-    // INF triggers
-    "INF-010": [
+    "INF-001": [
       { target: "DC", level: "RED" },
-      { target: "CYB", level: "ORANGE" },
-      { target: "FIN", level: "ORANGE" }
+      { target: "CYB", level: "YELLOW" }
     ]
   };
+}
+
+/* =========================
+   PROPAGATION ENGINE
+========================= */
+
+function applyScenarioPropagation(ruleId, state) {
+
+  const map = getPropagationMap();
+  const triggers = map[ruleId] || [];
+
+  for (const t of triggers) {
+    state[t.target] = escalate(state[t.target], t.level);
+  }
+
+  return state;
+}
+
+/* =========================
+   DECAY SYSTEM (NEW)
+========================= */
+
+function applyDecay(state) {
+
+  const decay = {
+    RED: "ORANGE",
+    ORANGE: "YELLOW",
+    YELLOW: "GREEN",
+    GREEN: "GREEN"
+  };
+
+  for (const key in state) {
+    state[key] = decay[state[key]];
+  }
+
+  return state;
 }
 
 /* =========================
    ESCALATION LOGIC
 ========================= */
 
-function escalate(current, newLevel) {
+function escalate(current, next) {
 
   const rank = {
     GREEN: 0,
@@ -165,32 +220,55 @@ function escalate(current, newLevel) {
     RED: 3
   };
 
-  return (rank[newLevel] > rank[current]) ? newLevel : current;
+  return rank[next] > rank[current] ? next : current;
 }
 
 /* =========================
-   SYSTEM METRICS
+   METRICS ENGINE
 ========================= */
 
-function riskToScore(risk) {
-  return { GREEN: 0, YELLOW: 1, ORANGE: 2, RED: 3 }[risk] || 0;
+function riskToScore(r) {
+  return { GREEN: 0, YELLOW: 1, ORANGE: 2, RED: 3 }[r] || 0;
 }
 
 function calculateSystemMetrics(state) {
 
-  const totalStress =
+  const total =
     riskToScore(state.FIN) +
     riskToScore(state.DC) +
     riskToScore(state.CYB) +
     riskToScore(state.INF);
 
-  const maxStress = 12;
-
-  const resilienceIndex = 1 - (totalStress / maxStress);
-
   return {
-    totalStress,
-    resilienceIndex: resilienceIndex.toFixed(2)
+    totalStress: total,
+    resilienceIndex: (1 - total / 12).toFixed(2)
+  };
+}
+
+/* =========================
+   AUDIT
+========================= */
+
+let auditLog = [];
+
+function audit(type, data) {
+  auditLog.push({
+    time: new Date().toISOString(),
+    type,
+    data
+  });
+}
+
+/* =========================
+   RESET
+========================= */
+
+function resetSystem() {
+  systemState = {
+    FIN: "GREEN",
+    DC: "GREEN",
+    CYB: "GREEN",
+    INF: "GREEN"
   };
 }
 
@@ -203,13 +281,13 @@ function renderOutput(ruleId, result, state, metrics) {
   document.getElementById("output").innerHTML = `
     <h3>${ruleId}</h3>
 
-    <p><b>Risk:</b> ${result.risk}</p>
+    <p><b>Status:</b> ${result.risk}</p>
     <p><b>Cascade:</b> ${result.cascade}</p>
     <p><b>Action:</b> ${result.action}</p>
 
     <hr>
 
-    <h4>System State</h4>
+    <h4>System State (Live)</h4>
     <p>FIN: ${state.FIN}</p>
     <p>DC: ${state.DC}</p>
     <p>CYB: ${state.CYB}</p>
@@ -218,7 +296,7 @@ function renderOutput(ruleId, result, state, metrics) {
     <hr>
 
     <h4>Metrics</h4>
-    <p><b>Total Stress:</b> ${metrics.totalStress}</p>
-    <p><b>Resilience Index:</b> ${metrics.resilienceIndex}</p>
+    <p>Total Stress: ${metrics.totalStress}</p>
+    <p>Resilience Index: ${metrics.resilienceIndex}</p>
   `;
 }
