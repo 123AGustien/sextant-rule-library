@@ -1,18 +1,21 @@
-/***********************
+    /***********************
  * SPD v10 ENGINE CORE
  ***********************/
 
-const systemState = {
+const state = {
   FIN: "GREEN",
   DC: "GREEN",
   CYB: "GREEN",
   INF: "GREEN"
 };
 
-let tick = 0;
-let active = false;
-let auditLog = [];
+const rank = { GREEN:0, YELLOW:1, ORANGE:2, RED:3 };
+const rev = ["GREEN","YELLOW","ORANGE","RED"];
 
+let tick = 0;
+let running = false;
+
+/* RULES */
 const rules = {
   "FIN-001": { domain: "FIN", impact: 2 },
   "DC-001":  { domain: "DC", impact: 3 },
@@ -20,20 +23,17 @@ const rules = {
   "INF-001": { domain: "INF", impact: 4 }
 };
 
-const rank = { GREEN:0, YELLOW:1, ORANGE:2, RED:3 };
-const reverseRank = ["GREEN","YELLOW","ORANGE","RED"];
-
 function runScenario(id) {
   reset();
-  active = true;
+  running = true;
   tick = 0;
 
-  applyImpact(id);
+  apply(id);
   propagate(id);
 
-  audit("SCENARIO_START", { id, state: {...systemState} });
+  audit("SCENARIO_START", { id, state: {...state} });
 
-  loop();
+  loop(id);
 }
 
 function injectEvent(type) {
@@ -46,7 +46,7 @@ function injectEvent(type) {
   runScenario(map[type]);
 }
 
-function applyImpact(id) {
+function apply(id) {
   const r = rules[id];
   escalate(r.domain, 2);
 }
@@ -59,96 +59,62 @@ function propagate(id) {
     "INF-001": { DC:3, CYB:1 }
   };
 
-  const effects = map[id] || {};
-  for (let k in effects) {
-    escalate(k, effects[k]);
+  for (let k in map[id]) {
+    escalate(k, map[id][k]);
   }
 }
 
 function escalate(domain, level) {
-  const current = rank[systemState[domain]];
+  const current = rank[state[domain]];
   const next = Math.min(3, current + level);
-  systemState[domain] = reverseRank[next];
+  state[domain] = rev[next];
 }
 
 function decay() {
-  for (let k in systemState) {
-    const r = rank[systemState[k]];
-    systemState[k] = reverseRank[Math.max(0, r - 1)];
+  for (let k in state) {
+    const r = rank[state[k]];
+    state[k] = rev[Math.max(0, r - 1)];
   }
 }
 
-function calculateRisk() {
-  return Object.values(systemState)
-    .map(v => rank[v])
-    .reduce((a,b)=>a+b,0);
+function risk() {
+  return Object.values(state).map(v => rank[v]).reduce((a,b)=>a+b,0);
 }
 
-function loop() {
-  if (!active) return;
+function loop(id) {
+  if (!running) return;
 
   tick++;
 
   decay();
-  propagate("FIN-001");
+  propagate(id);
 
-  const risk = calculateRisk();
+  const r = risk();
 
-  updateUI({
-    tick,
-    state: systemState,
-    risk
-  });
+  updateUI(tick, r);
+  updateGraph(state);
 
-  updateGraph(systemState);
+  audit("TICK", { tick, state:{...state}, risk:r });
 
-  audit("TICK", { tick, state:{...systemState}, risk });
-
-  if (risk >= 10) {
-    active = false;
-    audit("CRITICAL_STOP", systemState);
+  if (r >= 10) {
+    running = false;
+    audit("CRITICAL_STOP", state);
   }
 
-  setTimeout(loop, 1000);
+  setTimeout(()=>loop(id), 1000);
 }
 
 function reset() {
-  systemState.FIN = "GREEN";
-  systemState.DC = "GREEN";
-  systemState.CYB = "GREEN";
-  systemState.INF = "GREEN";
+  state.FIN="GREEN";
+  state.DC="GREEN";
+  state.CYB="GREEN";
+  state.INF="GREEN";
 }
 
-function audit(type, data) {
-  auditLog.push({
-    time: new Date().toISOString(),
-    type,
-    data
-  });
-}
-
-function showAudit() {
-  document.getElementById("audit").textContent =
-    JSON.stringify(auditLog, null, 2);
-}
-
-function clearAudit() {
-  auditLog = [];
-  reset();
-  document.getElementById("audit").textContent = "CLEARED";
-  updateUI({ tick:0, state:systemState, risk:0 });
-}
-
-/***********************
- * UI HOOK
- ***********************/
-function updateUI(data) {
-  document.getElementById("output").innerHTML = `
-    <b>TICK:</b> ${data.tick}<br>
-    FIN:${data.state.FIN} |
-    DC:${data.state.DC} |
-    CYB:${data.state.CYB} |
-    INF:${data.state.INF}<br>
-    <b>RISK:</b> ${data.risk}
-  `;
+/* UI HOOK */
+function updateUI(tick, risk) {
+  document.getElementById("output").innerHTML =
+    "TICK: " + tick + "<br>" +
+    "FIN:" + state.FIN + " DC:" + state.DC + " CYB:" + state.CYB + " INF:" + state.INF + "<br>" +
+    "RISK: " + risk;
 }
