@@ -47,6 +47,12 @@
   <canvas id="graph"></canvas>
 </div>
 
+<!-- 🧪 LIVE DIAGNOSTICS PANEL (correct placement) -->
+<div class="panel">
+  <h2>🧪 Live Diagnostics</h2>
+  <pre id="diag">Checking system...</pre>
+</div>
+
 <div class="panel">
   <h2>Audit Log</h2>
 
@@ -56,10 +62,14 @@
   <pre id="audit"></pre>
 </div>
 
+<!-- 🧠 CORE SCRIPTS -->
 <script src="audit.js"></script>
 <script src="engine.js"></script>
 <script src="cascade-graph.js"></script>
 <script src="ui.js"></script>
+
+<!-- 🛡️ DEPENDENCY SAFETY LAYER (LAST = IMPORTANT) -->
+<script src="dependency-lock.js"></script>
 
 </body>
 </html>
