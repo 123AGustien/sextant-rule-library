@@ -1,12 +1,12 @@
 /***********************
- * SEXTANT ENGINE v10.0
- * STEP 18–19–20 FULL INTEGRATION
- * Explainability + Governance + Event Driven System
+ * SEXTANT ENGINE v2.0
+ * Cross-Domain Propagation + System Scoring + Scenario Map Integration
  ***********************/
 
 /* =========================
-   GLOBAL SYSTEM STATE
+   SYSTEM STATE
 ========================= */
+
 let systemState = {
   FIN: "GREEN",
   DC: "GREEN",
@@ -15,180 +15,44 @@ let systemState = {
 };
 
 /* =========================
-   MARKET + MACRO STATE
+   MAIN ENTRY POINT
 ========================= */
-let marketData = {
-  FX: {
-    SGD_IDR: null,
-    volatility: 0.2,
-    lastUpdate: null
-  }
-};
 
-let macroState = {
-  BONDS: { yieldStress: 0 },
-  LIQUIDITY: { stress: 0 },
-  BANKING: { stress: 0 },
-  SYSTEM: { contagionIndex: 0 }
-};
+async function runScenario(ruleId) {
 
-/* =========================
-   STEP 18 — AUDIT + EXPLAINABILITY
-========================= */
-let auditLog = [];
+  const filePath = getRulePath(ruleId);
+  const ruleText = await fetch(filePath).then(r => r.text());
 
-function logEvent(event) {
-  auditLog.push({
-    timestamp: Date.now(),
-    ...event
-  });
-}
+  const parsed = parseRule(ruleText);
+  const result = evaluateRule(parsed);
 
-function generateExplanation(ruleId, components, risk) {
+  // STEP 1: Apply base domain result
+  systemState = applyPrimaryImpact(ruleId, result);
 
-  let reasons = [];
+  // STEP 2: Apply cross-domain propagation (SCENARIO_MAP)
+  systemState = applyScenarioPropagation(ruleId, systemState);
 
-  if (components.fx > 0.1) reasons.push("FX volatility impact detected");
-  if (components.macro > 0.2) reasons.push("Macro contagion pressure present");
-  if (components.shock > 0.3) reasons.push("Market shock amplification detected");
-  if (components.base > 0.5) reasons.push("High structural baseline risk");
+  // STEP 3: Calculate system-wide metrics
+  const metrics = calculateSystemMetrics(systemState);
 
-  if (reasons.length === 0) reasons.push("Stable baseline conditions");
-
-  return {
-    summary: `Risk classified as ${risk}`,
-    factors: reasons
-  };
-}
-
-function evaluateExplainableRisk(ruleId, components, finalScore, risk) {
-
-  const explanation = generateExplanation(ruleId, components, risk);
-
-  logEvent({
-    type: "RISK_EVALUATION",
-    ruleId,
-    components,
-    finalScore,
-    risk,
-    explanation
-  });
-
-  return { risk, explanation };
+  // STEP 4: Render output
+  renderOutput(ruleId, result, systemState, metrics);
 }
 
 /* =========================
-   STEP 19 — GOVERNANCE LAYER
+   RULE LOADER
 ========================= */
-let governance = {
-  ruleVersions: {},
-  approvals: {},
-  activeProfile: "DEFAULT"
-};
 
-function getRuleVersion(ruleId) {
-  return governance.ruleVersions[ruleId]?.active || "v1.0";
-}
-
-function registerRuleVersion(ruleId, version, approvedBy = "SYSTEM") {
-
-  governance.ruleVersions[ruleId] = {
-    active: version,
-    approvedBy,
-    updatedAt: Date.now()
-  };
-}
-
-/* =========================
-   STEP 20 — EVENT INGESTION ENGINE
-========================= */
-let eventStream = [];
-
-function ingestEvent(event) {
-
-  eventStream.push({
-    timestamp: Date.now(),
-    ...event
-  });
-
-  triggerScenarioFromEvent(event);
-}
-
-function triggerScenarioFromEvent(event) {
-
-  if (event.type === "FX_SPIKE") {
-    runSystemicSimulation(["FIN-001"]);
-  }
-
-  if (event.type === "BOND_STRESS") {
-    runSystemicSimulation(["FIN-002"]);
-  }
-
-  if (event.type === "CYBER_ATTACK") {
-    runSystemicSimulation(["CYB-001"]);
-  }
-
-  if (event.type === "INFRA_FAILURE") {
-    runSystemicSimulation(["INF-001"]);
-  }
-}
-
-/* =========================
-   MAIN ENGINE ENTRY (STEP 20 CORE)
-========================= */
-async function runSystemicSimulation(ruleIds) {
-
-  await updateMarketData();
-  await updateMacroMarkets();
-
-  let state = {
-    FIN: "GREEN",
-    DC: "GREEN",
-    CYB: "GREEN",
-    INF: "GREEN"
-  };
-
-  for (let ruleId of ruleIds) {
-
-    const filePath = getRulePath(ruleId);
-    const ruleText = await fetch(filePath).then(r => r.text());
-
-    const parsed = parseRule(ruleText);
-
-    const base = getBaseRisk(ruleId);
-    const shock = generateShock();
-
-    const fx = computeFXImpact(ruleId);
-    const macro = macroState.SYSTEM.contagionIndex;
-
-    const finalScore = base + shock + fx + macro;
-
-    const risk = mapRisk(finalScore);
-
-    const explained = evaluateExplainableRisk(
-      ruleId,
-      { base, shock, fx, macro },
-      finalScore,
-      risk
-    );
-
-    state = applyToWorld(ruleId, risk, state);
-  }
-
-  state = applyMacroOverlay(state);
-
-  renderFinal(state);
-}
-
-/* =========================
-   SUPPORT FUNCTIONS
-========================= */
 function getRulePath(ruleId) {
   if (ruleId.startsWith("FIN")) return "FIN/" + ruleId + ".md";
   if (ruleId.startsWith("DC")) return "DC/" + ruleId + ".md";
   if (ruleId.startsWith("CYB")) return "CYB/" + ruleId + ".md";
   if (ruleId.startsWith("INF")) return "INF/" + ruleId + ".md";
 }
+
+/* =========================
+   RULE PARSER
+========================= */
 
 function parseRule(text) {
   return {
@@ -199,111 +63,153 @@ function parseRule(text) {
   };
 }
 
-function getBaseRisk(ruleId) {
-  if (ruleId.startsWith("FIN")) return 0.5;
-  if (ruleId.startsWith("DC")) return 0.4;
-  if (ruleId.startsWith("CYB")) return 0.6;
-  if (ruleId.startsWith("INF")) return 0.45;
-  return 0.3;
-}
+/* =========================
+   RISK ENGINE
+========================= */
 
-function generateShock() {
-  return Math.random() * 0.4;
-}
+function evaluateRule(rule) {
 
-function computeFXImpact(ruleId) {
-  return marketData.FX.volatility || 0.2;
-}
+  if (rule.hasRed) {
+    return { risk: "RED", cascade: "Critical impact", action: "Immediate response required" };
+  }
 
-function mapRisk(score) {
-  if (score < 0.3) return "GREEN";
-  if (score < 0.6) return "YELLOW";
-  if (score < 0.8) return "ORANGE";
-  return "RED";
+  if (rule.hasOrange) {
+    return { risk: "ORANGE", cascade: "Active stress propagation", action: "Mitigation required" };
+  }
+
+  if (rule.hasYellow) {
+    return { risk: "YELLOW", cascade: "Early warning signals", action: "Monitor closely" };
+  }
+
+  return { risk: "GREEN", cascade: "Stable conditions", action: "No action required" };
 }
 
 /* =========================
-   WORLD STATE UPDATE
+   PRIMARY IMPACT
 ========================= */
-function applyToWorld(ruleId, risk, state) {
 
-  if (ruleId.startsWith("FIN")) state.FIN = risk;
-  if (ruleId.startsWith("DC")) state.DC = risk;
-  if (ruleId.startsWith("CYB")) state.CYB = risk;
-  if (ruleId.startsWith("INF")) state.INF = risk;
+function applyPrimaryImpact(ruleId, result) {
+
+  if (ruleId.startsWith("FIN")) systemState.FIN = result.risk;
+  if (ruleId.startsWith("DC")) systemState.DC = result.risk;
+  if (ruleId.startsWith("CYB")) systemState.CYB = result.risk;
+  if (ruleId.startsWith("INF")) systemState.INF = result.risk;
+
+  return systemState;
+}
+
+/* =========================
+   SCENARIO MAP PROPAGATION
+========================= */
+
+function applyScenarioPropagation(ruleId, state) {
+
+  const map = getPropagationMap();
+
+  const triggers = map[ruleId] || [];
+
+  triggers.forEach(t => {
+    state[t.target] = escalate(state[t.target], t.level);
+  });
 
   return state;
 }
 
 /* =========================
-   MACRO OVERLAY
+   PROPAGATION MAP (FROM SCENARIO_MAP)
 ========================= */
-function applyMacroOverlay(state) {
 
-  const c = macroState.SYSTEM.contagionIndex;
+function getPropagationMap() {
 
-  if (c > 0.7) {
-    state.FIN = escalate(state.FIN, "ORANGE");
-    state.CYB = escalate(state.CYB, "ORANGE");
-  }
+  return {
 
-  if (c > 0.9) {
-    state.FIN = escalate(state.FIN, "RED");
-  }
+    // FIN triggers
+    "FIN-001": [
+      { target: "DC", level: "YELLOW" },
+      { target: "CYB", level: "ORANGE" }
+    ],
 
-  return state;
-}
+    // DC triggers
+    "DC-010": [
+      { target: "CYB", level: "ORANGE" },
+      { target: "INF", level: "ORANGE" },
+      { target: "FIN", level: "ORANGE" }
+    ],
 
-function escalate(current, next) {
+    // CYB triggers
+    "CYB-010": [
+      { target: "DC", level: "RED" },
+      { target: "FIN", level: "ORANGE" },
+      { target: "INF", level: "ORANGE" }
+    ],
 
-  const rank = { GREEN: 0, YELLOW: 1, ORANGE: 2, RED: 3 };
-
-  return rank[next] > rank[current] ? next : current;
-}
-
-/* =========================
-   MACRO SYSTEM UPDATE (STEP 17 dependency)
-========================= */
-async function updateMacroMarkets() {
-
-  macroState.BONDS.yieldStress = Math.random();
-  macroState.LIQUIDITY.stress = Math.random();
-  macroState.BANKING.stress = Math.random();
-
-  macroState.SYSTEM.contagionIndex =
-    (macroState.BONDS.yieldStress +
-     macroState.LIQUIDITY.stress +
-     macroState.BANKING.stress +
-     marketData.FX.volatility) / 4;
+    // INF triggers
+    "INF-010": [
+      { target: "DC", level: "RED" },
+      { target: "CYB", level: "ORANGE" },
+      { target: "FIN", level: "ORANGE" }
+    ]
+  };
 }
 
 /* =========================
-   MARKET DATA (FX)
+   ESCALATION LOGIC
 ========================= */
-async function updateMarketData() {
 
-  try {
-    const res = await fetch("https://api.exchangerate.host/latest?base=SGD&symbols=IDR");
-    const data = await res.json();
+function escalate(current, newLevel) {
 
-    marketData.FX.SGD_IDR = data.rates.IDR;
-    marketData.FX.volatility = Math.random() * 0.5;
-    marketData.FX.lastUpdate = Date.now();
+  const rank = {
+    GREEN: 0,
+    YELLOW: 1,
+    ORANGE: 2,
+    RED: 3
+  };
 
-  } catch (e) {
-    marketData.FX.volatility = 0.3;
-  }
+  return (rank[newLevel] > rank[current]) ? newLevel : current;
 }
 
 /* =========================
-   RENDER OUTPUT (FINAL SYSTEM)
+   SYSTEM METRICS
 ========================= */
-function renderFinal(state) {
+
+function riskToScore(risk) {
+  return { GREEN: 0, YELLOW: 1, ORANGE: 2, RED: 3 }[risk] || 0;
+}
+
+function calculateSystemMetrics(state) {
+
+  const totalStress =
+    riskToScore(state.FIN) +
+    riskToScore(state.DC) +
+    riskToScore(state.CYB) +
+    riskToScore(state.INF);
+
+  const maxStress = 12;
+
+  const resilienceIndex = 1 - (totalStress / maxStress);
+
+  return {
+    totalStress,
+    resilienceIndex: resilienceIndex.toFixed(2)
+  };
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function renderOutput(ruleId, result, state, metrics) {
 
   document.getElementById("output").innerHTML = `
-    <h2>Sextant Engine v10.0 (Step 18–20)</h2>
+    <h3>${ruleId}</h3>
 
-    <h3>System State</h3>
+    <p><b>Risk:</b> ${result.risk}</p>
+    <p><b>Cascade:</b> ${result.cascade}</p>
+    <p><b>Action:</b> ${result.action}</p>
+
+    <hr>
+
+    <h4>System State</h4>
     <p>FIN: ${state.FIN}</p>
     <p>DC: ${state.DC}</p>
     <p>CYB: ${state.CYB}</p>
@@ -311,15 +217,8 @@ function renderFinal(state) {
 
     <hr>
 
-    <h3>Macro System</h3>
-    <p>FX Volatility: ${marketData.FX.volatility}</p>
-    <p>Contagion Index: ${macroState.SYSTEM.contagionIndex.toFixed(2)}</p>
-
-    <hr>
-
-    <h3>Audit Log</h3>
-    <p>Total Events: ${auditLog.length}</p>
-
-    <button onclick="console.log(auditLog)">View Audit Log</button>
+    <h4>Metrics</h4>
+    <p><b>Total Stress:</b> ${metrics.totalStress}</p>
+    <p><b>Resilience Index:</b> ${metrics.resilienceIndex}</p>
   `;
 }
