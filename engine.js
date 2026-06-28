@@ -8,15 +8,7 @@ let state = {
 let auditLog = [];
 
 function runScenario(type) {
-
-  const impactMap = {
-    FX: 2,
-    DC: 3,
-    CYB: 5,
-    INF: 4
-  };
-
-  state[type] += impactMap[type] || 1;
+  state[type] += 2;
 
   audit("SCENARIO", { type, state });
 
@@ -48,13 +40,11 @@ function updateUI() {
 
   const out = document.getElementById("output");
 
-  const total =
-    state.FX + state.DC + state.CYB + state.INF;
+  if (!out) return;
 
   out.innerHTML =
     "FX: " + state.FX + "<br>" +
     "DC: " + state.DC + "<br>" +
     "CYB: " + state.CYB + "<br>" +
-    "INF: " + state.INF + "<br><hr>" +
-    "TOTAL STRESS: " + total;
+    "INF: " + state.INF;
 }
