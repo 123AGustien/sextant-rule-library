@@ -17,3 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
 });
+
+window.onerror = function(message, source, lineno, colno, error) {
+  document.getElementById("output").innerHTML =
+    "❌ ERROR: " + message;
+};
