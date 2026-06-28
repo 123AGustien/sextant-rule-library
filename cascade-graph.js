@@ -1,6 +1,6 @@
 /***********************
- * SEXTANT CASCADE GRAPH v2.0
- * Hybrid Static + Animation Ready Visual Layer
+ * SEXTANT CASCADE GRAPH v2.1
+ * Static + Flow Animation Engine (Stable Build)
  ***********************/
 
 /* =========================
@@ -15,21 +15,20 @@ const nodeState = {
 };
 
 /* =========================
-   FLOW LAYER (NEW)
-   - reserved for future animation system
+   FLOW LAYER
 ========================= */
 
 let flowLayer = [];
 
 /* =========================
-   CANVAS CONTEXT
+   CANVAS
 ========================= */
 
 let ctx;
 let canvasRef;
 
 /* =========================
-   INIT GRAPH
+   INIT
 ========================= */
 
 function initGraph(canvasId) {
@@ -46,12 +45,11 @@ function initGraph(canvasId) {
 }
 
 /* =========================
-   ENGINE HOOK (v3 INTEGRATION)
+   ENGINE HOOK
 ========================= */
 
 function updateGraph(systemState) {
 
-  // update node states
   for (const key in systemState) {
     if (nodeState[key]) {
       nodeState[key].status = systemState[key];
@@ -62,15 +60,22 @@ function updateGraph(systemState) {
 }
 
 /* =========================
-   OPTIONAL FLOW HOOK (FOR NEXT UPGRADE)
+   FLOW UPDATE HOOK
 ========================= */
 
 function updateFlows(flows = []) {
-  flowLayer = flows;
+
+  flowLayer = flows.map(f => ({
+    from: f.from,
+    to: f.to,
+    progress: f.progress || 0,
+    speed: f.speed || 0.015,
+    color: f.color || "#ffffff"
+  }));
 }
 
 /* =========================
-   MAIN RENDER LOOP (STATIC MODE)
+   RENDER LOOP (STATIC + FLOW LAYER)
 ========================= */
 
 function drawGraph() {
@@ -79,8 +84,8 @@ function drawGraph() {
 
   clearCanvas();
   drawConnections();
-  drawFlows();   // safe even if empty
   drawNodes();
+  drawFlows();
 }
 
 /* =========================
@@ -142,7 +147,7 @@ function drawNodes() {
 }
 
 /* =========================
-   FLOW RENDER LAYER (READY FOR v3 FLOW ENGINE)
+   FLOWS (ANIMATION LAYER)
 ========================= */
 
 function drawFlows() {
@@ -160,56 +165,17 @@ function drawFlows() {
     ctx.beginPath();
     ctx.arc(x, y, 5, 0, Math.PI * 2);
 
-    ctx.fillStyle = f.color || "#ffffff";
+    ctx.fillStyle = f.color;
     ctx.fill();
   }
 }
 
 /* =========================
-   COLOR SYSTEM
-========================= */
-
-function getColor(status) {
-
-  switch (status) {
-    case "GREEN": return "#00ff88";
-    case "YELLOW": return "#ffd000";
-    case "ORANGE": return "#ff8800";
-    case "RED": return "#ff3b3b";
-    default: return "#ffffff";
-  }
-}
-
-/* =========================
-   INTEGRATION RULE
-========================= */
-
-/*
-ENGINE v3 MUST CALL:
-
-1. updateGraph(systemState)
-
-OPTIONAL (next upgrade):
-
-2. updateFlows(flowData)
-
-Flow format:
-[
-  {
-    from: "FIN",
-    to: "DC",
-    progress: 0.0 - 1.0,
-    color: "#ff8800"
-  }
-]
-*/
-/* =========================
-   FLOW ANIMATION ENGINE (NEW CORE)
+   FLOW ANIMATION ENGINE
 ========================= */
 
 let animationRunning = false;
 
-/* START LOOP */
 function startFlowAnimation() {
 
   if (animationRunning) return;
@@ -228,50 +194,14 @@ function startFlowAnimation() {
   requestAnimationFrame(loop);
 }
 
-/* STOP LOOP */
 function stopFlowAnimation() {
   animationRunning = false;
 }
 
 /* =========================
-   FLOW PROGRESSION ENGINE
+   FLOW PROGRESSION
 ========================= */
 
 function updateFlowProgress() {
 
-  if (!flowLayer) return;
-
-  for (const f of flowLayer) {
-
-    f.progress += f.speed || 0.015;
-
-    if (f.progress >= 1) {
-      f.progress = 0; // loop continuous propagation
-    }
-  }
-}
-
-/* =========================
-   ENHANCED FLOW UPDATE (replace your current one OR extend it)
-========================= */
-
-function updateFlows(flows = []) {
-
-  flowLayer = flows.map(f => ({
-    from: f.from,
-    to: f.to,
-    progress: f.progress || 0,
-    speed: f.speed || 0.015,
-    color: f.color || "#ffffff"
-  }));
-}
-
-/* =========================
-   AUTO-INIT HOOK (OPTIONAL BUT IMPORTANT)
-========================= */
-
-/*
-CALL THIS AFTER initGraph():
-
-startFlowAnimation();
-*/
+  if (!flowLayer || flowLayer.length === 0) return;
