@@ -12,7 +12,22 @@
       padding: 20px;
     }
 
-    h1 { margin-bottom: 20px; }
+    h1 { margin-bottom: 10px; }
+
+    .system-banner {
+      background:#0f172a;
+      border:1px solid #1f2a44;
+      padding:12px;
+      border-radius:8px;
+      margin-bottom:15px;
+      font-size:12px;
+      color:#9fb0c3;
+    }
+
+    .status-line {
+      margin-bottom:10px;
+      font-size:13px;
+    }
 
     .panel {
       border: 1px solid #2a2f3a;
@@ -58,11 +73,27 @@
 
 <body>
 
-<h1>🧠 Sextant Protocol Simulation Console (v10.0)</h1>
+<!-- SYSTEM BANNER -->
+<div class="system-banner">
+🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE · LIVE EVALUATION ENVIRONMENT<br>
+Linked to Submission Index Gateway · GitHub Pages Deployment
+</div>
+
+<!-- STATUS -->
+<div class="status-line">
+<span class="green">● SYSTEM ONLINE</span>
+<span style="color:#9fb0c3;"> | Simulation Kernel Active | Audit Logging Enabled</span>
+</div>
+
+<h1>🧠 Sextant Protocol Simulation Console v10</h1>
+
+<p style="color:#9fb0c3; margin-top:-5px;">
+Resilience simulation engine for financial, infrastructure, cyber, and network stress scenarios
+</p>
 
 <!-- ================= SCENARIO ENGINE ================= -->
 <div class="panel">
-  <h2>Scenario Engine (FIN / DC / CYB / INF)</h2>
+  <h2>Core Scenario Engine (Multi-Domain Stress Model)</h2>
 
   <button onclick="runScenario('FIN-001')">FX Stress</button>
   <button onclick="runScenario('DC-001')">Cooling Failure</button>
@@ -72,7 +103,7 @@
 
 <!-- ================= LIVE EVENTS ================= -->
 <div class="panel">
-  <h2>Live Event Ingestion (Step 20)</h2>
+  <h2>Live Event Injection Layer (Operational Trigger Interface)</h2>
 
   <button onclick="runScenario('FIN-001')">FX Spike</button>
   <button onclick="runScenario('DC-001')">Bond Stress</button>
@@ -130,7 +161,7 @@ function clearAudit() {
 }
 
 /* =========================
-   SAFE INIT HOOK (IMPORTANT)
+   SAFE INIT HOOK
 ========================= */
 
 window.onload = function () {
