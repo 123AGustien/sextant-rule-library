@@ -203,3 +203,75 @@ Flow format:
   }
 ]
 */
+/* =========================
+   FLOW ANIMATION ENGINE (NEW CORE)
+========================= */
+
+let animationRunning = false;
+
+/* START LOOP */
+function startFlowAnimation() {
+
+  if (animationRunning) return;
+  animationRunning = true;
+
+  function loop() {
+
+    if (!animationRunning) return;
+
+    updateFlowProgress();
+    drawGraph();
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+/* STOP LOOP */
+function stopFlowAnimation() {
+  animationRunning = false;
+}
+
+/* =========================
+   FLOW PROGRESSION ENGINE
+========================= */
+
+function updateFlowProgress() {
+
+  if (!flowLayer) return;
+
+  for (const f of flowLayer) {
+
+    f.progress += f.speed || 0.015;
+
+    if (f.progress >= 1) {
+      f.progress = 0; // loop continuous propagation
+    }
+  }
+}
+
+/* =========================
+   ENHANCED FLOW UPDATE (replace your current one OR extend it)
+========================= */
+
+function updateFlows(flows = []) {
+
+  flowLayer = flows.map(f => ({
+    from: f.from,
+    to: f.to,
+    progress: f.progress || 0,
+    speed: f.speed || 0.015,
+    color: f.color || "#ffffff"
+  }));
+}
+
+/* =========================
+   AUTO-INIT HOOK (OPTIONAL BUT IMPORTANT)
+========================= */
+
+/*
+CALL THIS AFTER initGraph():
+
+startFlowAnimation();
+*/
