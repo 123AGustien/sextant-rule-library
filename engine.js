@@ -300,3 +300,75 @@ function renderOutput(ruleId, result, state, metrics) {
     <p>Resilience Index: ${metrics.resilienceIndex}</p>
   `;
 }
+/* =========================
+   AUTONOMOUS MODE v1.0
+========================= */
+
+let autonomousRunning = false;
+let autonomousTimer;
+
+/* START AUTONOMOUS SIM */
+function startAutonomousMode() {
+
+  if (autonomousRunning) return;
+
+  autonomousRunning = true;
+
+  autonomousLoop();
+}
+
+/* STOP AUTONOMOUS SIM */
+function stopAutonomousMode() {
+  autonomousRunning = false;
+  clearTimeout(autonomousTimer);
+}
+
+/* MAIN LOOP */
+function autonomousLoop() {
+
+  if (!autonomousRunning) return;
+
+  // 1. generate random system event
+  const event = generateRandomEvent();
+
+  // 2. apply to system
+  applyEvent(event);
+
+  // 3. re-evaluate system
+  runScenario(event.id);
+
+  // 4. repeat with variable timing
+  const delay = 1200 + Math.random() * 2000;
+
+  autonomousTimer = setTimeout(autonomousLoop, delay);
+}
+
+/* =========================
+   RANDOM EVENT ENGINE
+========================= */
+
+function generateRandomEvent() {
+
+  const events = [
+    { id: "FIN-001", type: "FIN_STRESS" },
+    { id: "DC-001", type: "COOLING_DRIFT" },
+    { id: "CYB-001", type: "THREAT_SPIKE" },
+    { id: "INF-001", type: "NETWORK_FLUCT" }
+  ];
+
+  return events[Math.floor(Math.random() * events.length)];
+}
+
+/* =========================
+   EVENT APPLICATION HOOK
+========================= */
+
+function applyEvent(event) {
+
+  if (!systemState) return;
+
+  if (event.id.startsWith("FIN")) systemState.FIN = "ORANGE";
+  if (event.id.startsWith("DC")) systemState.DC = "YELLOW";
+  if (event.id.startsWith("CYB")) systemState.CYB = "RED";
+  if (event.id.startsWith("INF")) systemState.INF = "ORANGE";
+}
