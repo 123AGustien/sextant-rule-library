@@ -1,194 +1,125 @@
 /***********************
- * SPD v10 LIVE CASCADE ENGINE
- * Real-Time Propagation Model
+ * SPD v10 ENGINE CORE
  ***********************/
 
-/* =========================
-   GLOBAL STATE
-========================= */
-
-let systemState = {
-  FIN: 0,
-  DC: 0,
-  CYB: 0,
-  INF: 0
+const systemState = {
+  FIN: "GREEN",
+  DC: "GREEN",
+  CYB: "GREEN",
+  INF: "GREEN"
 };
 
-let eventQueue = [];
+let tick = 0;
+let active = false;
 let auditLog = [];
 
-/* =========================
-   CASCADE MATRIX (CORE MODEL)
-========================= */
-
-const CASCADE = {
-  FIN: { DC: 0.6, CYB: 0.4 },
-  DC:  { INF: 0.7, CYB: 0.3 },
-  CYB: { FIN: 0.5, DC: 0.5 },
-  INF: { DC: 0.6, CYB: 0.4 }
+const rules = {
+  "FIN-001": { domain: "FIN", impact: 2 },
+  "DC-001":  { domain: "DC", impact: 3 },
+  "CYB-001": { domain: "CYB", impact: 5 },
+  "INF-001": { domain: "INF", impact: 4 }
 };
 
-/* =========================
-   EVENT ENTRY (USER ACTIONS)
-========================= */
+const rank = { GREEN:0, YELLOW:1, ORANGE:2, RED:3 };
+const reverseRank = ["GREEN","YELLOW","ORANGE","RED"];
 
-function runScenario(code) {
+function runScenario(id) {
+  reset();
+  active = true;
+  tick = 0;
 
-  enqueueEvent({
-    type: code.split("-")[0],
-    strength: getImpact(code),
-    source: "SCENARIO"
-  });
+  applyImpact(id);
+  propagate(id);
 
-  startCascade();
+  audit("SCENARIO_START", { id, state: {...systemState} });
+
+  loop();
 }
 
 function injectEvent(type) {
-
-  enqueueEvent({
-    type,
-    strength: 2,
-    source: "INJECTION"
-  });
-
-  startCascade();
+  const map = {
+    FX: "FIN-001",
+    BOND: "DC-001",
+    CYBER: "CYB-001",
+    INFRA: "INF-001"
+  };
+  runScenario(map[type]);
 }
 
-/* =========================
-   EVENT QUEUE SYSTEM
-========================= */
-
-function enqueueEvent(event) {
-  eventQueue.push({
-    ...event,
-    time: Date.now()
-  });
-
-  log("EVENT_ENQUEUE", event);
+function applyImpact(id) {
+  const r = rules[id];
+  escalate(r.domain, 2);
 }
 
-/* =========================
-   CASCADE ENGINE (LIVE LOOP)
-========================= */
+function propagate(id) {
+  const map = {
+    "FIN-001": { DC:1, CYB:2 },
+    "DC-001": { INF:2, CYB:1 },
+    "CYB-001": { FIN:2, DC:2 },
+    "INF-001": { DC:3, CYB:1 }
+  };
 
-let cascadeRunning = false;
-
-function startCascade() {
-
-  if (cascadeRunning) return;
-
-  cascadeRunning = true;
-
-  const interval = setInterval(() => {
-
-    if (eventQueue.length === 0) {
-      cascadeRunning = false;
-      clearInterval(interval);
-      return;
-    }
-
-    const event = eventQueue.shift();
-
-    applyEvent(event);
-    propagate(event.type, event.strength);
-
-    render();
-    updateCascadeView();
-
-    log("CASCADE_TICK", {
-      state: { ...systemState },
-      event
-    });
-
-  }, 900);
-}
-
-/* =========================
-   CORE IMPACT APPLICATION
-========================= */
-
-function applyEvent(event) {
-  systemState[event.type] += event.strength;
-}
-
-/* =========================
-   PROPAGATION MODEL
-========================= */
-
-function propagate(origin, strength) {
-
-  const links = CASCADE[origin] || {};
-
-  for (let target in links) {
-
-    const impact = Math.round(strength * links[target]);
-
-    systemState[target] += impact;
-
-    enqueueEvent({
-      type: target,
-      strength: impact,
-      source: "CASCADE"
-    });
+  const effects = map[id] || {};
+  for (let k in effects) {
+    escalate(k, effects[k]);
   }
 }
 
-/* =========================
-   SCORING
-========================= */
-
-function getImpact(code) {
-  const map = {
-    "FIN-001": 3,
-    "DC-001": 4,
-    "CYB-001": 6,
-    "INF-001": 5
-  };
-  return map[code] || 2;
+function escalate(domain, level) {
+  const current = rank[systemState[domain]];
+  const next = Math.min(3, current + level);
+  systemState[domain] = reverseRank[next];
 }
 
-/* =========================
-   UI RENDER HOOK
-========================= */
-
-function render() {
-  const el = document.getElementById("output");
-
-  el.innerHTML =
-    "FIN: " + systemState.FIN + "<br>" +
-    "DC: " + systemState.DC + "<br>" +
-    "CYB: " + systemState.CYB + "<br>" +
-    "INF: " + systemState.INF + "<br><hr>" +
-    "TOTAL STRESS: " + total();
+function decay() {
+  for (let k in systemState) {
+    const r = rank[systemState[k]];
+    systemState[k] = reverseRank[Math.max(0, r - 1)];
+  }
 }
 
-function total() {
-  return systemState.FIN +
-         systemState.DC +
-         systemState.CYB +
-         systemState.INF;
+function calculateRisk() {
+  return Object.values(systemState)
+    .map(v => rank[v])
+    .reduce((a,b)=>a+b,0);
 }
 
-/* =========================
-   CASCADE GRAPH HOOK
-   (USED BY cascade-graph.js IF PRESENT)
-========================= */
+function loop() {
+  if (!active) return;
 
-function updateCascadeView() {
-  const el = document.getElementById("cascade");
+  tick++;
 
-  el.innerHTML =
-    "ACTIVE CASCADE NODES:<br>" +
-    Object.entries(systemState)
-      .map(([k,v]) => `${k}: ${v}`)
-      .join("<br>");
+  decay();
+  propagate("FIN-001");
+
+  const risk = calculateRisk();
+
+  updateUI({
+    tick,
+    state: systemState,
+    risk
+  });
+
+  updateGraph(systemState);
+
+  audit("TICK", { tick, state:{...systemState}, risk });
+
+  if (risk >= 10) {
+    active = false;
+    audit("CRITICAL_STOP", systemState);
+  }
+
+  setTimeout(loop, 1000);
 }
 
-/* =========================
-   AUDIT SYSTEM
-========================= */
+function reset() {
+  systemState.FIN = "GREEN";
+  systemState.DC = "GREEN";
+  systemState.CYB = "GREEN";
+  systemState.INF = "GREEN";
+}
 
-function log(type, data) {
+function audit(type, data) {
   auditLog.push({
     time: new Date().toISOString(),
     type,
@@ -203,11 +134,21 @@ function showAudit() {
 
 function clearAudit() {
   auditLog = [];
-  systemState = { FIN:0, DC:0, CYB:0, INF:0 };
-  eventQueue = [];
-
-  render();
-  updateCascadeView();
-
+  reset();
   document.getElementById("audit").textContent = "CLEARED";
+  updateUI({ tick:0, state:systemState, risk:0 });
+}
+
+/***********************
+ * UI HOOK
+ ***********************/
+function updateUI(data) {
+  document.getElementById("output").innerHTML = `
+    <b>TICK:</b> ${data.tick}<br>
+    FIN:${data.state.FIN} |
+    DC:${data.state.DC} |
+    CYB:${data.state.CYB} |
+    INF:${data.state.INF}<br>
+    <b>RISK:</b> ${data.risk}
+  `;
 }
