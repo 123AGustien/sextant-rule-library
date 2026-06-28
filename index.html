@@ -2,73 +2,173 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v10 LIVE</title>
+<title>SPD v10 LIVE | Simulation Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link rel="stylesheet" href="styles.css">
+
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0b0f1a;
+    color: #e6edf3;
+  }
+
+  .header {
+    padding: 18px;
+    background: #0f172a;
+    border-bottom: 1px solid #1f2937;
+    font-weight: bold;
+  }
+
+  .status-bar {
+    padding: 10px 18px;
+    background: #111827;
+    font-size: 13px;
+    color: #34d399;
+    border-bottom: 1px solid #1f2937;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .panel {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .panel h2 {
+    margin-top: 0;
+    font-size: 16px;
+    color: #93c5fd;
+  }
+
+  button {
+    margin: 6px 6px 6px 0;
+    padding: 8px 10px;
+    border: 1px solid #374151;
+    background: #0b1220;
+    color: #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: #60a5fa;
+  }
+
+  #output, #audit, #diag {
+    background: #0b1220;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    min-height: 80px;
+    overflow: auto;
+  }
+
+  canvas {
+    width: 100%;
+    height: 220px;
+    background: #0b1220;
+    border-radius: 8px;
+  }
+
+  .health-strip {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 18px;
+    font-size: 12px;
+    border-bottom: 1px solid #1f2937;
+    color: #9ca3af;
+  }
+
+  .online { color: #34d399; }
+  .warn { color: #fbbf24; }
+  .fail { color: #ef4444; }
+</style>
+
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE
+🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE v10
 </div>
 
+<!-- SYSTEM STATUS -->
 <div class="status-bar">
-● SYSTEM ONLINE | Simulation Kernel Active
+● SYSTEM ONLINE | Simulation Kernel Active | Cascade Engine Ready
 </div>
 
-<h1>🧠 SPD v10 Simulation Console</h1>
-
-<div class="panel">
-  <h2>Core Engine</h2>
-
-  <button onclick="runScenario('FX')">FX Stress</button>
-  <button onclick="runScenario('DC')">Cooling Failure</button>
-  <button onclick="runScenario('CYB')">Ransomware</button>
-  <button onclick="runScenario('INF')">Network Outage</button>
+<div class="health-strip">
+  <div>Core: <span class="online">ONLINE</span></div>
+  <div>FX Module: <span class="online">STABLE</span></div>
+  <div>Infra: <span class="warn">MONITORING</span></div>
+  <div>Cyber: <span class="online">READY</span></div>
 </div>
 
-<div class="panel">
-  <h2>Event Injection</h2>
+<!-- MAIN GRID -->
+<div class="grid">
 
-  <button onclick="injectEvent('FX_SPIKE')">FX Spike</button>
-  <button onclick="injectEvent('BOND_STRESS')">Bond Stress</button>
-  <button onclick="injectEvent('CYBER_ATTACK')">Cyber Attack</button>
-  <button onclick="injectEvent('INFRA_FAILURE')">Infra Failure</button>
+  <!-- CORE ENGINE -->
+  <div class="panel">
+    <h2>Core Engine</h2>
+    <button onclick="runScenario('FX')">FX Stress</button>
+    <button onclick="runScenario('DC')">Cooling Failure</button>
+    <button onclick="runScenario('CYB')">Ransomware</button>
+    <button onclick="runScenario('INF')">Network Outage</button>
+  </div>
+
+  <!-- EVENT INJECTION -->
+  <div class="panel">
+    <h2>Event Injection</h2>
+    <button onclick="injectEvent('FX_SPIKE')">FX Spike</button>
+    <button onclick="injectEvent('BOND_STRESS')">Bond Stress</button>
+    <button onclick="injectEvent('CYBER_ATTACK')">Cyber Attack</button>
+    <button onclick="injectEvent('INFRA_FAILURE')">Infra Failure</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="panel">
+    <h2>System Output</h2>
+    <div id="output">Boot sequence initiated...</div>
+  </div>
+
+  <!-- GRAPH -->
+  <div class="panel">
+    <h2>Cascade Graph</h2>
+    <canvas id="graph"></canvas>
+  </div>
+
+  <!-- DIAGNOSTICS -->
+  <div class="panel">
+    <h2>Live Diagnostics</h2>
+    <pre id="diag">Checking system integrity...</pre>
+  </div>
+
+  <!-- AUDIT -->
+  <div class="panel">
+    <h2>Audit Log</h2>
+    <button onclick="showAudit()">Show</button>
+    <button onclick="clearAudit()">Clear</button>
+    <pre id="audit"></pre>
+  </div>
+
 </div>
 
-<div class="panel">
-  <h2>System Output</h2>
-  <div id="output">Booting...</div>
-</div>
-
-<div class="panel">
-  <h2>System Cascade Graph</h2>
-  <canvas id="graph"></canvas>
-</div>
-
-<!-- 🧪 LIVE DIAGNOSTICS PANEL (correct placement) -->
-<div class="panel">
-  <h2>🧪 Live Diagnostics</h2>
-  <pre id="diag">Checking system...</pre>
-</div>
-
-<div class="panel">
-  <h2>Audit Log</h2>
-
-  <button onclick="showAudit()">Show</button>
-  <button onclick="clearAudit()">Clear</button>
-
-  <pre id="audit"></pre>
-</div>
-
-<!-- 🧠 CORE SCRIPTS -->
+<!-- SCRIPTS -->
 <script src="audit.js"></script>
 <script src="engine.js"></script>
 <script src="cascade-graph.js"></script>
 <script src="ui.js"></script>
-
-<!-- 🛡️ DEPENDENCY SAFETY LAYER (LAST = IMPORTANT) -->
 <script src="dependency-lock.js"></script>
 
 </body>
