@@ -1,4 +1,13 @@
+
+let auditLog = [];
+
 function audit(type, data) {
+  auditLog.push({
+    time: new Date().toISOString(),
+    type,
+    data
+  });
+}function audit(type, data) {
   auditLog.push({
     time: new Date().toISOString(),
     type,
