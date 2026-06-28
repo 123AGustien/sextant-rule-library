@@ -1,8 +1,22 @@
 
 
-Good — now you’re at the documentation layer, which is what makes this look like a real system instead of just code.
-Here is a clean README section you can paste directly into your GitHub repo.
 📘 Sextant Protocol – SPA Control System
+
+## 🧠 Live System Screen
+
+The Sextant Protocol Rule Library UI is deployed via GitHub Pages:
+
+👉 https://123agustien.github.io/sextant-rule-library/
+
+## 📦 Repository
+
+Source code and workflow:
+
+👉 https://github.com/123AGustien/sextant-rule-library
+
+## 🛰 System Note
+
+This repository serves as the **single-source rule execution layer** for the Sextant Protocol simulation engine.
 🛰 Live System (Single Screen SPA)
 Sextant SPA Control System⁠�
 🧭 System Overview
