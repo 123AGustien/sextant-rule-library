@@ -1,4 +1,4 @@
-/***********************
+ /***********************
  * SPD v10 CASCADE GRAPH
  ***********************/
 
@@ -19,60 +19,91 @@ const colorMap = {
   RED: "#ef4444"
 };
 
+/* =========================
+   INIT GRAPH
+========================= */
 function initGraph() {
   canvas = document.createElement("canvas");
   canvas.width = 420;
   canvas.height = 420;
+
   document.getElementById("cascade").innerHTML = "";
   document.getElementById("cascade").appendChild(canvas);
+
   ctx = canvas.getContext("2d");
+
   draw();
 }
 
+/* =========================
+   UPDATE GRAPH STATE
+========================= */
 function updateGraph(state) {
+
   for (let k in state) {
-    nodeState[k].status = state[k];
+    if (nodeState[k]) {
+      nodeState[k].status = state[k];
+    }
   }
+
   draw();
 }
 
+/* =========================
+   DRAW ENGINE
+========================= */
 function draw() {
+
   if (!ctx) return;
 
-  ctx.clearRect(0,0,420,420);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawLinks();
   drawNodes();
 }
 
+/* =========================
+   LINKS (CASCADE EDGES)
+========================= */
 function drawLinks() {
-  ctx.strokeStyle = "#1f2a44";
-  ctx.lineWidth = 2;
-
-  link("FIN","DC");
-  link("FIN","CYB");
-  link("DC","INF");
-  link("CYB","INF");
+  connect("FIN", "DC");
+  connect("DC", "CYB");
+  connect("CYB", "INF");
+  connect("INF", "FIN");
 }
 
-function link(a,b){
+/* =========================
+   NODE CONNECTION
+========================= */
+function connect(a, b) {
   ctx.beginPath();
-  ctx.moveTo(nodeState[a].x,nodeState[a].y);
-  ctx.lineTo(nodeState[b].x,nodeState[b].y);
+  ctx.moveTo(nodeState[a].x, nodeState[a].y);
+  ctx.lineTo(nodeState[b].x, nodeState[b].y);
+  ctx.strokeStyle = "#2a2f3a";
+  ctx.lineWidth = 2;
   ctx.stroke();
 }
 
+/* =========================
+   NODE RENDERING
+========================= */
 function drawNodes() {
+
   for (let k in nodeState) {
-    const n = nodeState[k];
+
+    const node = nodeState[k];
 
     ctx.beginPath();
-    ctx.arc(n.x,n.y,18,0,Math.PI*2);
+    ctx.arc(node.x, node.y, 18, 0, Math.PI * 2);
 
-    ctx.fillStyle = colorMap[n.status];
+    ctx.fillStyle = colorMap[node.status] || "#2bd4ff";
     ctx.fill();
 
-    ctx.fillStyle = "#fff";
-    ctx.fillText(k,n.x-10,n.y+4);
+    ctx.strokeStyle = "#0a0f1f";
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px Arial";
+    ctx.fillText(k, node.x - 12, node.y + 4);
   }
 }
