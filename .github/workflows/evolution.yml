@@ -1,9 +1,6 @@
-name: Evolution Engine
+name: Evolution Engine (Isolated)
 
 on:
-  push:
-    branches: ["main"]
-
   workflow_dispatch:
 
 permissions:
@@ -14,18 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run evolution update
+      - name: Generate Evolution Data
         run: |
-          echo "event-driven evolution update" >> evolution_log.txt
-          echo "{ \"status\": \"ok\" }" > evolution_log.json
+          mkdir -p runtime
+          echo "{ \"event\": \"update\", \"status\": \"ok\" }" > runtime/evolution.json
 
-      - name: Commit Evolution Output
+      - name: Commit Evolution Data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add .
-          git commit -m "event-driven evolution update" || exit 0
+
+          git add runtime/evolution.json
+          git commit -m "evolution update" || exit 0
           git push
