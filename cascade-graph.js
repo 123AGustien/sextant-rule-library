@@ -1,9 +1,9 @@
- /***********************
+/***********************
  * SPD v10 CASCADE GRAPH
  ***********************/
 
 const nodeState = {
-  FIN: { x: 100, y: 150, status: "GREEN" },
+  FX:  { x: 100, y: 150, status: "GREEN" },
   DC:  { x: 300, y: 150, status: "GREEN" },
   CYB: { x: 300, y: 300, status: "GREEN" },
   INF: { x: 100, y: 300, status: "GREEN" }
@@ -23,12 +23,15 @@ const colorMap = {
    INIT GRAPH
 ========================= */
 function initGraph() {
+  const container = document.getElementById("cascade");
+  if (!container) return;
+
   canvas = document.createElement("canvas");
   canvas.width = 420;
   canvas.height = 420;
 
-  document.getElementById("cascade").innerHTML = "";
-  document.getElementById("cascade").appendChild(canvas);
+  container.innerHTML = "";
+  container.appendChild(canvas);
 
   ctx = canvas.getContext("2d");
 
@@ -39,10 +42,11 @@ function initGraph() {
    UPDATE GRAPH STATE
 ========================= */
 function updateGraph(state) {
+  if (!state) return;
 
   for (let k in state) {
     if (nodeState[k]) {
-      nodeState[k].status = state[k];
+      nodeState[k].status = mapStatus(state[k]);
     }
   }
 
@@ -50,11 +54,24 @@ function updateGraph(state) {
 }
 
 /* =========================
+   STATUS MAPPING (SAFE)
+========================= */
+function mapStatus(value) {
+  if (typeof value === "number") {
+    if (value > 6) return "RED";
+    if (value > 4) return "ORANGE";
+    if (value > 2) return "YELLOW";
+    return "GREEN";
+  }
+
+  return value || "GREEN";
+}
+
+/* =========================
    DRAW ENGINE
 ========================= */
 function draw() {
-
-  if (!ctx) return;
+  if (!ctx || !canvas) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -66,14 +83,14 @@ function draw() {
    LINKS (CASCADE EDGES)
 ========================= */
 function drawLinks() {
-  connect("FIN", "DC");
+  connect("FX", "DC");
   connect("DC", "CYB");
   connect("CYB", "INF");
-  connect("INF", "FIN");
+  connect("INF", "FX");
 }
 
 /* =========================
-   NODE CONNECTION
+   CONNECTIONS
 ========================= */
 function connect(a, b) {
   ctx.beginPath();
@@ -104,6 +121,6 @@ function drawNodes() {
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Arial";
-    ctx.fillText(k, node.x - 12, node.y + 4);
+    ctx.fillText(k, node.x - 10, node.y + 4);
   }
 }
