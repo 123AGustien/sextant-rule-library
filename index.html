@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD PILOT SYSTEM v10</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<div class="header">
+  <div>🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE · LIVE EVALUATION ENVIRONMENT</div>
+</div>
+
+<div class="status-bar">
+● SYSTEM ONLINE | Simulation Kernel Active | Audit Logging Enabled
+</div>
+
+<h1>🧠 Sextant Protocol Simulation Console v10</h1>
+
+<!-- CORE ENGINE -->
+<div class="panel">
+  <h2>Core Scenario Engine (Multi-Domain Stress Model)</h2>
+
+  <button onclick="runScenario('FIN-001')">FX Stress</button>
+  <button onclick="runScenario('DC-001')">Cooling Failure</button>
+  <button onclick="runScenario('CYB-001')">Ransomware</button>
+  <button onclick="runScenario('INF-001')">Network Outage</button>
+</div>
+
+<!-- EVENT LAYER -->
+<div class="panel">
+  <h2>Live Event Injection Layer</h2>
+
+  <button onclick="injectEvent('FX')">FX Spike</button>
+  <button onclick="injectEvent('BOND')">Bond Stress</button>
+  <button onclick="injectEvent('CYBER')">Cyber Attack</button>
+  <button onclick="injectEvent('INFRA')">Infra Failure</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="panel">
+  <h2>System Output</h2>
+  <div id="output">Waiting for simulation...</div>
+</div>
+
+<!-- CASCADE GRAPH -->
+<div class="panel">
+  <h2>System Cascade Graph</h2>
+  <div id="cascade">No active cascade</div>
+</div>
+
+<!-- AUDIT -->
+<div class="panel">
+  <h2>Audit Trail (Step 18 Explainability)</h2>
+
+  <button onclick="showAudit()">Show Audit Log</button>
+  <button onclick="clearAudit()">Clear Audit Log</button>
+
+  <pre id="audit"></pre>
+</div>
+
+<script src="audit.js"></script>
+<script src="engine.js"></script>
+<script src="ui.js"></script>
+
+</body>
+</html>
