@@ -1,6 +1,6 @@
 /***********************
- * SEXTANT CASCADE GRAPH v1.0
- * Visual Propagation Layer for engine.js v3
+ * SEXTANT CASCADE GRAPH v2.0
+ * Hybrid Static + Animation Ready Visual Layer
  ***********************/
 
 /* =========================
@@ -15,71 +15,101 @@ const nodeState = {
 };
 
 /* =========================
-   INITIALIZE CANVAS
+   FLOW LAYER (NEW)
+   - reserved for future animation system
+========================= */
+
+let flowLayer = [];
+
+/* =========================
+   CANVAS CONTEXT
+========================= */
+
+let ctx;
+let canvasRef;
+
+/* =========================
+   INIT GRAPH
 ========================= */
 
 function initGraph(canvasId) {
 
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext("2d");
+  canvasRef = document.getElementById(canvasId);
+  ctx = canvasRef.getContext("2d");
 
-  canvas.width = 500;
-  canvas.height = 500;
+  canvasRef.width = 500;
+  canvasRef.height = 500;
 
-  drawGraph(ctx);
+  drawGraph();
 
   return ctx;
 }
 
 /* =========================
-   UPDATE FROM ENGINE STATE
+   ENGINE HOOK (v3 INTEGRATION)
 ========================= */
 
 function updateGraph(systemState) {
 
+  // update node states
   for (const key in systemState) {
-    nodeState[key].status = systemState[key];
+    if (nodeState[key]) {
+      nodeState[key].status = systemState[key];
+    }
   }
 
-  const canvas = document.getElementById("graph");
-  const ctx = canvas.getContext("2d");
-
-  drawGraph(ctx);
+  drawGraph();
 }
 
 /* =========================
-   DRAW FULL GRAPH
+   OPTIONAL FLOW HOOK (FOR NEXT UPGRADE)
 ========================= */
 
-function drawGraph(ctx) {
+function updateFlows(flows = []) {
+  flowLayer = flows;
+}
 
+/* =========================
+   MAIN RENDER LOOP (STATIC MODE)
+========================= */
+
+function drawGraph() {
+
+  if (!ctx) return;
+
+  clearCanvas();
+  drawConnections();
+  drawFlows();   // safe even if empty
+  drawNodes();
+}
+
+/* =========================
+   CLEAR
+========================= */
+
+function clearCanvas() {
   ctx.clearRect(0, 0, 500, 500);
-
-  drawConnections(ctx);
-
-  for (const key in nodeState) {
-    drawNode(ctx, key, nodeState[key]);
-  }
 }
 
 /* =========================
-   CONNECTION LINES
+   CONNECTIONS
 ========================= */
 
-function drawConnections(ctx) {
+function drawConnections() {
 
   ctx.strokeStyle = "#2a2f3a";
   ctx.lineWidth = 2;
 
-  connect(ctx, "FIN", "DC");
-  connect(ctx, "FIN", "CYB");
-  connect(ctx, "DC", "CYB");
-  connect(ctx, "DC", "INF");
-  connect(ctx, "CYB", "INF");
-  connect(ctx, "INF", "FIN");
+  connect("FIN", "DC");
+  connect("FIN", "CYB");
+  connect("DC", "CYB");
+  connect("DC", "INF");
+  connect("CYB", "INF");
+  connect("INF", "FIN");
 }
 
-function connect(ctx, a, b) {
+function connect(a, b) {
+
   ctx.beginPath();
   ctx.moveTo(nodeState[a].x, nodeState[a].y);
   ctx.lineTo(nodeState[b].x, nodeState[b].y);
@@ -87,50 +117,89 @@ function connect(ctx, a, b) {
 }
 
 /* =========================
-   NODE RENDERING
+   NODES
 ========================= */
 
-function drawNode(ctx, key, node) {
+function drawNodes() {
 
-  ctx.beginPath();
-  ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+  for (const key in nodeState) {
 
-  ctx.fillStyle = getColor(node.status);
-  ctx.fill();
+    const node = nodeState[key];
 
-  ctx.strokeStyle = "#111827";
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, 18, 0, Math.PI * 2);
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "12px Arial";
-  ctx.fillText(key, node.x - 12, node.y + 4);
+    ctx.fillStyle = getColor(node.status);
+    ctx.fill();
+
+    ctx.strokeStyle = "#0a0f1f";
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "12px Arial";
+    ctx.fillText(key, node.x - 12, node.y + 4);
+  }
 }
 
 /* =========================
-   STATUS COLORS
+   FLOW RENDER LAYER (READY FOR v3 FLOW ENGINE)
+========================= */
+
+function drawFlows() {
+
+  if (!flowLayer || flowLayer.length === 0) return;
+
+  for (const f of flowLayer) {
+
+    const from = nodeState[f.from];
+    const to = nodeState[f.to];
+
+    const x = from.x + (to.x - from.x) * f.progress;
+    const y = from.y + (to.y - from.y) * f.progress;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+
+    ctx.fillStyle = f.color || "#ffffff";
+    ctx.fill();
+  }
+}
+
+/* =========================
+   COLOR SYSTEM
 ========================= */
 
 function getColor(status) {
 
   switch (status) {
-
     case "GREEN": return "#00ff88";
     case "YELLOW": return "#ffd000";
     case "ORANGE": return "#ff8800";
     case "RED": return "#ff3b3b";
-
     default: return "#ffffff";
   }
 }
 
 /* =========================
-   INTEGRATION HOOK
+   INTEGRATION RULE
 ========================= */
 
 /*
-  CALL THIS FROM engine.js v3:
+ENGINE v3 MUST CALL:
 
-  updateGraph(systemState);
+1. updateGraph(systemState)
 
-  AFTER each renderOutput()
+OPTIONAL (next upgrade):
+
+2. updateFlows(flowData)
+
+Flow format:
+[
+  {
+    from: "FIN",
+    to: "DC",
+    progress: 0.0 - 1.0,
+    color: "#ff8800"
+  }
+]
 */
