@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sextant SPA Rewired Engine v1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0b0f14;
+    color: #2bd4ff;
+}
+
+.header {
+    background:#0f172a;
+    padding:12px;
+    border-bottom:1px solid #1f2a44;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12px;
+    color:#9fb0c3;
+}
+
+h1 {
+    margin: 15px;
+    font-size: 20px;
+}
+
+.panel {
+    margin: 15px;
+    padding: 15px;
+    background: #111827;
+    border: 1px solid #2a2f3a;
+    border-radius: 8px;
+}
+
+button {
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+    background: #1f2937;
+    color: white;
+    border: 1px solid #374151;
+    border-radius: 6px;
+}
+
+button:hover {
+    background:#374151;
+}
+
+pre {
+    background:#0a0f1f;
+    padding:10px;
+    overflow:auto;
+}
+
+.status {
+    color:#7aa2b7;
+    font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div>🛰 SEXTANT REWIRED SPA ENGINE v1</div>
+    <button onclick="showAudit()">AUDIT</button>
+</div>
+
+<h1>🧠 Live Simulation Console</h1>
+
+<!-- SCENARIOS -->
+<div class="panel">
+<h2>Scenario Engine</h2>
+
+<button onclick="runScenario('FIN-001')">Power Surge</button>
+<button onclick="runScenario('DC-001')">Cooling Failure</button>
+<button onclick="runScenario('CYB-001')">Ransomware</button>
+<button onclick="runScenario('INF-001')">Network Outage</button>
+
+<p class="status">Fully wired event-driven simulation</p>
+</div>
+
+<!-- OUTPUT -->
+<div class="panel">
+<h2>System Output</h2>
+<div id="output">READY</div>
+</div>
+
+<!-- GRAPH -->
+<div class="panel">
+<h2>Risk Graph</h2>
+<canvas id="graph"></canvas>
+</div>
+
+<!-- AUDIT -->
+<div class="panel">
+<h2>Audit Log</h2>
+<button onclick="clearAudit()">Clear</button>
+<pre id="audit"></pre>
+</div>
+
+<script>
+
+/* =========================
+   STATE ENGINE
+========================= */
+
+let riskLevel = 0;
+let auditLog = [];
+
+/* =========================
+   MAIN ENGINE (WIRED)
+========================= */
+
+function runScenario(code) {
+
+    let event = "";
+    let impact = 0;
+
+    if (code === "FIN-001") {
+        event = "POWER SURGE";
+        impact = 2;
+    }
+
+    if (code === "DC-001") {
+        event = "COOLING FAILURE";
+        impact = 3;
+    }
+
+    if (code === "CYB-001") {
+        event = "RANSOMWARE ATTACK";
+        impact = 5;
+    }
+
+    if (code === "INF-001") {
+        event = "NETWORK OUTAGE";
+        impact = 4;
+    }
+
+    // UPDATE STATE
+    riskLevel += impact;
+
+    auditLog.push({
+        time: new Date().toISOString(),
+        event,
+        impact,
+        riskLevel
+    });
+
+    updateUI(event, impact);
+    drawGraph(impact);
+}
+
+/* =========================
+   UI BINDING (CRITICAL FIX)
+========================= */
+
+function updateUI(event, impact) {
+
+    document.getElementById("output").innerHTML =
+        "EVENT: " + event + "<br>" +
+        "IMPACT: " + impact + "<br>" +
+        "TOTAL RISK: " + riskLevel + "<br>" +
+        "STATUS: WIRED ✔";
+}
+
+/* =========================
+   GRAPH ENGINE
+========================= */
+
+function drawGraph(impact) {
+
+    const c = document.getElementById("graph");
+    const ctx = c.getContext("2d");
+
+    c.width = 500;
+    c.height = 300;
+
+    ctx.clearRect(0,0,c.width,c.height);
+
+    ctx.fillStyle = "#2bd4ff";
+    ctx.beginPath();
+    ctx.arc(250, 80, 10, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = impact >= 4 ? "red" : "orange";
+    ctx.beginPath();
+    ctx.arc(250, 200, 20 + impact*2, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#2bd4ff";
+    ctx.beginPath();
+    ctx.moveTo(250,90);
+    ctx.lineTo(250,180);
+    ctx.stroke();
+}
+
+/* =========================
+   AUDIT SYSTEM
+========================= */
+
+function showAudit() {
+    document.getElementById("audit").textContent =
+        JSON.stringify(auditLog, null, 2);
+}
+
+function clearAudit() {
+    riskLevel = 0;
+    auditLog = [];
+    document.getElementById("audit").textContent = "CLEARED";
+    document.getElementById("output").innerHTML = "RESET COMPLETE";
+    drawGraph(0);
+}
+
+window.onload = function() {
+    drawGraph(0);
+};
+
+</script>
+
+</body>
+</html>
