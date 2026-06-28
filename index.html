@@ -42,6 +42,13 @@
       overflow-x: auto;
     }
 
+    canvas {
+      background: #0a0f1f;
+      border: 1px solid #2a2f3a;
+      display: block;
+      margin-top: 10px;
+    }
+
     .green { color: #00ff88; }
     .yellow { color: #ffd000; }
     .orange { color: #ff8800; }
@@ -79,6 +86,12 @@
   <div id="output">Waiting for simulation...</div>
 </div>
 
+<!-- ================= CASCADE GRAPH ================= -->
+<div class="panel">
+  <h2>System Cascade Graph</h2>
+  <canvas id="graph" width="500" height="500"></canvas>
+</div>
+
 <!-- ================= AUDIT PANEL ================= -->
 <div class="panel">
   <h2>Audit Trail (Step 18 Explainability)</h2>
@@ -89,7 +102,9 @@
   <pre id="audit"></pre>
 </div>
 
+<!-- ================= SCRIPTS ================= -->
 <script src="engine.js"></script>
+<script src="cascade-graph.js"></script>
 
 <script>
 function showAudit() {
