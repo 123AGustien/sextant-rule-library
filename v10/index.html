@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v10 COCKPIT - STABLE CORE</title>
+<title>SPD v10 COCKPIT - RULE ENGINE CORE</title>
 
 <style>
 body {
@@ -18,6 +18,8 @@ body {
   background: #0a111a;
   border-bottom: 1px solid #1b2a3a;
   font-size: 13px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .grid {
@@ -77,12 +79,12 @@ canvas {
 <body>
 
 <div class="top">
-🛰 SPD COCKPIT v10 // LOCKED STABLE BUILD
+  🛰 SPD COCKPIT v10 // RULE ENGINE ACTIVE
+  <div id="status" class="good">STABLE</div>
 </div>
 
 <div class="grid">
 
-  <!-- LEFT PANEL -->
   <div class="left">
     <button onclick="run('FX')">FX STRESS</button>
     <button onclick="run('DC')">DC LOAD</button>
@@ -91,25 +93,34 @@ canvas {
     <button onclick="resetSystem()">RESET</button>
   </div>
 
-  <!-- CENTER GRAPH -->
   <div class="center">
     <canvas id="g" width="420" height="260"></canvas>
   </div>
 
-  <!-- RIGHT LOG -->
   <div class="right" id="log"></div>
 
 </div>
 
 <script>
 /* =========================
-   CORE STATE
+   STATE
 ========================= */
 let state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
 let log = [];
 
 /* =========================
-   LOG SYSTEM
+   RULE ENGINE BRIDGE (v1)
+   (Simulates GitHub Rule Library connection)
+========================= */
+const RULES = {
+  FX:  { base: 2, cascade: ["DC"] },
+  DC:  { base: 2, cascade: ["CYB"] },
+  CYB: { base: 2, cascade: ["INF"] },
+  INF: { base: 2, cascade: [] }
+};
+
+/* =========================
+   LOG
 ========================= */
 function write(msg) {
   const t = new Date().toLocaleTimeString();
@@ -118,17 +129,27 @@ function write(msg) {
 }
 
 /* =========================
-   EVENT ENGINE
+   RULE EXECUTION ENGINE
 ========================= */
 function run(type) {
-  state[type] += 2;
-  write("EVENT → " + type);
+  const rule = RULES[type];
+  if (!rule) return;
+
+  state[type] += rule.base;
+  write(`RULE → ${type} +${rule.base}`);
+
+  rule.cascade.forEach(target => {
+    const spill = Math.max(1, Math.floor(rule.base * 0.6));
+    state[target] += spill;
+    write(`CASCADE → ${type} → ${target} +${spill}`);
+  });
+
   evaluate();
   draw();
 }
 
 /* =========================
-   RESET ENGINE
+   RESET
 ========================= */
 function resetSystem() {
   state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
@@ -144,8 +165,6 @@ function evaluate() {
   const total = Object.values(state).reduce((a, b) => a + b, 0);
   const s = document.getElementById("status");
 
-  if (!s) return;
-
   if (total < 8) {
     s.textContent = "STABLE";
     s.className = "good";
@@ -159,7 +178,7 @@ function evaluate() {
 }
 
 /* =========================
-   GRAPH ENGINE (FIXED)
+   GRAPH
 ========================= */
 function draw() {
   const c = document.getElementById("g");
@@ -173,9 +192,7 @@ function draw() {
   const max = Math.max(...values, 5);
 
   keys.forEach((key, i) => {
-    const value = values[i];
-    const height = (value / max) * 200;
-
+    const height = (values[i] / max) * 200;
     const xPos = 50 + i * 80;
 
     x.fillStyle = "#00ffd5";
@@ -190,8 +207,8 @@ function draw() {
 /* =========================
    INIT
 ========================= */
-document.addEventListener("DOMContentLoaded", function () {
-  write("SYSTEM ONLINE - SPD v10 LOCKED");
+document.addEventListener("DOMContentLoaded", () => {
+  write("SYSTEM ONLINE - RULE ENGINE LINKED");
   draw();
 });
 </script>
