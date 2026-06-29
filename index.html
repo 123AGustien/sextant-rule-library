@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v10.4.1 COCKPIT - STABLE FINAL ENGINE</title>
+<title>SPD v11.0 // DIGITAL TWIN CORE</title>
 
 <style>
 body {
@@ -34,7 +34,7 @@ body {
 }
 
 .value {
-  font-size: 28px;
+  font-size: 26px;
   margin-top: 10px;
 }
 
@@ -43,6 +43,7 @@ body {
   justify-content: center;
   gap: 10px;
   margin: 10px;
+  flex-wrap: wrap;
 }
 
 button {
@@ -70,56 +71,29 @@ button {
   font-size: 12px;
   padding: 10px;
 }
-
-.graph {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-top: 10px;
-}
-
-.node {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #1f3b5c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  transition: all 0.3s;
-}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-🛰 SPD v10.4.1 FINAL // STABLE RESILIENCE ENGINE
+🛰 SPD v11.0 // SCENARIO DIGITAL TWIN CORE
 </div>
 
-<div id="statusBar">STATUS: INITIALIZING</div>
+<div id="statusBar">STATUS: READY</div>
 
 <div class="panel">
-  <div class="card">FX<div class="value" id="fx"></div></div>
-  <div class="card">DC<div class="value" id="dc"></div></div>
-  <div class="card">CYB<div class="value" id="cyb"></div></div>
-  <div class="card">INF<div class="value" id="inf"></div></div>
-</div>
-
-<div class="graph">
-  <div class="node" id="nFX">FX</div>
-  <div class="node" id="nDC">DC</div>
-  <div class="node" id="nCYB">CYB</div>
-  <div class="node" id="nINF">INF</div>
+  <div class="card">FX<div class="value" id="FX">0</div></div>
+  <div class="card">DC<div class="value" id="DC">0</div></div>
+  <div class="card">CYB<div class="value" id="CYB">0</div></div>
+  <div class="card">INF<div class="value" id="INF">0</div></div>
 </div>
 
 <div class="buttons">
-  <button onclick="trigger('FX')">FX STRESS</button>
-  <button onclick="trigger('DC')">DC LOAD</button>
-  <button onclick="trigger('CYB')">CYBER EVENT</button>
-  <button onclick="trigger('INF')">INFRA STRAIN</button>
-  <button onclick="shock()">SHOCK</button>
+  <button onclick="runScenario('BOND_CRISIS')">BOND CRISIS</button>
+  <button onclick="runScenario('CYBER_WAR')">CYBER WAR</button>
+  <button onclick="runScenario('GRID_FAILURE')">GRID FAILURE</button>
+  <button onclick="inject('FX')">FX STRESS</button>
   <button onclick="reset()">RESET</button>
 </div>
 
@@ -128,84 +102,89 @@ button {
 <script>
 
 /* =========================
-   DOM CACHE (FIXED)
+   DIGITAL TWIN STATE
 ========================= */
 
-const el = {
-  fx: document.getElementById("fx"),
-  dc: document.getElementById("dc"),
-  cyb: document.getElementById("cyb"),
-  inf: document.getElementById("inf"),
-  statusBar: document.getElementById("statusBar"),
-  audit: document.getElementById("audit")
+const NODES = {
+  FX: { value: 0, sens: 0.7 },
+  DC: { value: 0, sens: 0.9 },
+  CYB:{ value: 0, sens: 0.8 },
+  INF:{ value: 0, sens: 0.85 }
 };
 
-/* =========================
-   STATE ENGINE
-========================= */
+/* Weighted edges */
+const EDGES = [
+  { from:"FX", to:"DC", w:0.8 },
+  { from:"DC", to:"CYB", w:0.7 },
+  { from:"CYB", to:"INF", w:0.6 },
+  { from:"INF", to:"FX", w:0.5 }
+];
 
-const state = { FX:0, DC:0, CYB:0, INF:0 };
-
-const threshold = 30;
-
-const link = {
-  FX:"DC",
-  DC:"CYB",
-  CYB:"INF",
-  INF:"FX"
+/* Scenarios */
+const SCENARIOS = {
+  BOND_CRISIS: { FX: 35, DC: 10, CYB: 5 },
+  CYBER_WAR:   { CYB: 40, DC: 25, INF: 10 },
+  GRID_FAILURE: { INF: 50, DC: 20, FX: 15 }
 };
 
 let log = [];
+let events = [];
 
 /* =========================
-   AUDIT ENGINE
+   AUDIT
 ========================= */
 
 function audit(type, data){
   log.push({
-    time: new Date(),
+    time: new Date().toLocaleTimeString(),
     type,
     data
   });
 }
 
 /* =========================
-   CASCADE ENGINE
+   SCENARIO ENGINE
 ========================= */
 
-function cascade(from){
-  const to = link[from];
+function runScenario(name){
+  const s = SCENARIOS[name];
+  if(!s) return;
 
-  if(state[from] >= threshold){
-    state[to] += 2;
-    audit("CASCADE",{from,to});
-    cascade(to);
+  for(let k in s){
+    NODES[k].value += s[k];
   }
-}
 
-/* =========================
-   USER ENGINE
-========================= */
-
-function trigger(type){
-  state[type] += 6;
-  audit("USER", {type});
-  cascade(type);
+  audit("SCENARIO", {name});
   render();
 }
 
 /* =========================
-   SHOCK ENGINE
+   DIRECT INJECTION
 ========================= */
 
-function shock(){
-  const keys = Object.keys(state);
-  const r = keys[Math.floor(Math.random()*4)];
-
-  state[r] += 20;
-  audit("SHOCK",{r});
-  cascade(r);
+function inject(node){
+  NODES[node].value += 10;
+  audit("INJECT", {node});
   render();
+}
+
+/* =========================
+   CASCADE ENGINE (PROBABILISTIC)
+========================= */
+
+function cascade(){
+  EDGES.forEach(e => {
+    const from = NODES[e.from];
+    const to = NODES[e.to];
+
+    const chance =
+      from.value * e.w * to.sens / 100;
+
+    if(Math.random() < chance){
+      to.value += 5;
+      audit("CASCADE", {from:e.from,to:e.to});
+    }
+  });
 }
 
 /* =========================
@@ -213,94 +192,49 @@ function shock(){
 ========================= */
 
 function tick(){
-  for(let k in state){
-    state[k] = Math.max(0, state[k] - 0.4);
+  for(let k in NODES){
+    NODES[k].value *= 0.97; // nonlinear decay
   }
 
-  for(let k in state){
-    cascade(k);
-  }
-
+  cascade();
   render();
 }
 
 setInterval(tick, 1000);
 
 /* =========================
-   STABILITY ENGINE
-========================= */
-
-function stability(){
-  const avg = (state.FX + state.DC + state.CYB + state.INF)/4;
-  return Math.max(0, 100 - avg*2);
-}
-
-/* =========================
-   RENDER ENGINE
-========================= */
-
-function render(){
-
-  el.fx.innerText = state.FX.toFixed(1);
-  el.dc.innerText = state.DC.toFixed(1);
-  el.cyb.innerText = state.CYB.toFixed(1);
-  el.inf.innerText = state.INF.toFixed(1);
-
-  let s = stability();
-
-  el.statusBar.innerText =
-    s > 70 ? "STATUS: STABLE" :
-    s > 40 ? "STATUS: UNSTABLE" :
-    s > 20 ? "STATUS: CRITICAL" : "STATUS: BLACKOUT";
-
-  renderGraph();
-  renderAudit();
-}
-
-/* =========================
-   GRAPH ENGINE
-========================= */
-
-function renderGraph(){
-
-  const nodes = {
-    nFX: state.FX,
-    nDC: state.DC,
-    nCYB: state.CYB,
-    nINF: state.INF
-  };
-
-  for(let n in nodes){
-    const v = nodes[n];
-    const node = document.getElementById(n);
-
-    node.style.transform = `scale(${1 + v/50})`;
-
-    node.style.background =
-      v > 40 ? "#ff3b3b" :
-      v > 20 ? "#ffb020" :
-      "#1f3b5c";
-  }
-}
-
-/* =========================
-   AUDIT ENGINE
-========================= */
-
-function renderAudit(){
-  el.audit.innerHTML = log.slice(-12).map(e =>
-    `[${e.time.toLocaleTimeString()}] ${e.type}`
-  ).join("<br>");
-}
-
-/* =========================
    RESET
 ========================= */
 
 function reset(){
-  for(let k in state) state[k] = 0;
+  for(let k in NODES){
+    NODES[k].value = 0;
+  }
   audit("RESET",{});
   render();
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+  FX.innerText  = NODES.FX.value.toFixed(1);
+  DC.innerText  = NODES.DC.value.toFixed(1);
+  CYB.innerText = NODES.CYB.value.toFixed(1);
+  INF.innerText = NODES.INF.value.toFixed(1);
+
+  auditView();
+}
+
+/* =========================
+   AUDIT VIEW
+========================= */
+
+function auditView(){
+  audit.innerHTML = log.slice(-10).map(e =>
+    `[${e.time}] ${e.type}`
+  ).join("<br>");
 }
 
 /* INIT */
