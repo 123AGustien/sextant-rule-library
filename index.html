@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.1 // PROBABILISTIC SIMULATOR CORE</title>
+<title>SPD v11.2 // OJK PRESENTATION LAYER</title>
 
 <style>
 body {
@@ -10,11 +10,20 @@ body {
   background: #05070b;
   color: #cfe8ff;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 .header {
   padding: 12px;
   background: #0b1220;
+  font-size: 14px;
+}
+
+.ojk {
+  background:#0b1220;
+  padding:12px;
+  font-size:12px;
+  border-bottom:1px solid #1f3b5c;
 }
 
 .panel {
@@ -28,10 +37,20 @@ body {
   padding: 20px;
   width: 20%;
   text-align: center;
+  border-radius: 8px;
 }
 
 .value {
   font-size: 26px;
+  margin-top: 10px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px;
+  flex-wrap: wrap;
 }
 
 button {
@@ -40,25 +59,24 @@ button {
   color: white;
   border: none;
   cursor: pointer;
-  margin: 3px;
+}
+
+#statusBar {
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  background: #0a0f18;
 }
 
 #audit {
   position: absolute;
   bottom: 0;
-  width: 100%;
   height: 140px;
-  overflow-y: auto;
+  width: 100%;
   background: #0a0f18;
+  overflow-y: auto;
   font-size: 12px;
   padding: 10px;
-}
-
-.status {
-  text-align: center;
-  padding: 8px;
-  font-size: 13px;
-  background: #0a0f18;
 }
 </style>
 </head>
@@ -66,23 +84,42 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v11.1 // PROBABILISTIC SIMULATOR CORE
+🛰 SPD v11.2 // OJK PRESENTATION LAYER
 </div>
 
-<div class="status" id="status">STATUS: READY</div>
+<div class="ojk">
+<b>OJK SANDBOX SIMULATION INTERFACE</b><br>
+This system demonstrates scenario-based systemic risk propagation in a controlled simulation environment. No financial execution capability.
+<br><br>
+
+Scenario:
+<select id="scenarioInfo">
+  <option value="BOND_CRISIS">Bond Crisis</option>
+  <option value="CYBER_WAR">Cyber War</option>
+  <option value="GRID_FAILURE">Grid Failure</option>
+</select>
+
+<button onclick="loadScenarioInfo()">Load Brief</button>
+<button onclick="toggleExplain()">Explain Mode</button>
+<button onclick="exportAudit()">Export Audit</button>
+
+<div id="scenarioPanel" style="margin-top:8px;color:#9ecbff;"></div>
+</div>
+
+<div id="statusBar">STATUS: READY</div>
 
 <div class="panel">
-  <div class="card">FX<div id="FX" class="value">0</div></div>
-  <div class="card">DC<div id="DC" class="value">0</div></div>
-  <div class="card">CYB<div id="CYB" class="value">0</div></div>
-  <div class="card">INF<div id="INF" class="value">0</div></div>
+  <div class="card">FX<div class="value" id="FX">0</div></div>
+  <div class="card">DC<div class="value" id="DC">0</div></div>
+  <div class="card">CYB<div class="value" id="CYB">0</div></div>
+  <div class="card">INF<div class="value" id="INF">0</div></div>
 </div>
 
-<div style="text-align:center;">
-  <button onclick="enqueue('FX')">FX STRESS</button>
-  <button onclick="enqueue('DC')">DC LOAD</button>
-  <button onclick="enqueue('CYB')">CYBER EVENT</button>
-  <button onclick="enqueue('INF')">INFRA STRAIN</button>
+<div class="buttons">
+  <button onclick="runScenario('BOND_CRISIS')">BOND CRISIS</button>
+  <button onclick="runScenario('CYBER_WAR')">CYBER WAR</button>
+  <button onclick="runScenario('GRID_FAILURE')">GRID FAILURE</button>
+  <button onclick="inject('FX')">FX STRESS</button>
   <button onclick="reset()">RESET</button>
 </div>
 
@@ -91,169 +128,182 @@ button {
 <script>
 
 /* =========================
-   STATE MODEL (WITH SENSITIVITY)
+   CORE STATE
 ========================= */
 
-const state = {
-  FX:  { value:0, sens:0.7 },
-  DC:  { value:0, sens:0.9 },
-  CYB: { value:0, sens:0.8 },
-  INF: { value:0, sens:0.85 }
+const NODES = {
+  FX:{value:0,sens:0.7},
+  DC:{value:0,sens:0.9},
+  CYB:{value:0,sens:0.8},
+  INF:{value:0,sens:0.85}
 };
 
-const links = {
-  FX:"DC",
-  DC:"CYB",
-  CYB:"INF",
-  INF:"FX"
+const EDGES = [
+  {from:"FX",to:"DC",w:0.8},
+  {from:"DC",to:"CYB",w:0.7},
+  {from:"CYB",to:"INF",w:0.6},
+  {from:"INF",to:"FX",w:0.5}
+];
+
+const SCENARIOS = {
+  BOND_CRISIS:{FX:35,DC:10,CYB:5},
+  CYBER_WAR:{CYB:40,DC:25,INF:10},
+  GRID_FAILURE:{INF:50,DC:20,FX:15}
 };
 
-const queue = [];
-let log = [];
-
-const threshold = 30;
-
-/* =========================
-   INPUT LAYER
-========================= */
-
-function enqueue(type){
-  queue.push({ type, value: 6 });
-  audit("ENQUEUE", {type});
-}
-
-/* =========================
-   PROCESS QUEUE
-========================= */
-
-function processQueue(){
-  while(queue.length > 0){
-    const e = queue.shift();
-    state[e.type].value += e.value;
+const SCENARIO_DOCS = {
+  BOND_CRISIS:{
+    objective:"Simulate sovereign bond stress propagation.",
+    assumptions:["FX leads shock","DC liquidity impact","CYB secondary stress"],
+    expected:"FX → DC cascade likely"
+  },
+  CYBER_WAR:{
+    objective:"Cyber disruption propagation model.",
+    assumptions:["CYB primary shock","infra degradation follows"],
+    expected:"CYB dominates system instability"
+  },
+  GRID_FAILURE:{
+    objective:"Infrastructure failure propagation.",
+    assumptions:["INF primary shock source"],
+    expected:"INF → DC → FX reverse cascade possible"
   }
-}
+};
+
+let log=[];
 
 /* =========================
-   PROBABILISTIC CASCADE ENGINE
+   SCENARIO ENGINE
 ========================= */
 
-function cascade(){
-
-  for(let from in state){
-
-    const fromNode = state[from];
-    if(fromNode.value < threshold) continue;
-
-    const to = links[from];
-
-    const toNode = state[to];
-
-    // 🔥 probability formula (core upgrade)
-    const probability =
-      (fromNode.value / 100) *
-      fromNode.sens *
-      toNode.sens;
-
-    const roll = Math.random();
-
-    if(roll < probability){
-
-      const impact = 5 + Math.random() * 5;
-      toNode.value += impact;
-
-      audit("CASCADE", {
-        from,
-        to,
-        roll: roll.toFixed(3),
-        p: probability.toFixed(3),
-        impact: impact.toFixed(1)
-      });
-    }
+function runScenario(name){
+  const s = SCENARIOS[name];
+  for(let k in s){
+    NODES[k].value += s[k];
   }
-}
-
-/* =========================
-   TIME ENGINE (NONLINEAR DECAY)
-========================= */
-
-function tick(){
-
-  processQueue();
-  cascade();
-
-  for(let k in state){
-    state[k].value *= 0.97; // soft decay
-    state[k].value = Math.max(0, state[k].value);
-  }
-
+  audit("SCENARIO",{name});
   render();
 }
 
-setInterval(tick, 1000);
+/* =========================
+   INJECT
+========================= */
+
+function inject(n){
+  NODES[n].value += 10;
+  audit("INJECT",{n});
+}
+
+/* =========================
+   CASCADE ENGINE
+========================= */
+
+function cascade(){
+  EDGES.forEach(e=>{
+    const f=NODES[e.from];
+    const t=NODES[e.to];
+
+    const p = f.value * e.w * t.sens / 100;
+
+    if(Math.random()<p){
+      t.value += 5;
+      audit("CASCADE",{from:e.from,to:e.to});
+    }
+  });
+}
+
+/* =========================
+   TICK
+========================= */
+
+function tick(){
+  for(let k in NODES){
+    NODES[k].value *= 0.97;
+  }
+  cascade();
+  render();
+}
+
+setInterval(tick,1000);
 
 /* =========================
    RESET
 ========================= */
 
 function reset(){
-  for(let k in state){
-    state[k].value = 0;
+  for(let k in NODES){
+    NODES[k].value=0;
   }
-  queue.length = 0;
   audit("RESET",{});
+  render();
 }
 
 /* =========================
    AUDIT
 ========================= */
 
-function audit(type, data){
+function audit(type,data){
   log.push({
-    time: new Date().toLocaleTimeString(),
+    time:new Date().toISOString(),
     type,
-    data
+    data,
+    snapshot:{
+      FX:NODES.FX.value,
+      DC:NODES.DC.value,
+      CYB:NODES.CYB.value,
+      INF:NODES.INF.value
+    }
   });
 }
 
 /* =========================
-   STABILITY ENGINE
+   EXPLAIN MODE
 ========================= */
 
-function stability(){
+let explain=false;
 
-  let avg =
-    (state.FX.value +
-     state.DC.value +
-     state.CYB.value +
-     state.INF.value) / 4;
-
-  let vol =
-    Math.abs(state.FX.value - state.DC.value) +
-    Math.abs(state.CYB.value - state.INF.value);
-
-  return Math.max(0, 100 - avg*1.5 - vol*0.5);
+function toggleExplain(){
+  explain=!explain;
+  alert("Explain Mode: "+(explain?"ON":"OFF"));
 }
 
 /* =========================
-   RENDER ENGINE
+   SCENARIO INFO
+========================= */
+
+function loadScenarioInfo(){
+  const key=document.getElementById("scenarioInfo").value;
+  const s=SCENARIO_DOCS[key];
+
+  document.getElementById("scenarioPanel").innerHTML=
+  `<b>${key}</b><br>
+  Objective: ${s.objective}<br><br>
+  Assumptions:<br>${s.assumptions.map(a=>"• "+a).join("<br>")}<br><br>
+  Expected: ${s.expected}`;
+}
+
+/* =========================
+   EXPORT
+========================= */
+
+function exportAudit(){
+  const blob=new Blob([JSON.stringify(log,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="SPD_v11_OJK_AUDIT.json";
+  a.click();
+}
+
+/* =========================
+   RENDER
 ========================= */
 
 function render(){
+  FX.innerText=NODES.FX.value.toFixed(1);
+  DC.innerText=NODES.DC.value.toFixed(1);
+  CYB.innerText=NODES.CYB.value.toFixed(1);
+  INF.innerText=NODES.INF.value.toFixed(1);
 
-  FX.innerText  = state.FX.value.toFixed(1);
-  DC.innerText  = state.DC.value.toFixed(1);
-  CYB.innerText = state.CYB.value.toFixed(1);
-  INF.innerText = state.INF.value.toFixed(1);
-
-  let s = stability();
-
-  status.innerText =
-    s > 70 ? "STATUS: STABLE" :
-    s > 40 ? "STATUS: UNSTABLE" :
-    s > 20 ? "STATUS: CRITICAL" :
-             "STATUS: BLACKOUT";
-
-  audit.innerHTML = log.slice(-12).map(e =>
+  audit.innerHTML=log.slice(-10).map(e=>
     `[${e.time}] ${e.type}`
   ).join("<br>");
 }
