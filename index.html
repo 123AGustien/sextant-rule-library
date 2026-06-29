@@ -2,15 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD COCKPIT HUD v1.2</title>
+<title>SPD COCKPIT HUD v1.3</title>
 
 <style>
 body {
   margin: 0;
-  background: #04070b;
+  background: #03060a;
   color: #cfe8ff;
   font-family: Arial, sans-serif;
   overflow: hidden;
+}
+
+/* GRID OVERLAY (cockpit feel) */
+body::before {
+  content: "";
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
 }
 
 /* TOP BAR */
@@ -62,6 +75,7 @@ button:hover {
   background: #050b12;
 }
 
+/* CANVAS */
 canvas {
   background: #070f18;
   border: 1px solid #1c2c3c;
@@ -77,16 +91,28 @@ canvas {
   line-height: 1.4;
 }
 
+/* STATUS */
 .good { color: #3dffb5; }
 .warn { color: #ffd166; }
 .bad  { color: #ff4d6d; }
+
+/* STRESS FLICKER */
+@keyframes flicker {
+  0% { opacity: 1; }
+  50% { opacity: 0.92; }
+  100% { opacity: 1; }
+}
+
+.stressed-flicker {
+  animation: flicker 0.12s infinite;
+}
 </style>
 </head>
 
 <body>
 
 <div class="top">
-  <div>🛰 SPD COCKPIT HUD // CASCADE ENGINE</div>
+  <div>🛰 SPD COCKPIT HUD // RULE ENGINE ACTIVE</div>
   <div id="status" class="good">STABLE</div>
 </div>
 
@@ -115,15 +141,15 @@ canvas {
 let state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
 let log = [];
 
-/* CASCADE PATHWAYS */
-const cascadeMap = {
-  FX: ["DC"],
-  DC: ["CYB"],
-  CYB: ["INF"],
-  INF: []
+/* ---------------- RULE LAYER (HOOK) ---------------- */
+const ruleLibrary = {
+  FX: { threshold: 6, affects: { DC: 0.7 } },
+  DC: { threshold: 6, affects: { CYB: 0.6 } },
+  CYB:{ threshold: 6, affects: { INF: 0.5 } },
+  INF: { threshold: 999, affects: {} }
 };
 
-/* LOG */
+/* ---------------- LOG ---------------- */
 function push(msg) {
   const t = new Date().toLocaleTimeString();
   log.push(`[${t}] ${msg}`);
@@ -131,29 +157,31 @@ function push(msg) {
     log.slice(-18).join("<br>");
 }
 
-/* RUN SCENARIO */
+/* ---------------- SCENARIO ---------------- */
 function runScenario(type) {
   applyImpact(type, 2, "USER_EVENT");
   evaluate();
   draw();
 }
 
-/* CASCADE ENGINE */
+/* ---------------- RULE-AWARE CASCADE ENGINE ---------------- */
 function applyImpact(node, value, source) {
   state[node] += value;
   push(`${source} → ${node} +${value}`);
 
-  const next = cascadeMap[node];
+  const rule = ruleLibrary[node];
+  if (!rule) return;
 
-  if (next && next.length > 0) {
-    next.forEach(n => {
-      const spill = Math.max(1, Math.floor(value * 0.6));
-      applyImpact(n, spill, `CASCADE(${node})`);
+  // trigger rule-based cascade if threshold exceeded
+  if (state[node] >= rule.threshold) {
+    Object.entries(rule.affects).forEach(([target, factor]) => {
+      const spill = Math.max(1, Math.floor(value * factor));
+      applyImpact(target, spill, `RULE(${node})`);
     });
   }
 }
 
-/* RESET */
+/* ---------------- RESET ---------------- */
 function resetSystem() {
   state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
   push("SYSTEM RESET");
@@ -161,10 +189,13 @@ function resetSystem() {
   draw();
 }
 
-/* STATUS */
+/* ---------------- STATUS ENGINE ---------------- */
 function evaluate() {
   const total = Object.values(state).reduce((a,b)=>a+b,0);
   const s = document.getElementById("status");
+  const body = document.body;
+
+  body.classList.remove("stressed-flicker");
 
   if (total < 8) {
     s.textContent = "STABLE";
@@ -175,10 +206,11 @@ function evaluate() {
   } else {
     s.textContent = "STRESSED";
     s.className = "bad";
+    body.classList.add("stressed-flicker"); // visual layer restore
   }
 }
 
-/* GRAPH */
+/* ---------------- GRAPH (COCKPIT STYLE) ---------------- */
 function draw() {
   const c = document.getElementById("graph");
   const x = c.getContext("2d");
@@ -190,10 +222,14 @@ function draw() {
   const max = Math.max(...vals, 5);
 
   keys.forEach((k, i) => {
-    const bar = (vals[i] / max) * 210;
+    const ratio = vals[i] / max;
+    const bar = ratio * 210;
     const xpos = 60 + i * 100;
 
-    x.fillStyle = "#00ffd5";
+    // glow intensity (cockpit restoration)
+    const glow = Math.min(255, vals[i] * 18);
+
+    x.fillStyle = `rgb(${glow}, ${255 - glow}, 255)`;
     x.fillRect(xpos, 240 - bar, 40, bar);
 
     x.fillStyle = "#cfe8ff";
