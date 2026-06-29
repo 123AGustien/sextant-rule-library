@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v10.4 COCKPIT - FINAL SIMULATION ENGINE</title>
+<title>SPD v10.4.1 COCKPIT - STABLE FINAL ENGINE</title>
 
 <style>
 body {
@@ -71,7 +71,6 @@ button {
   padding: 10px;
 }
 
-/* simple graph */
 .graph {
   display: flex;
   justify-content: center;
@@ -96,16 +95,16 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v10.4 FINAL // RESILIENCE SIMULATION CORE
+🛰 SPD v10.4.1 FINAL // STABLE RESILIENCE ENGINE
 </div>
 
 <div id="statusBar">STATUS: INITIALIZING</div>
 
 <div class="panel">
-  <div class="card">FX<div class="value" id="fx">0</div></div>
-  <div class="card">DC<div class="value" id="dc">0</div></div>
-  <div class="card">CYB<div class="value" id="cyb">0</div></div>
-  <div class="card">INF<div class="value" id="inf">0</div></div>
+  <div class="card">FX<div class="value" id="fx"></div></div>
+  <div class="card">DC<div class="value" id="dc"></div></div>
+  <div class="card">CYB<div class="value" id="cyb"></div></div>
+  <div class="card">INF<div class="value" id="inf"></div></div>
 </div>
 
 <div class="graph">
@@ -129,6 +128,19 @@ button {
 <script>
 
 /* =========================
+   DOM CACHE (FIXED)
+========================= */
+
+const el = {
+  fx: document.getElementById("fx"),
+  dc: document.getElementById("dc"),
+  cyb: document.getElementById("cyb"),
+  inf: document.getElementById("inf"),
+  statusBar: document.getElementById("statusBar"),
+  audit: document.getElementById("audit")
+};
+
+/* =========================
    STATE ENGINE
 ========================= */
 
@@ -146,11 +158,15 @@ const link = {
 let log = [];
 
 /* =========================
-   AUDIT
+   AUDIT ENGINE
 ========================= */
 
 function audit(type, data){
-  log.push({ time: Date.now(), type, data });
+  log.push({
+    time: new Date(),
+    type,
+    data
+  });
 }
 
 /* =========================
@@ -168,7 +184,7 @@ function cascade(from){
 }
 
 /* =========================
-   USER ACTION
+   USER ENGINE
 ========================= */
 
 function trigger(type){
@@ -179,12 +195,13 @@ function trigger(type){
 }
 
 /* =========================
-   SHOCK
+   SHOCK ENGINE
 ========================= */
 
 function shock(){
   const keys = Object.keys(state);
   const r = keys[Math.floor(Math.random()*4)];
+
   state[r] += 20;
   audit("SHOCK",{r});
   cascade(r);
@@ -197,23 +214,25 @@ function shock(){
 
 function tick(){
   for(let k in state){
-    state[k] = Math.max(0, state[k]-0.4);
+    state[k] = Math.max(0, state[k] - 0.4);
   }
+
   for(let k in state){
     cascade(k);
   }
+
   render();
 }
 
 setInterval(tick, 1000);
 
 /* =========================
-   STABILITY
+   STABILITY ENGINE
 ========================= */
 
 function stability(){
-  const avg = (state.FX+state.DC+state.CYB+state.INF)/4;
-  return Math.max(0,100-avg*2);
+  const avg = (state.FX + state.DC + state.CYB + state.INF)/4;
+  return Math.max(0, 100 - avg*2);
 }
 
 /* =========================
@@ -222,27 +241,28 @@ function stability(){
 
 function render(){
 
-  fx.innerText = state.FX.toFixed(1);
-  dc.innerText = state.DC.toFixed(1);
-  cyb.innerText = state.CYB.toFixed(1);
-  inf.innerText = state.INF.toFixed(1);
+  el.fx.innerText = state.FX.toFixed(1);
+  el.dc.innerText = state.DC.toFixed(1);
+  el.cyb.innerText = state.CYB.toFixed(1);
+  el.inf.innerText = state.INF.toFixed(1);
 
   let s = stability();
 
-  statusBar.innerText =
-    s>70?"STATUS: STABLE":
-    s>40?"STATUS: UNSTABLE":
-    s>20?"STATUS: CRITICAL":"STATUS: BLACKOUT";
+  el.statusBar.innerText =
+    s > 70 ? "STATUS: STABLE" :
+    s > 40 ? "STATUS: UNSTABLE" :
+    s > 20 ? "STATUS: CRITICAL" : "STATUS: BLACKOUT";
 
   renderGraph();
   renderAudit();
 }
 
 /* =========================
-   GRAPH VISUAL STATE
+   GRAPH ENGINE
 ========================= */
 
 function renderGraph(){
+
   const nodes = {
     nFX: state.FX,
     nDC: state.DC,
@@ -251,23 +271,25 @@ function renderGraph(){
   };
 
   for(let n in nodes){
-    let v = nodes[n];
-    let el = document.getElementById(n);
+    const v = nodes[n];
+    const node = document.getElementById(n);
 
-    el.style.transform = `scale(${1 + v/50})`;
-    el.style.background = v>40 ? "#ff3b3b" :
-                          v>20 ? "#ffb020" :
-                          "#1f3b5c";
+    node.style.transform = `scale(${1 + v/50})`;
+
+    node.style.background =
+      v > 40 ? "#ff3b3b" :
+      v > 20 ? "#ffb020" :
+      "#1f3b5c";
   }
 }
 
 /* =========================
-   AUDIT VIEW
+   AUDIT ENGINE
 ========================= */
 
 function renderAudit(){
-  audit.innerHTML = log.slice(-10).map(e =>
-    `[${new Date(e.time).toLocaleTimeString()}] ${e.type}`
+  el.audit.innerHTML = log.slice(-12).map(e =>
+    `[${e.time.toLocaleTimeString()}] ${e.type}`
   ).join("<br>");
 }
 
@@ -276,7 +298,7 @@ function renderAudit(){
 ========================= */
 
 function reset(){
-  for(let k in state) state[k]=0;
+  for(let k in state) state[k] = 0;
   audit("RESET",{});
   render();
 }
@@ -285,13 +307,6 @@ function reset(){
 render();
 
 </script>
-
-<div id="audit"></div>
-<div id="fx"></div>
-<div id="dc"></div>
-<div id="cyb"></div>
-<div id="inf"></div>
-<div id="statusBar"></div>
 
 </body>
 </html>
