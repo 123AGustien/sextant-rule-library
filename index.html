@@ -5,8 +5,6 @@
 <title>SPD v11 LIVE | Resilience Simulation Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="styles.css">
-
 <style>
 body{
     margin:0;
@@ -34,9 +32,7 @@ body{
 .health-strip{
     display:flex;
     justify-content:space-between;
-    flex-wrap:wrap;
     padding:10px 18px;
-    border-bottom:1px solid #1f2937;
     font-size:12px;
     color:#9ca3af;
 }
@@ -58,15 +54,9 @@ body{
     padding:14px;
 }
 
-.panel h2{
-    margin-top:0;
-    color:#93c5fd;
-    font-size:16px;
-}
-
 button{
     margin:6px;
-    padding:8px 10px;
+    padding:8px;
     background:#0b1220;
     color:white;
     border:1px solid #374151;
@@ -82,8 +72,7 @@ button:hover{
     background:#0b1220;
     border-radius:8px;
     padding:10px;
-    min-height:90px;
-    overflow:auto;
+    min-height:80px;
     font-size:12px;
 }
 
@@ -93,67 +82,60 @@ canvas{
     background:#0b1220;
     border-radius:8px;
 }
-
-.score{
-    font-size:32px;
-    font-weight:bold;
-}
 </style>
 
 </head>
 
 <body>
 
-<div class="header">
-🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE v11
-</div>
+<div class="header">🛰 SPD PILOT SYSTEM · v11</div>
 
 <div class="status-bar">
-● SYSTEM ONLINE | Simulation Kernel Active | Cascade Engine Ready
+SYSTEM ONLINE | Simulation Kernel Active
 </div>
 
 <div class="health-strip">
-<div>Core: <span class="online">ONLINE</span></div>
-<div>FX Module: <span class="online">STABLE</span></div>
-<div>Infra: <span class="warn">MONITORING</span></div>
-<div>Cyber: <span class="online">READY</span></div>
+<div>FX: <span class="online">ONLINE</span></div>
+<div>DC: <span class="online">STABLE</span></div>
+<div>CYB: <span class="warn">MONITORING</span></div>
+<div>INF: <span class="online">READY</span></div>
 </div>
 
 <div class="grid">
 
 <div class="panel">
 <h2>Core Engine</h2>
-<button onclick="runScenario('FX')">FX Stress</button>
-<button onclick="runScenario('DC')">Cooling Failure</button>
-<button onclick="runScenario('CYB')">Ransomware</button>
-<button onclick="runScenario('INF')">Network Outage</button>
+<button onclick="runScenario('FX')">FX</button>
+<button onclick="runScenario('DC')">DC</button>
+<button onclick="runScenario('CYB')">CYB</button>
+<button onclick="runScenario('INF')">INF</button>
 </div>
 
 <div class="panel">
-<h2>Event Injection</h2>
+<h2>Events</h2>
 <button onclick="injectEvent('FX_SPIKE')">FX Spike</button>
-<button onclick="injectEvent('BOND_STRESS')">Bond Stress</button>
-<button onclick="injectEvent('CYBER_ATTACK')">Cyber Attack</button>
-<button onclick="injectEvent('INFRA_FAILURE')">Infra Failure</button>
+<button onclick="injectEvent('BOND_STRESS')">Bond</button>
+<button onclick="injectEvent('CYBER_ATTACK')">Cyber</button>
+<button onclick="injectEvent('INFRA_FAILURE')">Infra</button>
 </div>
 
 <div class="panel">
-<h2>System Output</h2>
+<h2>Output</h2>
 <div id="output">READY</div>
 </div>
 
 <div class="panel">
-<h2>Cascade Graph</h2>
+<h2>Graph</h2>
 <canvas id="graph"></canvas>
 </div>
 
 <div class="panel">
-<h2>Live Diagnostics</h2>
-<pre id="diag">Idle...</pre>
+<h2>Diagnostics</h2>
+<pre id="diag">Idle</pre>
 </div>
 
 <div class="panel">
-<h2>Audit Log</h2>
+<h2>Audit</h2>
 <button onclick="showAudit()">Show</button>
 <button onclick="clearAudit()">Clear</button>
 <pre id="audit"></pre>
@@ -161,11 +143,10 @@ canvas{
 
 </div>
 
-<!-- LOAD ORDER FIXED -->
+<!-- IMPORTANT LOAD ORDER -->
 <script src="engine-core.js"></script>
 <script src="engine-ui.js"></script>
 <script src="cascade-graph.js"></script>
-<script src="dependency-lock.js"></script>
 <script src="boot.js"></script>
 
 </body>
