@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD COCKPIT HUD</title>
+<title>SPD COCKPIT HUD v1.2</title>
 
 <style>
 body {
@@ -13,7 +13,7 @@ body {
   overflow: hidden;
 }
 
-/* TOP STRIP */
+/* TOP BAR */
 .top {
   height: 38px;
   background: #0a111a;
@@ -23,17 +23,16 @@ body {
   align-items: center;
   padding: 0 12px;
   font-size: 12px;
-  letter-spacing: 0.5px;
 }
 
-/* MAIN GRID - COMPACT HUD */
+/* GRID */
 .grid {
   display: grid;
   grid-template-columns: 200px 1fr 240px;
   height: calc(100vh - 38px);
 }
 
-/* LEFT HUD PANEL */
+/* LEFT */
 .left {
   background: #070d14;
   border-right: 1px solid #1b2a3a;
@@ -55,7 +54,7 @@ button:hover {
   background: #16283a;
 }
 
-/* CENTER HUD */
+/* CENTER */
 .center {
   display: flex;
   align-items: center;
@@ -68,7 +67,7 @@ canvas {
   border: 1px solid #1c2c3c;
 }
 
-/* RIGHT TELEMETRY */
+/* RIGHT */
 .right {
   background: #070d14;
   border-left: 1px solid #1b2a3a;
@@ -78,41 +77,36 @@ canvas {
   line-height: 1.4;
 }
 
-/* STATUS COLORS */
 .good { color: #3dffb5; }
 .warn { color: #ffd166; }
 .bad  { color: #ff4d6d; }
-
-.status {
-  font-size: 11px;
-}
 </style>
 </head>
 
 <body>
 
 <div class="top">
-  <div>🛰 SPD COCKPIT HUD // SIM ENGINE</div>
-  <div id="status" class="status good">STABLE</div>
+  <div>🛰 SPD COCKPIT HUD // CASCADE ENGINE</div>
+  <div id="status" class="good">STABLE</div>
 </div>
 
 <div class="grid">
 
-  <!-- LEFT CONTROLS -->
+  <!-- LEFT -->
   <div class="left">
     <button onclick="runScenario('FX')">FX STRESS</button>
     <button onclick="runScenario('DC')">DC LOAD</button>
-    <button onclick="runScenario('CYB')">CYBER HIT</button>
+    <button onclick="runScenario('CYB')">CYBER EVENT</button>
     <button onclick="runScenario('INF')">INFRA STRAIN</button>
-    <button onclick="reset()">RESET</button>
+    <button onclick="resetSystem()">RESET</button>
   </div>
 
-  <!-- CENTER GRAPH -->
+  <!-- CENTER -->
   <div class="center">
     <canvas id="graph" width="480" height="260"></canvas>
   </div>
 
-  <!-- RIGHT TELEMETRY -->
+  <!-- RIGHT -->
   <div class="right" id="log"></div>
 
 </div>
@@ -121,64 +115,93 @@ canvas {
 let state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
 let log = [];
 
+/* CASCADE PATHWAYS */
+const cascadeMap = {
+  FX: ["DC"],
+  DC: ["CYB"],
+  CYB: ["INF"],
+  INF: []
+};
+
+/* LOG */
 function push(msg) {
   const t = new Date().toLocaleTimeString();
   log.push(`[${t}] ${msg}`);
-  document.getElementById("log").innerHTML = log.slice(-18).join("<br>");
+  document.getElementById("log").innerHTML =
+    log.slice(-18).join("<br>");
 }
 
+/* RUN SCENARIO */
 function runScenario(type) {
-  state[type] += 2;
-  push("EVENT >> " + type);
+  applyImpact(type, 2, "USER_EVENT");
   evaluate();
   draw();
 }
 
-function reset() {
+/* CASCADE ENGINE */
+function applyImpact(node, value, source) {
+  state[node] += value;
+  push(`${source} → ${node} +${value}`);
+
+  const next = cascadeMap[node];
+
+  if (next && next.length > 0) {
+    next.forEach(n => {
+      const spill = Math.max(1, Math.floor(value * 0.6));
+      applyImpact(n, spill, `CASCADE(${node})`);
+    });
+  }
+}
+
+/* RESET */
+function resetSystem() {
   state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
   push("SYSTEM RESET");
   evaluate();
   draw();
 }
 
+/* STATUS */
 function evaluate() {
   const total = Object.values(state).reduce((a,b)=>a+b,0);
   const s = document.getElementById("status");
 
   if (total < 8) {
     s.textContent = "STABLE";
-    s.className = "status good";
-  } else if (total < 15) {
+    s.className = "good";
+  } else if (total < 18) {
     s.textContent = "DEGRADED";
-    s.className = "status warn";
+    s.className = "warn";
   } else {
     s.textContent = "STRESSED";
-    s.className = "status bad";
+    s.className = "bad";
   }
 }
 
+/* GRAPH */
 function draw() {
   const c = document.getElementById("graph");
   const x = c.getContext("2d");
 
-  x.clearRect(0,0,c.width,c.height);
+  x.clearRect(0, 0, c.width, c.height);
 
   const keys = Object.keys(state);
   const vals = Object.values(state);
   const max = Math.max(...vals, 5);
 
-  keys.forEach((k,i)=>{
-    const bar = (vals[i]/max)*210;
-    const xpos = 60 + i*100;
+  keys.forEach((k, i) => {
+    const bar = (vals[i] / max) * 210;
+    const xpos = 60 + i * 100;
 
     x.fillStyle = "#00ffd5";
-    x.fillRect(xpos, 240-bar, 40, bar);
+    x.fillRect(xpos, 240 - bar, 40, bar);
 
     x.fillStyle = "#cfe8ff";
-    x.fillText(k, xpos+8, 255);
+    x.fillText(k, xpos + 8, 255);
   });
 }
 
+/* INIT */
 evaluate();
 draw();
 </script>
