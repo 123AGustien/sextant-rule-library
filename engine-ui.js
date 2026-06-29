@@ -1,54 +1,65 @@
- /***********************
-  * SPD UI ENGINE v12
-  ***********************/
+/***********************
+ * SPD CORE ENGINE v12
+ ***********************/
 
-window.updateUI = function () {
-
-  const out = document.getElementById("output");
-  const diag = document.getElementById("diag");
-
-  if (out) {
-    out.innerHTML =
-      "FX : " + window.state.FX + "<br>" +
-      "DC : " + window.state.DC + "<br>" +
-      "CYB : " + window.state.CYB + "<br>" +
-      "INF : " + window.state.INF;
-  }
-
-  if (diag) {
-    diag.innerText =
-      "SYSTEM DIAGNOSTICS\n\n" +
-      JSON.stringify(window.state, null, 2);
-  }
+window.state = {
+  FX: 0,
+  DC: 0,
+  CYB: 0,
+  INF: 0
 };
 
-window.updateResilienceScore = function () {
+window.auditLog = [];
 
-  let score = 100;
-
-  score -= window.state.FX * 5;
-  score -= window.state.DC * 5;
-  score -= window.state.CYB * 5;
-  score -= window.state.INF * 5;
-
-  if (score < 0) score = 0;
-
-  const el = document.getElementById("output");
-
-  if (el) {
-    el.innerHTML += "<br><br>Resilience: " + score + "%";
-  }
+window.audit = function (type, payload) {
+  window.auditLog.push({
+    time: new Date().toISOString(),
+    type,
+    payload
+  });
 };
 
-window.showAudit = function () {
-  const el = document.getElementById("audit");
-  if (!el) return;
+function ensure(type) {
+  if (!window.state[type]) window.state[type] = 0;
+}
 
-  el.textContent = JSON.stringify(window.auditLog, null, 2);
+window.runScenario = function (type) {
+
+  ensure(type);
+  window.state[type] += 2;
+
+  window.audit("SCENARIO", {
+    type,
+    state: { ...window.state }
+  });
+
+  window.updateUI?.();
+  window.updateGraph?.(window.state);
+  window.updateResilienceScore?.();
 };
 
-window.clearAudit = function () {
-  window.auditLog = [];
-  const el = document.getElementById("audit");
-  if (el) el.textContent = "CLEARED";
+window.injectEvent = function (event) {
+
+  const map = {
+    FX_SPIKE: "FX",
+    BOND_STRESS: "DC",
+    CYBER_ATTACK: "CYB",
+    INFRA_FAILURE: "INF"
+  };
+
+  const t = map[event];
+  if (!t) return;
+
+  ensure(t);
+  window.state[t] += 3;
+
+  window.audit("EVENT", {
+    event,
+    target: t,
+    state: { ...window.state }
+  });
+
+  window.updateUI?.();
+  window.updateGraph?.(window.state);
+  window.updateResilienceScore?.();
 };
