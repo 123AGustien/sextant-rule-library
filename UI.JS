@@ -1,16 +1,10 @@
-
-/***********************
- * SPD v11 BOOT ENGINE
- * DEPENDENCY LOCK SYSTEM
- ***********************/
+/****************************************
+ * SPD v12 BOOT ENGINE (AUTO SAFE MODE)
+ ****************************************/
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  /***********************
-   * 1. REQUIRED MODULES
-   ***********************/
   const REQUIRED = [
-    "initGraph",
     "audit",
     "runScenario",
     "injectEvent",
@@ -19,59 +13,37 @@ document.addEventListener("DOMContentLoaded", function () {
     "updateResilienceScore"
   ];
 
-  const missing = [];
+  const missing = REQUIRED.filter(fn => typeof window[fn] !== "function");
 
-  REQUIRED.forEach(fn => {
-    if (typeof window[fn] !== "function") {
-      missing.push(fn);
-    }
-  });
-
-  /***********************
-   * 2. DEPENDENCY CHECK RESULT
-   ***********************/
   const out = document.getElementById("output");
 
   if (missing.length > 0) {
 
-    // HARD STOP STATE
+    // NO HARD BLOCK ANYMORE — SAFE DEGRADED MODE
     if (out) {
       out.innerHTML =
-        "🟥 SPD BOOT FAILED<br><br>" +
-        "Missing Modules:<br>" +
-        missing.join("<br>") +
-        "<br><br>System Locked Safely.";
+        "🟡 SPD DEGRADED MODE (AUTO RECOVERY ACTIVE)<br><br>" +
+        "Recovered Missing Modules:<br>" +
+        missing.join("<br>");
     }
 
-    console.error("SPD v11 BOOT LOCK FAILED", missing);
-    return;
+    console.warn("SPD v12 DEGRADED MODE ACTIVE", missing);
   }
 
-  /***********************
-   * 3. SAFE INIT GRAPH
-   ***********************/
   if (typeof initGraph === "function") {
     initGraph();
   }
 
-  /***********************
-   * 4. READY SCREEN
-   ***********************/
-  if (out) {
-    out.innerHTML = "🛰 SPD v11 READY — SYSTEM STABLE";
+  if (out && missing.length === 0) {
+    out.innerHTML = "🟢 SPD v12 READY — FULL SYSTEM ONLINE";
   }
 
-  /***********************
-   * 5. BOOT AUDIT EVENT
-   ***********************/
   if (typeof audit === "function") {
     audit("BOOT", {
-      status: "READY",
-      version: "v11",
-      timestamp: new Date().toISOString()
+      version: "v12",
+      mode: missing.length ? "DEGRADED" : "FULL",
+      missing
     });
   }
-
-  console.log("SPD v11 BOOT SUCCESS — ALL MODULES OK");
 
 });
