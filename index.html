@@ -1,4 +1,297 @@
-🛰 SPD COCKPIT v10.1 // MULTI-LAYER ENGINE
-STABLE
-FX STRESS DC LOAD CYBER EVENT INFRA STRAIN RESET
-[00:03:02] SYSTEM ONLINE - MULTI-LAYER ENGINE READY
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v10.4 COCKPIT - FINAL SIMULATION ENGINE</title>
+
+<style>
+body {
+  margin: 0;
+  background: #05070b;
+  color: #cfe8ff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.header {
+  padding: 12px;
+  background: #0b1220;
+  font-size: 14px;
+}
+
+.panel {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+}
+
+.card {
+  background: #0e1a2b;
+  padding: 20px;
+  width: 20%;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.value {
+  font-size: 28px;
+  margin-top: 10px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px;
+}
+
+button {
+  padding: 8px 12px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+#statusBar {
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  background: #0a0f18;
+}
+
+#audit {
+  position: absolute;
+  bottom: 0;
+  height: 140px;
+  width: 100%;
+  background: #0a0f18;
+  overflow-y: auto;
+  font-size: 12px;
+  padding: 10px;
+}
+
+/* simple graph */
+.graph {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 10px;
+}
+
+.node {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #1f3b5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.3s;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+🛰 SPD v10.4 FINAL // RESILIENCE SIMULATION CORE
+</div>
+
+<div id="statusBar">STATUS: INITIALIZING</div>
+
+<div class="panel">
+  <div class="card">FX<div class="value" id="fx">0</div></div>
+  <div class="card">DC<div class="value" id="dc">0</div></div>
+  <div class="card">CYB<div class="value" id="cyb">0</div></div>
+  <div class="card">INF<div class="value" id="inf">0</div></div>
+</div>
+
+<div class="graph">
+  <div class="node" id="nFX">FX</div>
+  <div class="node" id="nDC">DC</div>
+  <div class="node" id="nCYB">CYB</div>
+  <div class="node" id="nINF">INF</div>
+</div>
+
+<div class="buttons">
+  <button onclick="trigger('FX')">FX STRESS</button>
+  <button onclick="trigger('DC')">DC LOAD</button>
+  <button onclick="trigger('CYB')">CYBER EVENT</button>
+  <button onclick="trigger('INF')">INFRA STRAIN</button>
+  <button onclick="shock()">SHOCK</button>
+  <button onclick="reset()">RESET</button>
+</div>
+
+<div id="audit"></div>
+
+<script>
+
+/* =========================
+   STATE ENGINE
+========================= */
+
+const state = { FX:0, DC:0, CYB:0, INF:0 };
+
+const threshold = 30;
+
+const link = {
+  FX:"DC",
+  DC:"CYB",
+  CYB:"INF",
+  INF:"FX"
+};
+
+let log = [];
+
+/* =========================
+   AUDIT
+========================= */
+
+function audit(type, data){
+  log.push({ time: Date.now(), type, data });
+}
+
+/* =========================
+   CASCADE ENGINE
+========================= */
+
+function cascade(from){
+  const to = link[from];
+
+  if(state[from] >= threshold){
+    state[to] += 2;
+    audit("CASCADE",{from,to});
+    cascade(to);
+  }
+}
+
+/* =========================
+   USER ACTION
+========================= */
+
+function trigger(type){
+  state[type] += 6;
+  audit("USER", {type});
+  cascade(type);
+  render();
+}
+
+/* =========================
+   SHOCK
+========================= */
+
+function shock(){
+  const keys = Object.keys(state);
+  const r = keys[Math.floor(Math.random()*4)];
+  state[r] += 20;
+  audit("SHOCK",{r});
+  cascade(r);
+  render();
+}
+
+/* =========================
+   TIME ENGINE
+========================= */
+
+function tick(){
+  for(let k in state){
+    state[k] = Math.max(0, state[k]-0.4);
+  }
+  for(let k in state){
+    cascade(k);
+  }
+  render();
+}
+
+setInterval(tick, 1000);
+
+/* =========================
+   STABILITY
+========================= */
+
+function stability(){
+  const avg = (state.FX+state.DC+state.CYB+state.INF)/4;
+  return Math.max(0,100-avg*2);
+}
+
+/* =========================
+   RENDER ENGINE
+========================= */
+
+function render(){
+
+  fx.innerText = state.FX.toFixed(1);
+  dc.innerText = state.DC.toFixed(1);
+  cyb.innerText = state.CYB.toFixed(1);
+  inf.innerText = state.INF.toFixed(1);
+
+  let s = stability();
+
+  statusBar.innerText =
+    s>70?"STATUS: STABLE":
+    s>40?"STATUS: UNSTABLE":
+    s>20?"STATUS: CRITICAL":"STATUS: BLACKOUT";
+
+  renderGraph();
+  renderAudit();
+}
+
+/* =========================
+   GRAPH VISUAL STATE
+========================= */
+
+function renderGraph(){
+  const nodes = {
+    nFX: state.FX,
+    nDC: state.DC,
+    nCYB: state.CYB,
+    nINF: state.INF
+  };
+
+  for(let n in nodes){
+    let v = nodes[n];
+    let el = document.getElementById(n);
+
+    el.style.transform = `scale(${1 + v/50})`;
+    el.style.background = v>40 ? "#ff3b3b" :
+                          v>20 ? "#ffb020" :
+                          "#1f3b5c";
+  }
+}
+
+/* =========================
+   AUDIT VIEW
+========================= */
+
+function renderAudit(){
+  audit.innerHTML = log.slice(-10).map(e =>
+    `[${new Date(e.time).toLocaleTimeString()}] ${e.type}`
+  ).join("<br>");
+}
+
+/* =========================
+   RESET
+========================= */
+
+function reset(){
+  for(let k in state) state[k]=0;
+  audit("RESET",{});
+  render();
+}
+
+/* INIT */
+render();
+
+</script>
+
+<div id="audit"></div>
+<div id="fx"></div>
+<div id="dc"></div>
+<div id="cyb"></div>
+<div id="inf"></div>
+<div id="statusBar"></div>
+
+</body>
+</html>
