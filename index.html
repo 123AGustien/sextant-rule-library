@@ -1,135 +1,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>SPD Simulator - Clean Build</title>
+<meta charset="UTF-8" />
+<title>SPD Control System</title>
+
 <style>
-  body {
-    background: #0b0f14;
-    color: #ffffff;
-    font-family: Arial, sans-serif;
-    padding: 20px;
-  }
+body {
+  margin: 0;
+  background: #070b10;
+  color: #e6f1ff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
 
-  .panel {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
+/* HEADER */
+.header {
+  padding: 12px 20px;
+  background: #0e1620;
+  border-bottom: 1px solid #1f2d3a;
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
 
-  button {
-    padding: 10px 15px;
-    background: #1c2b3a;
-    color: white;
-    border: 1px solid #2f4b63;
-    cursor: pointer;
-  }
+/* MAIN GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 220px 1fr 260px;
+  height: calc(100vh - 45px);
+}
 
-  button:hover {
-    background: #27465f;
-  }
+/* LEFT PANEL */
+.left {
+  background: #0b1118;
+  border-right: 1px solid #1f2d3a;
+  padding: 10px;
+}
 
-  canvas {
-    background: #111821;
-    border: 1px solid #2f4b63;
-    margin-top: 10px;
-  }
+button {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px;
+  background: #14202c;
+  border: 1px solid #263a4d;
+  color: white;
+  cursor: pointer;
+}
 
-  #log {
-    margin-top: 15px;
-    font-size: 12px;
-    opacity: 0.8;
-    max-height: 120px;
-    overflow-y: auto;
-  }
+button:hover {
+  background: #1b2c3b;
+}
+
+/* CENTER */
+.center {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+canvas {
+  background: #0c141d;
+  border: 1px solid #223344;
+}
+
+/* RIGHT PANEL */
+.right {
+  background: #0b1118;
+  border-left: 1px solid #1f2d3a;
+  padding: 10px;
+  font-size: 12px;
+  overflow-y: auto;
+}
+
+.log {
+  opacity: 0.85;
+  line-height: 1.4;
+}
 </style>
 </head>
 
 <body>
 
-<h2>🛰 SPD Simulator — Clean Runtime</h2>
-
-<div class="panel">
-  <button onclick="runScenario('FX')">FX Stress</button>
-  <button onclick="runScenario('DC')">DC Load</button>
-  <button onclick="runScenario('CYB')">Cyber Event</button>
-  <button onclick="runScenario('INF')">Infra Strain</button>
+<div class="header">
+  <div>🛰 SPD CONTROL SYSTEM · LIVE</div>
+  <div>STATUS: RUNNING</div>
 </div>
 
-<canvas id="graph" width="320" height="200"></canvas>
+<div class="grid">
 
-<div id="log"></div>
+  <!-- LEFT -->
+  <div class="left">
+    <button onclick="runScenario('FX')">FX STRESS</button>
+    <button onclick="runScenario('DC')">DC LOAD</button>
+    <button onclick="runScenario('CYB')">CYBER EVENT</button>
+    <button onclick="runScenario('INF')">INFRA STRAIN</button>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <canvas id="graph" width="420" height="260"></canvas>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="log" id="log"></div>
+  </div>
+
+</div>
 
 <script>
-let state = {
-  FX: 0,
-  DC: 0,
-  CYB: 0,
-  INF: 0
-};
-
-let auditLog = [];
-
-function audit(type, data) {
-  auditLog.push({ type, data, time: Date.now() });
-
-  document.getElementById("log").innerHTML =
-    auditLog.slice(-5).map(l =>
-      `${l.type}: ${JSON.stringify(l.data)}`
-    ).join("<br>");
-}
+let state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+let log = [];
 
 function runScenario(type) {
   state[type] += 2;
-
-  audit("SCENARIO", { type, state });
-
-  updateGraph(state);
+  pushLog("SCENARIO", type);
+  updateGraph();
 }
 
-function injectEvent(event) {
-  const map = {
-    FX_SPIKE: "FX",
-    BOND_OUTFLOW: "FX",
-    CYBER_ATTACK: "CYB",
-    POWER_FAILURE: "DC",
-    INFRA_STRESS: "INF"
-  };
-
-  const target = map[event];
-  if (!target) return;
-
-  state[target] += 3;
-
-  audit("EVENT", { event, state });
-
-  updateGraph(state);
+function pushLog(tag, msg) {
+  log.push(`${tag}: ${msg}`);
+  document.getElementById("log").innerHTML =
+    log.slice(-12).join("<br>");
 }
 
-function updateGraph(state) {
-  const canvas = document.getElementById("graph");
-  const ctx = canvas.getContext("2d");
+function updateGraph() {
+  const c = document.getElementById("graph");
+  const x = c.getContext("2d");
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  x.clearRect(0, 0, c.width, c.height);
 
   const keys = Object.keys(state);
-  const values = Object.values(state);
-  const max = Math.max(...values, 5);
+  const vals = Object.values(state);
+  const max = Math.max(...vals, 5);
 
   keys.forEach((k, i) => {
-    const x = 40 + i * 70;
-    const barHeight = (state[k] / max) * 150;
+    const bar = (vals[i] / max) * 200;
 
-    ctx.fillStyle = "#00ffd5";
-    ctx.fillRect(x, 180 - barHeight, 30, barHeight);
+    const xPos = 70 + i * 90;
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(k, x, 195);
+    x.fillStyle = "#00ffd5";
+    x.fillRect(xPos, 220 - bar, 40, bar);
+
+    x.fillStyle = "#fff";
+    x.fillText(k, xPos + 8, 240);
   });
 }
 
-// initial render
-updateGraph(state);
+updateGraph();
 </script>
 
 </body>
