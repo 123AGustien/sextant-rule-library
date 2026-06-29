@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v10 COCKPIT - STABLE CORE</title>
+
+<style>
+body {
+  margin: 0;
+  background: #05070b;
+  color: #cfe8ff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.top {
+  padding: 10px;
+  background: #0a111a;
+  border-bottom: 1px solid #1b2a3a;
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 240px;
+  height: calc(100vh - 42px);
+}
+
+.left {
+  background: #070d14;
+  padding: 10px;
+  border-right: 1px solid #1b2a3a;
+}
+
+button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  background: #0f1b28;
+  border: 1px solid #223548;
+  color: #d6ecff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #16283a;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #050b12;
+}
+
+canvas {
+  background: #071019;
+  border: 1px solid #1c2c3c;
+}
+
+.right {
+  background: #070d14;
+  padding: 10px;
+  border-left: 1px solid #1b2a3a;
+  font-size: 11px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
+.good { color: #3dffb5; }
+.warn { color: #ffd166; }
+.bad  { color: #ff4d6d; }
+</style>
+</head>
+
+<body>
+
+<div class="top">
+🛰 SPD COCKPIT v10 // LOCKED STABLE BUILD
+</div>
+
+<div class="grid">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <button onclick="run('FX')">FX STRESS</button>
+    <button onclick="run('DC')">DC LOAD</button>
+    <button onclick="run('CYB')">CYBER EVENT</button>
+    <button onclick="run('INF')">INFRA STRAIN</button>
+    <button onclick="resetSystem()">RESET</button>
+  </div>
+
+  <!-- CENTER GRAPH -->
+  <div class="center">
+    <canvas id="g" width="420" height="260"></canvas>
+  </div>
+
+  <!-- RIGHT LOG -->
+  <div class="right" id="log"></div>
+
+</div>
+
+<script>
+/* =========================
+   CORE STATE
+========================= */
+let state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+let log = [];
+
+/* =========================
+   LOG SYSTEM
+========================= */
+function write(msg) {
+  const t = new Date().toLocaleTimeString();
+  log.push(`[${t}] ${msg}`);
+  document.getElementById("log").innerHTML = log.slice(-12).join("<br>");
+}
+
+/* =========================
+   EVENT ENGINE
+========================= */
+function run(type) {
+  state[type] += 2;
+  write("EVENT → " + type);
+  evaluate();
+  draw();
+}
+
+/* =========================
+   RESET ENGINE
+========================= */
+function resetSystem() {
+  state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+  write("SYSTEM RESET");
+  evaluate();
+  draw();
+}
+
+/* =========================
+   STATUS ENGINE
+========================= */
+function evaluate() {
+  const total = Object.values(state).reduce((a, b) => a + b, 0);
+  const s = document.getElementById("status");
+
+  if (!s) return;
+
+  if (total < 8) {
+    s.textContent = "STABLE";
+    s.className = "good";
+  } else if (total < 18) {
+    s.textContent = "DEGRADED";
+    s.className = "warn";
+  } else {
+    s.textContent = "STRESSED";
+    s.className = "bad";
+  }
+}
+
+/* =========================
+   GRAPH ENGINE (FIXED)
+========================= */
+function draw() {
+  const c = document.getElementById("g");
+  if (!c) return;
+
+  const x = c.getContext("2d");
+  x.clearRect(0, 0, c.width, c.height);
+
+  const keys = Object.keys(state);
+  const values = Object.values(state);
+  const max = Math.max(...values, 5);
+
+  keys.forEach((key, i) => {
+    const value = values[i];
+    const height = (value / max) * 200;
+
+    const xPos = 50 + i * 80;
+
+    x.fillStyle = "#00ffd5";
+    x.fillRect(xPos, 220 - height, 30, height);
+
+    x.fillStyle = "#cfe8ff";
+    x.font = "12px Arial";
+    x.fillText(key, xPos, 240);
+  });
+}
+
+/* =========================
+   INIT
+========================= */
+document.addEventListener("DOMContentLoaded", function () {
+  write("SYSTEM ONLINE - SPD v10 LOCKED");
+  draw();
+});
+</script>
+
+</body>
+</html>
