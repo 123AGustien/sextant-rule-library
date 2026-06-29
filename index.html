@@ -1,9 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v10 COCKPIT - STABLE BASELINE</title>
+
+<style>
+body {
+  margin: 0;
+  background: #05070b;
+  color: #cfe8ff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.top {
+  padding: 10px;
+  background: #0a111a;
+  border-bottom: 1px solid #1b2a3a;
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 240px;
+  height: calc(100vh - 42px);
+}
+
+/* LEFT PANEL */
+.left {
+  background: #070d14;
+  padding: 10px;
+  border-right: 1px solid #1b2a3a;
+}
+
+button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  background: #0f1b28;
+  border: 1px solid #223548;
+  color: #d6ecff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #16283a;
+}
+
+/* CENTER */
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #050b12;
+}
+
+canvas {
+  background: #071019;
+  border: 1px solid #1c2c3c;
+}
+
+/* RIGHT LOG */
+.right {
+  background: #070d14;
+  padding: 10px;
+  border-left: 1px solid #1b2a3a;
+  font-size: 11px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+</style>
+</head>
+
+<body>
+
+<div class="top">
+🛰 SPD COCKPIT v10 // STABLE BASELINE SYSTEM
+</div>
+
+<div class="grid">
+
+  <!-- LEFT -->
+  <div class="left">
+    <button onclick="run('FX')">FX STRESS</button>
+    <button onclick="run('DC')">DC LOAD</button>
+    <button onclick="run('CYB')">CYBER EVENT</button>
+    <button onclick="run('INF')">INFRA STRAIN</button>
+    <button onclick="resetSystem()">RESET</button>
+  </div>
+
+  <!-- CENTER GRAPH -->
+  <div class="center">
+    <canvas id="g" width="420" height="260"></canvas>
+  </div>
+
+  <!-- RIGHT LOG -->
+  <div class="right" id="log"></div>
+
+</div>
+
 <script>
 /* =========================
-   SPD v10 GRAPH ENGINE
-   SAFE STANDALONE MODULE
+   SPD v10 CORE STATE
 ========================= */
+let s = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+let log = [];
 
+/* =========================
+   LOG ENGINE
+========================= */
+function write(msg) {
+  const t = new Date().toLocaleTimeString();
+  log.push(`[${t}] ${msg}`);
+  document.getElementById("log").innerHTML = log.slice(-12).join("<br>");
+}
+
+/* =========================
+   EVENT ENGINE
+========================= */
+function run(type) {
+  s[type] += 2;
+  write("EVENT → " + type);
+  draw();
+}
+
+/* =========================
+   RESET ENGINE
+========================= */
+function resetSystem() {
+  s = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+  write("SYSTEM RESET");
+  draw();
+}
+
+/* =========================
+   GRAPH ENGINE (SAFE)
+========================= */
 function draw() {
   const c = document.getElementById("g");
   if (!c) return;
@@ -12,23 +145,33 @@ function draw() {
 
   x.clearRect(0, 0, c.width, c.height);
 
-  const k = Object.keys(s);
-  const v = Object.values(s);
-  const m = Math.max(...v, 5);
+  const keys = Object.keys(s);
+  const values = Object.values(s);
+  const max = Math.max(...values, 5);
 
-  k.forEach((a, i) => {
-    let h = (v[i] / m) * 200;
+  keys.forEach((key, i) => {
+    const value = values[i];
+    const height = (value / max) * 200;
+
+    const xPos = 50 + i * 80;
 
     x.fillStyle = "#00ffd5";
-    x.fillRect(50 + i * 80, 220 - h, 30, h);
+    x.fillRect(xPos, 220 - height, 30, height);
 
     x.fillStyle = "#ffffff";
-    x.fillText(a, 50 + i * 80, 240);
+    x.font = "12px Arial";
+    x.fillText(key, xPos, 240);
   });
 }
 
-/* SAFE INIT HOOK */
+/* =========================
+   SAFE INIT (CRITICAL)
+========================= */
 document.addEventListener("DOMContentLoaded", function () {
+  write("SYSTEM ONLINE");
   draw();
 });
 </script>
+
+</body>
+</html>
