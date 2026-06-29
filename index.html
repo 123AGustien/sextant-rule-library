@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.5 // OJK HYBRID DIGITAL TWIN</title>
+<title>SPD v11.6 // CLEAN DIGITAL TWIN CORE</title>
 
 <style>
 body {
@@ -13,94 +13,85 @@ body {
   overflow: hidden;
 }
 
-/* HEADER */
 .header {
   padding: 10px;
   background: #0b1220;
   font-size: 14px;
 }
 
-/* OJK PANEL */
-.ojk {
-  background: #0b1220;
-  padding: 10px;
-  font-size: 12px;
-  border-bottom: 1px solid #1f3b5c;
-}
-
-/* STATUS */
 #statusBar {
-  text-align:center;
-  padding:6px;
-  background:#0a0f18;
-  font-size:13px;
+  text-align: center;
+  padding: 6px;
+  background: #0a0f18;
+  font-size: 13px;
 }
 
-/* LAYOUT */
+/* PANELS */
 .panel {
-  display:flex;
-  justify-content:space-around;
-  padding:10px;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
 }
 
 .card {
-  background:#0e1a2b;
-  padding:12px;
-  width:22%;
-  text-align:center;
+  background: #0e1a2b;
+  width: 22%;
+  padding: 12px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.value {
+  font-size: 26px;
 }
 
 /* GRAPH */
 #graph {
   position: relative;
-  height: 220px;
+  height: 240px;
   margin: 10px;
 }
 
 .node {
-  position:absolute;
-  width:50px;
-  height:50px;
-  border-radius:50%;
-  background:#1f3b5c;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  transition:0.3s;
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #1f3b5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: 0.25s;
 }
 
-.edge {
-  position:absolute;
-  height:2px;
-  background:#2a4d77;
-  transform-origin:left center;
-}
-
-/* BUTTONS */
+/* CONTROLS */
 .buttons {
-  text-align:center;
-  margin:8px;
+  text-align: center;
+  margin: 8px;
 }
 
 button {
-  padding:6px 10px;
-  margin:3px;
-  background:#1f3b5c;
-  color:white;
-  border:none;
+  padding: 7px 10px;
+  margin: 3px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 
-/* AUDIT */
-#audit {
-  position:absolute;
-  bottom:0;
-  width:100%;
-  height:120px;
-  background:#0a0f18;
-  overflow-y:auto;
-  font-size:11px;
-  padding:8px;
+/* EXPLAIN PANEL */
+#explain {
+  position: absolute;
+  right: 10px;
+  top: 60px;
+  width: 240px;
+  background: #0a0f18;
+  padding: 10px;
+  font-size: 11px;
+  border-left: 2px solid #1f3b5c;
+  height: 200px;
+  overflow-y: auto;
 }
 </style>
 </head>
@@ -108,43 +99,23 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v11.5 // HYBRID OJK DIGITAL TWIN COCKPIT
-</div>
-
-<div class="ojk">
-<b>OJK SANDBOX MODE</b> — Non-execution systemic risk simulation  
-<select id="scenarioSelect">
-  <option>BOND_CRISIS</option>
-  <option>CYBER_WAR</option>
-  <option>GRID_FAILURE</option>
-</select>
-
-<button onclick="runScenario()">Run Scenario</button>
-<button onclick="toggleExplain()">Explain</button>
-<button onclick="exportAudit()">Export</button>
+🛰 SPD v11.6 // CLEAN ARCHITECTURE DIGITAL TWIN CORE (OJK READY)
 </div>
 
 <div id="statusBar">STATUS: READY</div>
 
-<!-- VALUES -->
 <div class="panel">
-  <div class="card">FX<div id="FX"></div></div>
-  <div class="card">DC<div id="DC"></div></div>
-  <div class="card">CYB<div id="CYB"></div></div>
-  <div class="card">INF<div id="INF"></div></div>
+  <div class="card">FX<div id="FX" class="value">0.0</div></div>
+  <div class="card">DC<div id="DC" class="value">0.0</div></div>
+  <div class="card">CYB<div id="CYB" class="value">0.0</div></div>
+  <div class="card">INF<div id="INF" class="value">0.0</div></div>
 </div>
 
-<!-- GRAPH -->
 <div id="graph">
   <div class="node" id="nFX">FX</div>
   <div class="node" id="nDC">DC</div>
   <div class="node" id="nCYB">CYB</div>
   <div class="node" id="nINF">INF</div>
-
-  <div class="edge" id="eFXDC"></div>
-  <div class="edge" id="eDCCYB"></div>
-  <div class="edge" id="eCYBINF"></div>
-  <div class="edge" id="eINFFX"></div>
 </div>
 
 <div class="buttons">
@@ -155,20 +126,21 @@ button {
   <button onclick="reset()">RESET</button>
 </div>
 
-<div id="audit"></div>
+<div id="explain">Explain: idle</div>
 
 <script>
 
-/* ================= CORE STATE ================= */
+/* =========================
+   SINGLE SOURCE OF TRUTH
+========================= */
 
-const NODES = {
-  FX:{v:0,s:0.7,x:80,y:80},
-  DC:{v:0,s:0.9,x:220,y:40},
-  CYB:{v:0,s:0.8,x:360,y:80},
-  INF:{v:0,s:0.85,x:220,y:140}
+const state = {
+  FX: { v: 0, s: 0.7, x: 80, y: 80 },
+  DC: { v: 0, s: 0.9, x: 220, y: 40 },
+  CYB:{ v: 0, s: 0.8, x: 360, y: 80 },
+  INF:{ v: 0, s: 0.85, x: 220, y: 140 }
 };
 
-/* LINKS */
 const LINKS = [
   ["FX","DC"],
   ["DC","CYB"],
@@ -176,45 +148,44 @@ const LINKS = [
   ["INF","FX"]
 ];
 
-/* SCENARIOS */
-const SCENARIOS = {
-  BOND_CRISIS:{FX:35,DC:10,CYB:5},
-  CYBER_WAR:{CYB:40,DC:25,INF:10},
-  GRID_FAILURE:{INF:50,DC:20,FX:15}
-};
+let log = [];
 
-let log=[];
+/* =========================
+   ENGINE LAYER
+========================= */
 
-/* ================= ENGINE ================= */
-
-function inject(n){
-  NODES[n].v += 10;
-  audit("INJECT",{n});
-}
-
-function runScenario(){
-  const s = SCENARIOS[document.getElementById("scenarioSelect").value];
-  for(let k in s) NODES[k].v += s[k];
-  audit("SCENARIO",s);
+function inject(node){
+  state[node].v += 10;
+  logEvent("INJECT", node);
 }
 
 function cascade(){
   LINKS.forEach(([a,b])=>{
-    const A=NODES[a], B=NODES[b];
-    const p = (A.v * A.s * B.s)/120;
+    const A = state[a];
+    const B = state[b];
 
-    if(Math.random()<p){
-      B.v += 4;
-      audit("CASCADE",{from:a,to:b});
+    const p = (A.v * A.s * B.s) / 120;
+
+    if(Math.random() < p){
+      const impact = 3 + Math.random() * 4;
+      B.v += impact;
+
+      logEvent("CASCADE", `${a}→${b}`, impact);
+      explain(`${a} influenced ${b} (+${impact.toFixed(1)})`);
     }
   });
 }
 
 function decay(){
-  for(let k in NODES){
-    NODES[k].v *= 0.97;
+  for(let k in state){
+    state[k].v *= 0.97;
+    state[k].v = Math.max(0, state[k].v);
   }
 }
+
+/* =========================
+   TIME ENGINE
+========================= */
 
 function tick(){
   cascade();
@@ -222,72 +193,60 @@ function tick(){
   render();
 }
 
-setInterval(tick,1000);
+setInterval(tick, 1000);
 
-/* ================= GRAPH ================= */
+/* =========================
+   RENDER ENGINE (CLEAN)
+========================= */
 
-const POS = {
-  FX:{x:80,y:80},
-  DC:{x:220,y:40},
-  CYB:{x:360,y:80},
-  INF:{x:220,y:140}
-};
+function render(){
 
-function renderGraph(){
+  for(let k in state){
+    const n = state[k];
+    const el = document.getElementById(k);
 
-  for(let k in NODES){
-    let n=NODES[k];
-    let el=document.getElementById("n"+k);
+    el.innerText = k + " " + n.v.toFixed(0);
 
-    el.style.left=POS[k].x+"px";
-    el.style.top=POS[k].y+"px";
-    el.style.transform=`scale(${1+n.v/50})`;
+    document.getElementById("n"+k).style.left = n.x + "px";
+    document.getElementById("n"+k).style.top  = n.y + "px";
 
-    el.style.background =
-      n.v>40?"#ff3b3b":
-      n.v>20?"#ffb020":
+    document.getElementById("n"+k).style.transform =
+      `scale(${1 + n.v/50})`;
+
+    document.getElementById("n"+k).style.background =
+      n.v > 40 ? "#ff3b3b" :
+      n.v > 20 ? "#ffb020" :
       "#1f3b5c";
-
-    el.innerText = k+" "+n.v.toFixed(0);
   }
 }
 
-/* ================= UI ================= */
-
-function render(){
-  FX.innerText=NODES.FX.v.toFixed(1);
-  DC.innerText=NODES.DC.v.toFixed(1);
-  CYB.innerText=NODES.CYB.v.toFixed(1);
-  INF.innerText=NODES.INF.v.toFixed(1);
-
-  renderGraph();
-
-  audit.innerHTML = log.slice(-10).map(e=>
-    `[${e.type}] ${JSON.stringify(e.data)}`
-  ).join("<br>");
-}
-
-/* ================= AUDIT ================= */
-
-function audit(type,data){
-  log.push({time:new Date().toISOString(),type,data});
-}
-
-/* ================= UTIL ================= */
+/* =========================
+   RESET
+========================= */
 
 function reset(){
-  for(let k in NODES) NODES[k].v=0;
+  for(let k in state){
+    state[k].v = 0;
+  }
+  logEvent("RESET");
+  explain("System reset to baseline state");
 }
 
-function toggleExplain(){
-  alert("Explain mode toggled (UI hook ready)");
+/* =========================
+   EXPLAIN + AUDIT
+========================= */
+
+function logEvent(type, detail, impact){
+  log.push({
+    time: new Date().toISOString(),
+    type,
+    detail,
+    impact
+  });
 }
 
-function exportAudit(){
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(log,null,2)]));
-  a.download="spd_v11_5_audit.json";
-  a.click();
+function explain(msg){
+  document.getElementById("explain").innerText = msg;
 }
 
 /* INIT */
