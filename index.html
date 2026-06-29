@@ -1,59 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>SPD Control System</title>
+<meta charset="UTF-8">
+<title>SPD FULL COCKPIT</title>
 
 <style>
 body {
   margin: 0;
-  background: #070b10;
-  color: #e6f1ff;
+  background: #05080c;
+  color: #d7e6ff;
   font-family: Arial, sans-serif;
   overflow: hidden;
 }
 
-/* HEADER */
-.header {
-  padding: 12px 20px;
-  background: #0e1620;
-  border-bottom: 1px solid #1f2d3a;
+/* TOP STATUS BAR */
+.topbar {
+  height: 42px;
+  background: #0c1520;
+  border-bottom: 1px solid #1c2b3a;
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
+  align-items: center;
+  padding: 0 15px;
+  font-size: 13px;
 }
 
-/* MAIN GRID */
+/* GRID LAYOUT */
 .grid {
   display: grid;
-  grid-template-columns: 220px 1fr 260px;
-  height: calc(100vh - 45px);
+  grid-template-columns: 240px 1fr 300px;
+  height: calc(100vh - 42px);
 }
 
-/* LEFT PANEL */
+/* LEFT CONTROL PANEL */
 .left {
-  background: #0b1118;
-  border-right: 1px solid #1f2d3a;
+  background: #0a111a;
+  border-right: 1px solid #1c2b3a;
   padding: 10px;
 }
 
 button {
   width: 100%;
-  margin-bottom: 8px;
   padding: 10px;
-  background: #14202c;
+  margin-bottom: 8px;
+  background: #132231;
   border: 1px solid #263a4d;
   color: white;
   cursor: pointer;
+  font-size: 12px;
 }
 
 button:hover {
-  background: #1b2c3b;
+  background: #1a3144;
 }
 
-/* CENTER */
+/* CENTER COCKPIT */
 .center {
-  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -61,14 +63,14 @@ button:hover {
 }
 
 canvas {
-  background: #0c141d;
+  background: #0b141e;
   border: 1px solid #223344;
 }
 
 /* RIGHT PANEL */
 .right {
-  background: #0b1118;
-  border-left: 1px solid #1f2d3a;
+  background: #0a111a;
+  border-left: 1px solid #1c2b3a;
   padding: 10px;
   font-size: 12px;
   overflow-y: auto;
@@ -78,78 +80,135 @@ canvas {
   opacity: 0.85;
   line-height: 1.4;
 }
+
+/* STATUS TAGS */
+.status {
+  font-size: 12px;
+}
+
+.good { color: #3cffb0; }
+.warn { color: #ffd166; }
+.danger { color: #ff4d6d; }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div>🛰 SPD CONTROL SYSTEM · LIVE</div>
-  <div>STATUS: RUNNING</div>
+<div class="topbar">
+  <div>🛰 SPD FULL COCKPIT · SIMULATION ENGINE</div>
+  <div id="sysStatus" class="status good">STATUS: STABLE</div>
 </div>
 
 <div class="grid">
 
   <!-- LEFT -->
   <div class="left">
-    <button onclick="runScenario('FX')">FX STRESS</button>
-    <button onclick="runScenario('DC')">DC LOAD</button>
-    <button onclick="runScenario('CYB')">CYBER EVENT</button>
-    <button onclick="runScenario('INF')">INFRA STRAIN</button>
+    <button onclick="runScenario('FX')">FX STRESS EVENT</button>
+    <button onclick="runScenario('DC')">DATA CENTRE LOAD</button>
+    <button onclick="runScenario('CYB')">CYBER INCIDENT</button>
+    <button onclick="runScenario('INF')">INFRASTRUCTURE STRAIN</button>
+
+    <hr style="border-color:#1c2b3a">
+
+    <button onclick="resetSystem()">RESET SYSTEM</button>
   </div>
 
   <!-- CENTER -->
   <div class="center">
-    <canvas id="graph" width="420" height="260"></canvas>
+    <canvas id="graph" width="520" height="300"></canvas>
   </div>
 
   <!-- RIGHT -->
   <div class="right">
-    <div class="log" id="log"></div>
+    <div id="log"></div>
   </div>
 
 </div>
 
 <script>
-let state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+let state = {
+  FX: 0,
+  DC: 0,
+  CYB: 0,
+  INF: 0
+};
+
 let log = [];
 
+/* ---------------- LOG ---------------- */
+function pushLog(msg) {
+  const time = new Date().toLocaleTimeString();
+  log.push(`[${time}] ${msg}`);
+
+  document.getElementById("log").innerHTML =
+    log.slice(-15).join("<br>");
+}
+
+/* ---------------- SCENARIOS ---------------- */
 function runScenario(type) {
   state[type] += 2;
-  pushLog("SCENARIO", type);
+
+  pushLog(`SCENARIO TRIGGERED: ${type}`);
+
+  evaluateSystem();
   updateGraph();
 }
 
-function pushLog(tag, msg) {
-  log.push(`${tag}: ${msg}`);
-  document.getElementById("log").innerHTML =
-    log.slice(-12).join("<br>");
+/* ---------------- SYSTEM EVALUATION ---------------- */
+function evaluateSystem() {
+  const total = Object.values(state).reduce((a, b) => a + b, 0);
+
+  const status = document.getElementById("sysStatus");
+
+  if (total < 8) {
+    status.textContent = "STATUS: STABLE";
+    status.className = "status good";
+  } 
+  else if (total < 15) {
+    status.textContent = "STATUS: DEGRADED";
+    status.className = "status warn";
+  } 
+  else {
+    status.textContent = "STATUS: STRESSED";
+    status.className = "status danger";
+  }
 }
 
+/* ---------------- GRAPH ---------------- */
 function updateGraph() {
-  const c = document.getElementById("graph");
-  const x = c.getContext("2d");
+  const canvas = document.getElementById("graph");
+  const ctx = canvas.getContext("2d");
 
-  x.clearRect(0, 0, c.width, c.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const keys = Object.keys(state);
   const vals = Object.values(state);
   const max = Math.max(...vals, 5);
 
   keys.forEach((k, i) => {
-    const bar = (vals[i] / max) * 200;
+    const bar = (vals[i] / max) * 240;
+    const x = 80 + i * 100;
 
-    const xPos = 70 + i * 90;
+    ctx.fillStyle = "#00ffd5";
+    ctx.fillRect(x, 260 - bar, 45, bar);
 
-    x.fillStyle = "#00ffd5";
-    x.fillRect(xPos, 220 - bar, 40, bar);
-
-    x.fillStyle = "#fff";
-    x.fillText(k, xPos + 8, 240);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(k, x + 10, 280);
   });
 }
 
+/* ---------------- RESET ---------------- */
+function resetSystem() {
+  state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+  pushLog("SYSTEM RESET EXECUTED");
+
+  evaluateSystem();
+  updateGraph();
+}
+
+/* ---------------- INIT ---------------- */
 updateGraph();
+evaluateSystem();
 </script>
 
 </body>
