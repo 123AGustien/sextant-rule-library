@@ -1,3 +1,8 @@
+
+/***********************
+ * SPD CORE ENGINE v11
+ ***********************/
+
 window.state = {
   FX: 0,
   DC: 0,
@@ -7,6 +12,10 @@ window.state = {
 
 window.auditLog = [];
 
+/***********************
+ * AUDIT SYSTEM
+ ***********************/
+
 window.audit = function(type, payload) {
   window.auditLog.push({
     time: new Date().toISOString(),
@@ -15,18 +24,47 @@ window.audit = function(type, payload) {
   });
 };
 
+/***********************
+ * SAFE STATE GUARD
+ ***********************/
+
+function ensureState(type) {
+  if (!window.state[type]) {
+    window.state[type] = 0;
+  }
+}
+
+/***********************
+ * SCENARIO ENGINE
+ ***********************/
+
 window.runScenario = function(type) {
+
+  ensureState(type);
+
   window.state[type] += 2;
 
   window.audit("SCENARIO", {
     type,
-    state: {...window.state}
+    state: { ...window.state }
   });
 
-  window.updateUI();
-  window.updateGraph(window.state);
-  window.updateResilienceScore();
+  if (typeof window.updateUI === "function") {
+    window.updateUI();
+  }
+
+  if (typeof window.updateGraph === "function") {
+    window.updateGraph(window.state);
+  }
+
+  if (typeof window.updateResilienceScore === "function") {
+    window.updateResilienceScore();
+  }
 };
+
+/***********************
+ * EVENT INJECTION ENGINE
+ ***********************/
 
 window.injectEvent = function(event) {
 
@@ -37,18 +75,28 @@ window.injectEvent = function(event) {
     INFRA_FAILURE: "INF"
   };
 
-  const t = map[event];
-  if (!t) return;
+  const target = map[event];
+  if (!target) return;
 
-  window.state[t] += 3;
+  ensureState(target);
+
+  window.state[target] += 3;
 
   window.audit("EVENT", {
     event,
-    target: t,
-    state: {...window.state}
+    target,
+    state: { ...window.state }
   });
 
-  window.updateUI();
-  window.updateGraph(window.state);
-  window.updateResilienceScore();
+  if (typeof window.updateUI === "function") {
+    window.updateUI();
+  }
+
+  if (typeof window.updateGraph === "function") {
+    window.updateGraph(window.state);
+  }
+
+  if (typeof window.updateResilienceScore === "function") {
+    window.updateResilienceScore();
+  }
 };
