@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.2 // OJK PRESENTATION LAYER</title>
+<title>SPD v11.3 // ADAPTATION & GOVERNANCE LAYER</title>
 
 <style>
 body {
@@ -19,7 +19,7 @@ body {
   font-size: 14px;
 }
 
-.ojk {
+.ojk, .gov {
   background:#0b1220;
   padding:12px;
   font-size:12px;
@@ -84,12 +84,13 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v11.2 // OJK PRESENTATION LAYER
+🛰 SPD v11.3 // ADAPTATION & GOVERNANCE LAYER
 </div>
 
+<!-- ================= OJK LAYER ================= -->
 <div class="ojk">
-<b>OJK SANDBOX SIMULATION INTERFACE</b><br>
-This system demonstrates scenario-based systemic risk propagation in a controlled simulation environment. No financial execution capability.
+<b>OJK SANDBOX INTERFACE</b><br>
+Scenario-based systemic risk simulation (non-execution model)
 <br><br>
 
 Scenario:
@@ -106,8 +107,27 @@ Scenario:
 <div id="scenarioPanel" style="margin-top:8px;color:#9ecbff;"></div>
 </div>
 
+<!-- ================= GOVERNANCE LAYER ================= -->
+<div class="gov">
+<b>🛰 GOVERNANCE ADAPTATION LAYER</b><br><br>
+
+Regulatory Mode:
+<select id="regMode">
+  <option value="SANDBOX">Sandbox</option>
+  <option value="CONTROLLED">Controlled</option>
+  <option value="AUDIT_HEAVY">Audit Heavy</option>
+</select>
+
+<button onclick="applyMode()">Apply Mode</button>
+<button onclick="addFeedback()">Add Feedback Rule</button>
+<button onclick="exportConfig()">Export Config</button>
+
+<div id="modePanel" style="margin-top:8px;color:#9ecbff;"></div>
+</div>
+
 <div id="statusBar">STATUS: READY</div>
 
+<!-- ================= CORE SIM ================= -->
 <div class="panel">
   <div class="card">FX<div class="value" id="FX">0</div></div>
   <div class="card">DC<div class="value" id="DC">0</div></div>
@@ -127,9 +147,7 @@ Scenario:
 
 <script>
 
-/* =========================
-   CORE STATE
-========================= */
+/* ================= CORE STATE ================= */
 
 const NODES = {
   FX:{value:0,sens:0.7},
@@ -153,27 +171,34 @@ const SCENARIOS = {
 
 const SCENARIO_DOCS = {
   BOND_CRISIS:{
-    objective:"Simulate sovereign bond stress propagation.",
-    assumptions:["FX leads shock","DC liquidity impact","CYB secondary stress"],
+    objective:"Sovereign bond stress propagation model",
+    assumptions:["FX leads shock","DC liquidity stress","CYB secondary reaction"],
     expected:"FX → DC cascade likely"
   },
   CYBER_WAR:{
-    objective:"Cyber disruption propagation model.",
+    objective:"Cyber disruption propagation model",
     assumptions:["CYB primary shock","infra degradation follows"],
-    expected:"CYB dominates system instability"
+    expected:"CYB dominates instability"
   },
   GRID_FAILURE:{
-    objective:"Infrastructure failure propagation.",
-    assumptions:["INF primary shock source"],
+    objective:"Infrastructure failure propagation",
+    assumptions:["INF primary source"],
     expected:"INF → DC → FX reverse cascade possible"
   }
 };
 
+/* ================= GOVERNANCE ================= */
+
+let GOVERNANCE = {
+  mode:"SANDBOX",
+  volatilityCap:1.0,
+  cascadeSensitivity:1.0,
+  feedbackRules:[]
+};
+
 let log=[];
 
-/* =========================
-   SCENARIO ENGINE
-========================= */
+/* ================= SCENARIO ================= */
 
 function runScenario(name){
   const s = SCENARIOS[name];
@@ -184,36 +209,42 @@ function runScenario(name){
   render();
 }
 
-/* =========================
-   INJECT
-========================= */
+/* ================= INJECT ================= */
 
 function inject(n){
   NODES[n].value += 10;
   audit("INJECT",{n});
 }
 
-/* =========================
-   CASCADE ENGINE
-========================= */
+/* ================= CASCADE ENGINE ================= */
 
 function cascade(){
   EDGES.forEach(e=>{
     const f=NODES[e.from];
     const t=NODES[e.to];
 
-    const p = f.value * e.w * t.sens / 100;
+    let p = (f.value * e.w * t.sens / 100);
 
-    if(Math.random()<p){
+    p *= GOVERNANCE.cascadeSensitivity;
+
+    if(p > GOVERNANCE.volatilityCap){
+      p = GOVERNANCE.volatilityCap;
+    }
+
+    GOVERNANCE.feedbackRules.forEach(r=>{
+      if(r.includes(e.to) && r.includes("reduce")){
+        p *= 0.8;
+      }
+    });
+
+    if(Math.random() < p){
       t.value += 5;
-      audit("CASCADE",{from:e.from,to:e.to});
+      audit("CASCADE",{from:e.from,to:e.to,prob:p.toFixed(3)});
     }
   });
 }
 
-/* =========================
-   TICK
-========================= */
+/* ================= TICK ================= */
 
 function tick(){
   for(let k in NODES){
@@ -225,21 +256,17 @@ function tick(){
 
 setInterval(tick,1000);
 
-/* =========================
-   RESET
-========================= */
+/* ================= RESET ================= */
 
 function reset(){
   for(let k in NODES){
-    NODES[k].value=0;
+    NODES[k].value = 0;
   }
   audit("RESET",{});
   render();
 }
 
-/* =========================
-   AUDIT
-========================= */
+/* ================= AUDIT ================= */
 
 function audit(type,data){
   log.push({
@@ -255,47 +282,68 @@ function audit(type,data){
   });
 }
 
-/* =========================
-   EXPLAIN MODE
-========================= */
+/* ================= GOVERNANCE CONTROLS ================= */
 
-let explain=false;
+function applyMode(){
+  const m=document.getElementById("regMode").value;
+  GOVERNANCE.mode=m;
 
-function toggleExplain(){
-  explain=!explain;
-  alert("Explain Mode: "+(explain?"ON":"OFF"));
+  if(m==="SANDBOX"){
+    GOVERNANCE.volatilityCap=1.0;
+    GOVERNANCE.cascadeSensitivity=1.0;
+  }
+
+  if(m==="CONTROLLED"){
+    GOVERNANCE.volatilityCap=0.6;
+    GOVERNANCE.cascadeSensitivity=0.7;
+  }
+
+  if(m==="AUDIT_HEAVY"){
+    GOVERNANCE.volatilityCap=0.4;
+    GOVERNANCE.cascadeSensitivity=0.5;
+  }
+
+  updateModePanel();
 }
 
-/* =========================
-   SCENARIO INFO
-========================= */
+function addFeedback(){
+  const r=prompt("Enter rule (e.g. CYB:reduce)");
+  if(r){
+    GOVERNANCE.feedbackRules.push(r);
+    audit("FEEDBACK",{r});
+    updateModePanel();
+  }
+}
+
+function updateModePanel(){
+  document.getElementById("modePanel").innerHTML=
+  `Mode: ${GOVERNANCE.mode}<br>
+  Vol Cap: ${GOVERNANCE.volatilityCap}<br>
+  Sensitivity: ${GOVERNANCE.cascadeSensitivity}<br>
+  Rules: ${GOVERNANCE.feedbackRules.length}`;
+}
+
+/* ================= SCENARIO INFO ================= */
 
 function loadScenarioInfo(){
-  const key=document.getElementById("scenarioInfo").value;
-  const s=SCENARIO_DOCS[key];
+  const k=document.getElementById("scenarioInfo").value;
+  const s=SCENARIO_DOCS[k];
 
   document.getElementById("scenarioPanel").innerHTML=
-  `<b>${key}</b><br>
-  Objective: ${s.objective}<br><br>
-  Assumptions:<br>${s.assumptions.map(a=>"• "+a).join("<br>")}<br><br>
-  Expected: ${s.expected}`;
+  `<b>${k}</b><br>${s.objective}<br><br>${s.assumptions.map(a=>"• "+a).join("<br>")}<br><br>${s.expected}`;
 }
 
-/* =========================
-   EXPORT
-========================= */
+/* ================= EXPORT ================= */
 
 function exportAudit(){
   const blob=new Blob([JSON.stringify(log,null,2)],{type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="SPD_v11_OJK_AUDIT.json";
+  a.download="SPD_v11_3_AUDIT.json";
   a.click();
 }
 
-/* =========================
-   RENDER
-========================= */
+/* ================= RENDER ================= */
 
 function render(){
   FX.innerText=NODES.FX.value.toFixed(1);
