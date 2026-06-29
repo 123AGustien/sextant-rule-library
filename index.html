@@ -2,169 +2,259 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v10 LIVE | Simulation Console</title>
+<title>SPD v11 LIVE | Resilience Simulation Console</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="styles.css">
 
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #0b0f1a;
-    color: #e6edf3;
-  }
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#0b0f1a;
+    color:#e6edf3;
+}
 
-  .header {
-    padding: 18px;
-    background: #0f172a;
-    border-bottom: 1px solid #1f2937;
-    font-weight: bold;
-  }
+.header{
+    padding:18px;
+    background:#0f172a;
+    border-bottom:1px solid #1f2937;
+    font-size:20px;
+    font-weight:bold;
+}
 
-  .status-bar {
-    padding: 10px 18px;
-    background: #111827;
-    font-size: 13px;
-    color: #34d399;
-    border-bottom: 1px solid #1f2937;
-  }
+.status-bar{
+    padding:10px 18px;
+    background:#111827;
+    color:#34d399;
+    border-bottom:1px solid #1f2937;
+    font-size:13px;
+}
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    padding: 16px;
-  }
+.health-strip{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    padding:10px 18px;
+    border-bottom:1px solid #1f2937;
+    font-size:12px;
+    color:#9ca3af;
+}
 
-  .panel {
-    background: #111827;
-    border: 1px solid #1f2937;
-    border-radius: 12px;
-    padding: 14px;
-  }
+.online{color:#34d399;}
+.warn{color:#fbbf24;}
+.fail{color:#ef4444;}
 
-  .panel h2 {
-    margin-top: 0;
-    font-size: 16px;
-    color: #93c5fd;
-  }
+.score-panel{
+    margin:18px;
+    background:#111827;
+    border:1px solid #1f2937;
+    border-radius:12px;
+    padding:16px;
+}
 
-  button {
-    margin: 6px 6px 6px 0;
-    padding: 8px 10px;
-    border: 1px solid #374151;
-    background: #0b1220;
-    color: #e5e7eb;
-    border-radius: 8px;
-    cursor: pointer;
-  }
+.score-number{
+    font-size:38px;
+    font-weight:bold;
+    margin-bottom:10px;
+}
 
-  button:hover {
-    border-color: #60a5fa;
-  }
+progress{
+    width:100%;
+    height:22px;
+}
 
-  #output, #audit, #diag {
-    background: #0b1220;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    min-height: 80px;
-    overflow: auto;
-  }
+.score-status{
+    margin-top:12px;
+    font-size:18px;
+    font-weight:bold;
+}
 
-  canvas {
-    width: 100%;
-    height: 220px;
-    background: #0b1220;
-    border-radius: 8px;
-  }
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:16px;
+    padding:16px;
+}
 
-  .health-strip {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 18px;
-    font-size: 12px;
-    border-bottom: 1px solid #1f2937;
-    color: #9ca3af;
-  }
+.panel{
+    background:#111827;
+    border:1px solid #1f2937;
+    border-radius:12px;
+    padding:14px;
+}
 
-  .online { color: #34d399; }
-  .warn { color: #fbbf24; }
-  .fail { color: #ef4444; }
+.panel h2{
+    margin-top:0;
+    color:#93c5fd;
+    font-size:16px;
+}
+
+button{
+    margin:6px;
+    padding:8px 10px;
+    background:#0b1220;
+    color:white;
+    border:1px solid #374151;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    border-color:#60a5fa;
+}
+
+#output,
+#audit,
+#diag{
+    background:#0b1220;
+    border-radius:8px;
+    padding:10px;
+    min-height:90px;
+    overflow:auto;
+    font-size:12px;
+}
+
+canvas{
+    width:100%;
+    height:220px;
+    background:#0b1220;
+    border-radius:8px;
+}
 </style>
 
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE v10
+🛰 SPD PILOT SYSTEM · RESILIENCE SIMULATION ENGINE v11
 </div>
 
-<!-- SYSTEM STATUS -->
 <div class="status-bar">
 ● SYSTEM ONLINE | Simulation Kernel Active | Cascade Engine Ready
 </div>
 
 <div class="health-strip">
-  <div>Core: <span class="online">ONLINE</span></div>
-  <div>FX Module: <span class="online">STABLE</span></div>
-  <div>Infra: <span class="warn">MONITORING</span></div>
-  <div>Cyber: <span class="online">READY</span></div>
+<div>Core: <span class="online">ONLINE</span></div>
+<div>FX Module: <span class="online">STABLE</span></div>
+<div>Infrastructure: <span class="warn">MONITORING</span></div>
+<div>Cyber: <span class="online">READY</span></div>
 </div>
 
-<!-- MAIN GRID -->
+<div class="score-panel">
+
+<h2>Overall Resilience Score</h2>
+
+<div id="resilienceScore" class="score-number">
+100%
+</div>
+
+<progress
+id="scoreBar"
+value="100"
+max="100">
+</progress>
+
+<div
+id="systemHealth"
+class="score-status"
+style="color:#34d399;">
+🟢 HEALTHY
+</div>
+
+</div>
+
 <div class="grid">
 
-  <!-- CORE ENGINE -->
-  <div class="panel">
-    <h2>Core Engine</h2>
-    <button onclick="runScenario('FX')">FX Stress</button>
-    <button onclick="runScenario('DC')">Cooling Failure</button>
-    <button onclick="runScenario('CYB')">Ransomware</button>
-    <button onclick="runScenario('INF')">Network Outage</button>
-  </div>
+<div class="panel">
 
-  <!-- EVENT INJECTION -->
-  <div class="panel">
-    <h2>Event Injection</h2>
-    <button onclick="injectEvent('FX_SPIKE')">FX Spike</button>
-    <button onclick="injectEvent('BOND_STRESS')">Bond Stress</button>
-    <button onclick="injectEvent('CYBER_ATTACK')">Cyber Attack</button>
-    <button onclick="injectEvent('INFRA_FAILURE')">Infra Failure</button>
-  </div>
+<h2>Core Engine</h2>
 
-  <!-- OUTPUT -->
-  <div class="panel">
-    <h2>System Output</h2>
-    <div id="output">Boot sequence initiated...</div>
-  </div>
+<button onclick="runScenario('FX')">FX Stress</button>
 
-  <!-- GRAPH -->
-  <div class="panel">
-    <h2>Cascade Graph</h2>
-    <canvas id="graph"></canvas>
-  </div>
+<button onclick="runScenario('DC')">
+Cooling Failure
+</button>
 
-  <!-- DIAGNOSTICS -->
-  <div class="panel">
-    <h2>Live Diagnostics</h2>
-    <pre id="diag">Checking system integrity...</pre>
-  </div>
+<button onclick="runScenario('CYB')">
+Ransomware
+</button>
 
-  <!-- AUDIT -->
-  <div class="panel">
-    <h2>Audit Log</h2>
-    <button onclick="showAudit()">Show</button>
-    <button onclick="clearAudit()">Clear</button>
-    <pre id="audit"></pre>
-  </div>
+<button onclick="runScenario('INF')">
+Network Outage
+</button>
 
 </div>
 
-<!-- SCRIPTS -->
+<div class="panel">
+
+<h2>Event Injection</h2>
+
+<button onclick="injectEvent('FX_SPIKE')">
+FX Spike
+</button>
+
+<button onclick="injectEvent('BOND_STRESS')">
+Bond Stress
+</button>
+
+<button onclick="injectEvent('CYBER_ATTACK')">
+Cyber Attack
+</button>
+
+<button onclick="injectEvent('INFRA_FAILURE')">
+Infrastructure Failure
+</button>
+
+</div>
+
+<div class="panel">
+
+<h2>System Output</h2>
+
+<div id="output">
+🟢 SPD DEPENDENCY OK — SYSTEM READY
+</div>
+
+</div>
+
+<div class="panel">
+
+<h2>Cascade Graph</h2>
+
+<canvas id="graph"></canvas>
+
+</div>
+
+<div class="panel">
+
+<h2>Live Diagnostics</h2>
+
+<pre id="diag">
+Checking system integrity...
+</pre>
+
+</div>
+
+<div class="panel">
+
+<h2>Audit Log</h2>
+
+<button onclick="showAudit()">
+Show
+</button>
+
+<button onclick="clearAudit()">
+Clear
+</button>
+
+<pre id="audit"></pre>
+
+</div>
+
+</div>
+
 <script src="audit.js"></script>
 <script src="engine.js"></script>
 <script src="cascade-graph.js"></script>
