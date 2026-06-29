@@ -24,116 +24,211 @@ window.audit = function(type, payload) {
 };
 
 // =========================
+// RESILIENCE SCORE ENGINE
+// =========================
+
+window.updateResilienceScore = function() {
+
+  let score = 100;
+
+  score -= window.state.FX * 5;
+  score -= window.state.DC * 5;
+  score -= window.state.CYB * 5;
+  score -= window.state.INF * 5;
+
+  if (score < 0) score = 0;
+
+  const scoreText = document.getElementById("resilienceScore");
+  const scoreBar = document.getElementById("scoreBar");
+  const health = document.getElementById("systemHealth");
+
+  if (!scoreText || !scoreBar || !health) return;
+
+  scoreText.innerHTML = score + "%";
+  scoreBar.value = score;
+
+  if (score >= 80) {
+    health.innerHTML = "🟢 HEALTHY";
+    health.style.color = "#34d399";
+  }
+  else if (score >= 50) {
+    health.innerHTML = "🟡 DEGRADED";
+    health.style.color = "#fbbf24";
+  }
+  else {
+    health.innerHTML = "🔴 CRITICAL";
+    health.style.color = "#ef4444";
+  }
+};
+
+// =========================
 // SCENARIO ENGINE
 // =========================
 
 window.runScenario = function(type) {
-  if (!window.state[type]) window.state[type] = 0;
+
+  if (!window.state[type])
+      window.state[type] = 0;
 
   window.state[type] += 2;
 
-  window.audit("SCENARIO", {
+  window.audit("SCENARIO",{
     type,
-    state: { ...window.state }
+    state:{...window.state}
   });
 
   window.updateUI();
   window.updateGraph(window.state);
+  window.updateResilienceScore();
+
 };
 
 // =========================
-// EVENT INJECTION ENGINE
+// EVENT ENGINE
 // =========================
 
-window.injectEvent = function(event) {
+window.injectEvent = function(event){
 
-  const map = {
-    FX_SPIKE: "FX",
-    BOND_STRESS: "DC",
-    CYBER_ATTACK: "CYB",
-    INFRA_FAILURE: "INF"
+  const map={
+    FX_SPIKE:"FX",
+    BOND_STRESS:"DC",
+    CYBER_ATTACK:"CYB",
+    INFRA_FAILURE:"INF"
   };
 
-  const target = map[event];
-  if (!target) return;
+  const target=map[event];
 
-  window.state[target] += 3;
+  if(!target) return;
 
-  window.audit("EVENT", {
+  window.state[target]+=3;
+
+  window.audit("EVENT",{
     event,
     target,
-    state: { ...window.state }
+    state:{...window.state}
   });
 
   window.updateUI();
   window.updateGraph(window.state);
+  window.updateResilienceScore();
+
 };
 
 // =========================
-// UI UPDATE
+// UI
 // =========================
 
-window.updateUI = function() {
+window.updateUI=function(){
 
-  const out = document.getElementById("output");
-  if (!out) return;
+  const out=document.getElementById("output");
+  const diag=document.getElementById("diag");
 
-  out.innerHTML =
-    "FX: " + window.state.FX + "<br>" +
-    "DC: " + window.state.DC + "<br>" +
-    "CYB: " + window.state.CYB + "<br>" +
-    "INF: " + window.state.INF;
+  if(!out) return;
+
+  out.innerHTML=
+      "FX : "+window.state.FX+"<br>"+
+      "DC : "+window.state.DC+"<br>"+
+      "CYB : "+window.state.CYB+"<br>"+
+      "INF : "+window.state.INF;
+
+  if(diag){
+
+      diag.innerHTML=
+      "System Diagnostics\n\n"+
+      "FX Module : "+window.state.FX+"\n"+
+      "Datacentre : "+window.state.DC+"\n"+
+      "Cyber : "+window.state.CYB+"\n"+
+      "Infrastructure : "+window.state.INF+"\n\n"+
+      "Simulation Active";
+  }
+
 };
 
 // =========================
-// AUDIT VIEW FUNCTIONS
+// AUDIT
 // =========================
 
-window.showAudit = function() {
-  const el = document.getElementById("audit");
-  if (!el) return;
+window.showAudit=function(){
 
-  el.innerText = JSON.stringify(window.auditLog, null, 2);
+  const el=document.getElementById("audit");
+
+  if(!el) return;
+
+  el.innerText=JSON.stringify(window.auditLog,null,2);
+
 };
 
-window.clearAudit = function() {
-  window.auditLog = [];
-  document.getElementById("audit").innerText = "cleared";
+window.clearAudit=function(){
+
+  window.auditLog=[];
+
+  const el=document.getElementById("audit");
+
+  if(el)
+      el.innerText="Audit log cleared.";
+
 };
 
 // =========================
-// GRAPH ENGINE (SAFE STUB)
+// GRAPH
 // =========================
 
-window.updateGraph = function(state) {
-  const canvas = document.getElementById("graph");
-  if (!canvas) return;
+window.updateGraph=function(state){
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  const canvas=document.getElementById("graph");
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if(!canvas) return;
 
-  const data = [state.FX, state.DC, state.CYB, state.INF];
-  const labels = ["FX", "DC", "CYB", "INF"];
+  canvas.width=400;
+  canvas.height=220;
 
-  const barWidth = 40;
-  const gap = 20;
+  const ctx=canvas.getContext("2d");
 
-  data.forEach((val, i) => {
-    ctx.fillStyle = "#60a5fa";
-    ctx.fillRect(50 + i * (barWidth + gap), 200 - val * 10, barWidth, val * 10);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillStyle = "#e5e7eb";
-    ctx.fillText(labels[i], 50 + i * (barWidth + gap), 210);
+  const labels=["FX","DC","CYB","INF"];
+  const values=[state.FX,state.DC,state.CYB,state.INF];
+
+  const width=50;
+  const gap=30;
+
+  values.forEach((v,i)=>{
+
+      ctx.fillStyle="#60a5fa";
+
+      ctx.fillRect(
+          40+i*(width+gap),
+          190-v*10,
+          width,
+          v*10
+      );
+
+      ctx.fillStyle="#ffffff";
+
+      ctx.fillText(
+          labels[i],
+          50+i*(width+gap),
+          205
+      );
+
+      ctx.fillText(
+          v,
+          58+i*(width+gap),
+          180-v*10
+      );
+
   });
+
 };
 
 // =========================
-// INIT SAFE BOOT
+// INIT
 // =========================
 
-document.addEventListener("DOMContentLoaded", function() {
-  window.updateUI();
-  window.updateGraph(window.state);
+document.addEventListener("DOMContentLoaded",function(){
+
+    window.updateUI();
+    window.updateGraph(window.state);
+    window.updateResilienceScore();
+
 });
