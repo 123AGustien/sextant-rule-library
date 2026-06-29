@@ -1,5 +1,6 @@
+
 /****************************************
- * SPD v11 CASCADE GRAPH ENGINE (FIXED)
+ * SPD v11 CASCADE GRAPH ENGINE (FINAL)
  ****************************************/
 
 let ctx;
@@ -7,10 +8,10 @@ let canvas;
 
 const nodeState = {
 
-  FX:  { x:100, y:100 },
-  DC:  { x:300, y:100 },
-  CYB: { x:300, y:300 },
-  INF: { x:100, y:300 }
+  FX:  { x: 100, y: 100 },
+  DC:  { x: 300, y: 100 },
+  CYB: { x: 300, y: 300 },
+  INF: { x: 100, y: 300 }
 
 };
 
@@ -27,18 +28,21 @@ const links = [
 ];
 
 /***********************
- * INIT GRAPH
+ * INIT GRAPH (SAFE)
  ***********************/
 
 function initGraph() {
 
   canvas = document.getElementById("graph");
+
   if (!canvas) return;
 
   ctx = canvas.getContext("2d");
 
-  // FIX: proper pixel scaling
   const dpr = window.devicePixelRatio || 1;
+
+  // IMPORTANT: reset transform before scaling
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   canvas.width = 400 * dpr;
   canvas.height = 400 * dpr;
@@ -58,7 +62,7 @@ function updateGraph(state) {
 }
 
 /***********************
- * DRAW ENGINE
+ * DRAW
  ***********************/
 
 function draw(state = {}) {
@@ -71,36 +75,36 @@ function draw(state = {}) {
   ctx.fillStyle = "#08111f";
   ctx.fillRect(0, 0, 400, 400);
 
-  // links first
-  links.forEach(([a, b]) => {
-    drawLink(a, b, state);
-  });
+  // links
+  for (let i = 0; i < links.length; i++) {
+    drawLink(links[i][0], links[i][1], state);
+  }
 
   // nodes
-  Object.keys(nodeState).forEach(name => {
-    drawNode(name, state[name] || 0);
-  });
+  for (let key in nodeState) {
+    drawNode(key, state[key] || 0);
+  }
 
 }
 
 /***********************
- * NODE RENDER
+ * NODE
  ***********************/
 
 function drawNode(name, value) {
 
   const n = nodeState[name];
 
-  let colour = "#2bd4ff";
+  let color = "#2bd4ff";
 
-  if (value >= 8) colour = "#ef4444";
-  else if (value >= 5) colour = "#f59e0b";
-  else if (value >= 2) colour = "#fde047";
+  if (value >= 8) color = "#ef4444";
+  else if (value >= 5) color = "#f59e0b";
+  else if (value >= 2) color = "#fde047";
 
   ctx.beginPath();
   ctx.arc(n.x, n.y, 26, 0, Math.PI * 2);
 
-  ctx.fillStyle = colour;
+  ctx.fillStyle = color;
   ctx.fill();
 
   ctx.lineWidth = 2;
@@ -117,7 +121,7 @@ function drawNode(name, value) {
 }
 
 /***********************
- * LINK RENDER
+ * LINK
  ***********************/
 
 function drawLink(a, b, state) {
@@ -130,17 +134,17 @@ function drawLink(a, b, state) {
     state[b] || 0
   );
 
-  let colour = "#334155";
+  let color = "#334155";
   let width = 2;
 
   if (risk >= 8) {
-    colour = "#ef4444";
+    color = "#ef4444";
     width = 4;
   } else if (risk >= 5) {
-    colour = "#f59e0b";
+    color = "#f59e0b";
     width = 3;
   } else if (risk >= 2) {
-    colour = "#fde047";
+    color = "#fde047";
     width = 2.5;
   }
 
@@ -149,7 +153,7 @@ function drawLink(a, b, state) {
   ctx.lineTo(nb.x, nb.y);
 
   ctx.lineWidth = width;
-  ctx.strokeStyle = colour;
+  ctx.strokeStyle = color;
   ctx.stroke();
 
 }
