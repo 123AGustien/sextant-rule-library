@@ -1,5 +1,5 @@
 /****************************************
- * SPD v11 CASCADE GRAPH ENGINE
+ * SPD v11 CASCADE GRAPH ENGINE (FIXED)
  ****************************************/
 
 let ctx;
@@ -7,12 +7,9 @@ let canvas;
 
 const nodeState = {
 
-  FX:  { x:100, y:120 },
-
-  DC:  { x:300, y:120 },
-
+  FX:  { x:100, y:100 },
+  DC:  { x:300, y:100 },
   CYB: { x:300, y:300 },
-
   INF: { x:100, y:300 }
 
 };
@@ -24,165 +21,142 @@ const links = [
   ["CYB","INF"],
   ["INF","FX"],
 
-  // Cross dependencies
   ["FX","CYB"],
   ["DC","INF"]
 
 ];
 
-function initGraph(){
+/***********************
+ * INIT GRAPH
+ ***********************/
 
-    canvas=document.getElementById("graph");
+function initGraph() {
 
-    if(!canvas) return;
+  canvas = document.getElementById("graph");
+  if (!canvas) return;
 
-    canvas.width=400;
-    canvas.height=400;
+  ctx = canvas.getContext("2d");
 
-    ctx=canvas.getContext("2d");
+  // FIX: proper pixel scaling
+  const dpr = window.devicePixelRatio || 1;
 
-    draw(window.state);
+  canvas.width = 400 * dpr;
+  canvas.height = 400 * dpr;
 
-}
+  ctx.scale(dpr, dpr);
 
-function updateGraph(state){
-
-    draw(state);
-
-}
-
-function draw(state={}){
-
-    if(!ctx) return;
-
-    ctx.clearRect(0,0,400,400);
-
-    // Background
-
-    ctx.fillStyle="#08111f";
-    ctx.fillRect(0,0,400,400);
-
-    // Draw links
-
-    links.forEach(pair=>{
-
-        drawLink(
-            pair[0],
-            pair[1],
-            state
-        );
-
-    });
-
-    // Draw nodes
-
-    Object.keys(nodeState).forEach(name=>{
-
-        drawNode(
-            name,
-            state[name]||0
-        );
-
-    });
+  draw(window.state || {});
 
 }
 
-function drawNode(name,value){
+/***********************
+ * UPDATE
+ ***********************/
 
-    const n=nodeState[name];
+function updateGraph(state) {
+  draw(state);
+}
 
-    let colour="#2bd4ff";
+/***********************
+ * DRAW ENGINE
+ ***********************/
 
-    if(value>=8)
-        colour="#ef4444";
+function draw(state = {}) {
 
-    else if(value>=5)
-        colour="#f59e0b";
+  if (!ctx) return;
 
-    else if(value>=2)
-        colour="#fde047";
+  ctx.clearRect(0, 0, 400, 400);
 
-    ctx.beginPath();
+  // background
+  ctx.fillStyle = "#08111f";
+  ctx.fillRect(0, 0, 400, 400);
 
-    ctx.arc(
-        n.x,
-        n.y,
-        24,
-        0,
-        Math.PI*2
-    );
+  // links first
+  links.forEach(([a, b]) => {
+    drawLink(a, b, state);
+  });
 
-    ctx.fillStyle=colour;
-    ctx.fill();
-
-    ctx.lineWidth=2;
-    ctx.strokeStyle="#ffffff";
-    ctx.stroke();
-
-    ctx.fillStyle="#ffffff";
-    ctx.font="bold 14px Arial";
-    ctx.fillText(name,n.x-14,n.y+5);
-
-    ctx.font="12px Arial";
-    ctx.fillText(
-        value,
-        n.x-4,
-        n.y+40
-    );
+  // nodes
+  Object.keys(nodeState).forEach(name => {
+    drawNode(name, state[name] || 0);
+  });
 
 }
 
-function drawLink(a,b,state){
+/***********************
+ * NODE RENDER
+ ***********************/
 
-    const na=nodeState[a];
-    const nb=nodeState[b];
+function drawNode(name, value) {
 
-    const risk=Math.max(
-        state[a]||0,
-        state[b]||0
-    );
+  const n = nodeState[name];
 
-    let colour="#334155";
-    let width=2;
+  let colour = "#2bd4ff";
 
-    if(risk>=8){
+  if (value >= 8) colour = "#ef4444";
+  else if (value >= 5) colour = "#f59e0b";
+  else if (value >= 2) colour = "#fde047";
 
-        colour="#ef4444";
-        width=4;
+  ctx.beginPath();
+  ctx.arc(n.x, n.y, 26, 0, Math.PI * 2);
 
-    }
+  ctx.fillStyle = colour;
+  ctx.fill();
 
-    else if(risk>=5){
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#ffffff";
+  ctx.stroke();
 
-        colour="#f59e0b";
-        width=3;
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 14px Arial";
+  ctx.fillText(name, n.x - 16, n.y + 5);
 
-    }
-
-    else if(risk>=2){
-
-        colour="#fde047";
-        width=2.5;
-
-    }
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        na.x,
-        na.y
-    );
-
-    ctx.lineTo(
-        nb.x,
-        nb.y
-    );
-
-    ctx.lineWidth=width;
-    ctx.strokeStyle=colour;
-    ctx.stroke();
+  ctx.font = "12px Arial";
+  ctx.fillText(value, n.x - 4, n.y + 42);
 
 }
 
-window.initGraph=initGraph;
-window.updateGraph=updateGraph;
+/***********************
+ * LINK RENDER
+ ***********************/
+
+function drawLink(a, b, state) {
+
+  const na = nodeState[a];
+  const nb = nodeState[b];
+
+  const risk = Math.max(
+    state[a] || 0,
+    state[b] || 0
+  );
+
+  let colour = "#334155";
+  let width = 2;
+
+  if (risk >= 8) {
+    colour = "#ef4444";
+    width = 4;
+  } else if (risk >= 5) {
+    colour = "#f59e0b";
+    width = 3;
+  } else if (risk >= 2) {
+    colour = "#fde047";
+    width = 2.5;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(na.x, na.y);
+  ctx.lineTo(nb.x, nb.y);
+
+  ctx.lineWidth = width;
+  ctx.strokeStyle = colour;
+  ctx.stroke();
+
+}
+
+/***********************
+ * EXPORT
+ ***********************/
+
+window.initGraph = initGraph;
+window.updateGraph = updateGraph;
