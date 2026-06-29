@@ -1,6 +1,7 @@
-// =========================
-// SPD CORE STATE
-// =========================
+
+/***********************
+ * SPD CORE STATE
+ ***********************/
 
 window.state = {
   FX: 0,
@@ -11,9 +12,9 @@ window.state = {
 
 window.auditLog = [];
 
-// =========================
-// AUDIT SYSTEM
-// =========================
+/***********************
+ * AUDIT SYSTEM
+ ***********************/
 
 window.audit = function(type, payload) {
   window.auditLog.push({
@@ -23,9 +24,9 @@ window.audit = function(type, payload) {
   });
 };
 
-// =========================
-// RESILIENCE SCORE ENGINE
-// =========================
+/***********************
+ * RESILIENCE SCORE ENGINE
+ ***********************/
 
 window.updateResilienceScore = function() {
 
@@ -50,185 +51,133 @@ window.updateResilienceScore = function() {
   if (score >= 80) {
     health.innerHTML = "🟢 HEALTHY";
     health.style.color = "#34d399";
-  }
-  else if (score >= 50) {
+  } else if (score >= 50) {
     health.innerHTML = "🟡 DEGRADED";
     health.style.color = "#fbbf24";
-  }
-  else {
+  } else {
     health.innerHTML = "🔴 CRITICAL";
     health.style.color = "#ef4444";
   }
 };
 
-// =========================
-// SCENARIO ENGINE
-// =========================
+/***********************
+ * SCENARIO ENGINE
+ ***********************/
 
 window.runScenario = function(type) {
 
-  if (!window.state[type])
-      window.state[type] = 0;
+  if (!window.state[type]) window.state[type] = 0;
 
   window.state[type] += 2;
 
-  window.audit("SCENARIO",{
+  window.audit("SCENARIO", {
     type,
-    state:{...window.state}
+    state: { ...window.state }
   });
 
   window.updateUI();
-  window.updateGraph(window.state);
-  window.updateResilienceScore();
 
+  if (window.updateGraph)
+    window.updateGraph(window.state);
+
+  window.updateResilienceScore();
 };
 
-// =========================
-// EVENT ENGINE
-// =========================
+/***********************
+ * EVENT ENGINE
+ ***********************/
 
-window.injectEvent = function(event){
+window.injectEvent = function(event) {
 
-  const map={
-    FX_SPIKE:"FX",
-    BOND_STRESS:"DC",
-    CYBER_ATTACK:"CYB",
-    INFRA_FAILURE:"INF"
+  const map = {
+    FX_SPIKE: "FX",
+    BOND_STRESS: "DC",
+    CYBER_ATTACK: "CYB",
+    INFRA_FAILURE: "INF"
   };
 
-  const target=map[event];
+  const target = map[event];
+  if (!target) return;
 
-  if(!target) return;
+  window.state[target] += 3;
 
-  window.state[target]+=3;
-
-  window.audit("EVENT",{
+  window.audit("EVENT", {
     event,
     target,
-    state:{...window.state}
+    state: { ...window.state }
   });
 
   window.updateUI();
-  window.updateGraph(window.state);
-  window.updateResilienceScore();
 
+  if (window.updateGraph)
+    window.updateGraph(window.state);
+
+  window.updateResilienceScore();
 };
 
-// =========================
-// UI
-// =========================
+/***********************
+ * UI ENGINE
+ ***********************/
 
-window.updateUI=function(){
+window.updateUI = function() {
 
-  const out=document.getElementById("output");
-  const diag=document.getElementById("diag");
+  const out = document.getElementById("output");
+  const diag = document.getElementById("diag");
 
-  if(!out) return;
+  if (!out) return;
 
-  out.innerHTML=
-      "FX : "+window.state.FX+"<br>"+
-      "DC : "+window.state.DC+"<br>"+
-      "CYB : "+window.state.CYB+"<br>"+
-      "INF : "+window.state.INF;
+  out.innerHTML =
+    "FX : " + window.state.FX + "<br>" +
+    "DC : " + window.state.DC + "<br>" +
+    "CYB : " + window.state.CYB + "<br>" +
+    "INF : " + window.state.INF;
 
-  if(diag){
+  if (diag) {
 
-      diag.innerHTML=
-      "System Diagnostics\n\n"+
-      "FX Module : "+window.state.FX+"\n"+
-      "Datacentre : "+window.state.DC+"\n"+
-      "Cyber : "+window.state.CYB+"\n"+
-      "Infrastructure : "+window.state.INF+"\n\n"+
+    diag.innerHTML =
+      "System Diagnostics\n\n" +
+      "FX Module : " + window.state.FX + "\n" +
+      "Datacentre : " + window.state.DC + "\n" +
+      "Cyber : " + window.state.CYB + "\n" +
+      "Infrastructure : " + window.state.INF + "\n\n" +
       "Simulation Active";
   }
-
 };
 
-// =========================
-// AUDIT
-// =========================
+/***********************
+ * AUDIT CONTROLS
+ ***********************/
 
-window.showAudit=function(){
+window.showAudit = function() {
 
-  const el=document.getElementById("audit");
+  const el = document.getElementById("audit");
 
-  if(!el) return;
+  if (!el) return;
 
-  el.innerText=JSON.stringify(window.auditLog,null,2);
-
+  el.innerText = JSON.stringify(window.auditLog, null, 2);
 };
 
-window.clearAudit=function(){
+window.clearAudit = function() {
 
-  window.auditLog=[];
+  window.auditLog = [];
 
-  const el=document.getElementById("audit");
+  const el = document.getElementById("audit");
 
-  if(el)
-      el.innerText="Audit log cleared.";
-
+  if (el)
+    el.innerText = "Audit log cleared.";
 };
 
-// =========================
-// GRAPH
-// =========================
+/***********************
+ * INIT
+ ***********************/
 
-window.updateGraph=function(state){
+document.addEventListener("DOMContentLoaded", function() {
 
-  const canvas=document.getElementById("graph");
+  window.updateUI();
 
-  if(!canvas) return;
+  if (typeof window.initGraph === "function") {
+    window.initGraph();
+  }
 
-  canvas.width=400;
-  canvas.height=220;
-
-  const ctx=canvas.getContext("2d");
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  const labels=["FX","DC","CYB","INF"];
-  const values=[state.FX,state.DC,state.CYB,state.INF];
-
-  const width=50;
-  const gap=30;
-
-  values.forEach((v,i)=>{
-
-      ctx.fillStyle="#60a5fa";
-
-      ctx.fillRect(
-          40+i*(width+gap),
-          190-v*10,
-          width,
-          v*10
-      );
-
-      ctx.fillStyle="#ffffff";
-
-      ctx.fillText(
-          labels[i],
-          50+i*(width+gap),
-          205
-      );
-
-      ctx.fillText(
-          v,
-          58+i*(width+gap),
-          180-v*10
-      );
-
-  });
-
-};
-
-// =========================
-// INIT
-// =========================
-
-document.addEventListener("DOMContentLoaded",function(){
-
-    window.updateUI();
-    window.updateGraph(window.state);
-    window.updateResilienceScore();
-
+  window.updateResilienceScore();
 });
