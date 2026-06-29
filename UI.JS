@@ -1,6 +1,6 @@
 
 /***********************
- * SPD v10 UI + BOOT
+ * SPD BOOT ENGINE (CLEAN)
  ***********************/
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -16,31 +16,19 @@ document.addEventListener("DOMContentLoaded", function () {
   // 2. READY SCREEN
   // =====================
   const out = document.getElementById("output");
+
   if (out) {
     out.innerHTML = "🛰 SPD v10 READY — SELECT SCENARIO";
   }
 
   // =====================
-  // 3. AUDIT BOOT EVENT
+  // 3. SAFE AUDIT BOOT EVENT
   // =====================
   if (typeof audit === "function") {
-    audit("BOOT", { status: "READY" });
+    audit("BOOT", {
+      status: "READY",
+      timestamp: new Date().toISOString()
+    });
   }
-
-  // =====================
-  // 4. RUN INITIAL DIAGNOSTICS
-  // =====================
-  if (typeof runDiagnostics === "function") {
-    runDiagnostics();
-  }
-
-  // =====================
-  // 5. LIVE DIAGNOSTICS LOOP
-  // =====================
-  setInterval(function () {
-    if (typeof runDiagnostics === "function") {
-      runDiagnostics();
-    }
-  }, 1000);
 
 });
