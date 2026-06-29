@@ -1,6 +1,5 @@
-
 /***********************
- * SPD CORE ENGINE v11
+ * SPD CORE ENGINE v12
  ***********************/
 
 window.state = {
@@ -12,11 +11,7 @@ window.state = {
 
 window.auditLog = [];
 
-/***********************
- * AUDIT SYSTEM
- ***********************/
-
-window.audit = function(type, payload) {
+window.audit = function (type, payload) {
   window.auditLog.push({
     time: new Date().toISOString(),
     type,
@@ -24,24 +19,13 @@ window.audit = function(type, payload) {
   });
 };
 
-/***********************
- * SAFE STATE GUARD
- ***********************/
-
-function ensureState(type) {
-  if (!window.state[type]) {
-    window.state[type] = 0;
-  }
+function ensure(type) {
+  if (!window.state[type]) window.state[type] = 0;
 }
 
-/***********************
- * SCENARIO ENGINE
- ***********************/
+window.runScenario = function (type) {
 
-window.runScenario = function(type) {
-
-  ensureState(type);
-
+  ensure(type);
   window.state[type] += 2;
 
   window.audit("SCENARIO", {
@@ -49,24 +33,12 @@ window.runScenario = function(type) {
     state: { ...window.state }
   });
 
-  if (typeof window.updateUI === "function") {
-    window.updateUI();
-  }
-
-  if (typeof window.updateGraph === "function") {
-    window.updateGraph(window.state);
-  }
-
-  if (typeof window.updateResilienceScore === "function") {
-    window.updateResilienceScore();
-  }
+  window.updateUI?.();
+  window.updateGraph?.(window.state);
+  window.updateResilienceScore?.();
 };
 
-/***********************
- * EVENT INJECTION ENGINE
- ***********************/
-
-window.injectEvent = function(event) {
+window.injectEvent = function (event) {
 
   const map = {
     FX_SPIKE: "FX",
@@ -75,28 +47,19 @@ window.injectEvent = function(event) {
     INFRA_FAILURE: "INF"
   };
 
-  const target = map[event];
-  if (!target) return;
+  const t = map[event];
+  if (!t) return;
 
-  ensureState(target);
-
-  window.state[target] += 3;
+  ensure(t);
+  window.state[t] += 3;
 
   window.audit("EVENT", {
     event,
-    target,
+    target: t,
     state: { ...window.state }
   });
 
-  if (typeof window.updateUI === "function") {
-    window.updateUI();
-  }
-
-  if (typeof window.updateGraph === "function") {
-    window.updateGraph(window.state);
-  }
-
-  if (typeof window.updateResilienceScore === "function") {
-    window.updateResilienceScore();
-  }
+  window.updateUI?.();
+  window.updateGraph?.(window.state);
+  window.updateResilienceScore?.();
 };
