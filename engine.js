@@ -1,9 +1,3 @@
-
-/***********************
- * SPD CORE STATE (CLASS 1)
- * SIMULATION BRAIN
- ***********************/
-
 window.state = {
   FX: 0,
   DC: 0,
@@ -13,10 +7,6 @@ window.state = {
 
 window.auditLog = [];
 
-/***********************
- * AUDIT CORE
- ***********************/
-
 window.audit = function(type, payload) {
   window.auditLog.push({
     time: new Date().toISOString(),
@@ -25,27 +15,18 @@ window.audit = function(type, payload) {
   });
 };
 
-/***********************
- * SCENARIO ENGINE
- ***********************/
-
 window.runScenario = function(type) {
-
-  if (!window.state[type]) window.state[type] = 0;
-
   window.state[type] += 2;
 
   window.audit("SCENARIO", {
     type,
-    state: { ...window.state }
+    state: {...window.state}
   });
 
-  window.engineNotify();
+  window.updateUI();
+  window.updateGraph(window.state);
+  window.updateResilienceScore();
 };
-
-/***********************
- * EVENT ENGINE
- ***********************/
 
 window.injectEvent = function(event) {
 
@@ -56,28 +37,18 @@ window.injectEvent = function(event) {
     INFRA_FAILURE: "INF"
   };
 
-  const target = map[event];
-  if (!target) return;
+  const t = map[event];
+  if (!t) return;
 
-  window.state[target] += 3;
+  window.state[t] += 3;
 
   window.audit("EVENT", {
     event,
-    target,
-    state: { ...window.state }
+    target: t,
+    state: {...window.state}
   });
 
-  window.engineNotify();
-};
-
-/***********************
- * NOTIFY LAYER (bridge to UI)
- ***********************/
-
-window.engineNotify = function() {
-
-  if (window.updateUI) window.updateUI();
-  if (window.updateGraph) window.updateGraph(window.state);
-  if (window.updateResilienceScore) window.updateResilienceScore();
-
+  window.updateUI();
+  window.updateGraph(window.state);
+  window.updateResilienceScore();
 };
