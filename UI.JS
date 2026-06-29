@@ -1,5 +1,6 @@
 /****************************************
- * SPD v12 BOOT ENGINE (AUTO SAFE MODE)
+ * SPD v12 BOOT ENGINE (NO BLOCK FIX)
+ * Replaces v11 dependency lock
  ****************************************/
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -17,33 +18,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const out = document.getElementById("output");
 
+  /***********************
+   * 1. NEVER BLOCK SYSTEM
+   ***********************/
   if (missing.length > 0) {
 
-    // NO HARD BLOCK ANYMORE — SAFE DEGRADED MODE
+    console.warn("SPD v12 WARNING: Missing modules detected", missing);
+
     if (out) {
       out.innerHTML =
-        "🟡 SPD DEGRADED MODE (AUTO RECOVERY ACTIVE)<br><br>" +
-        "Recovered Missing Modules:<br>" +
+        "🟡 SPD RUNNING IN DEGRADED MODE<br><br>" +
+        "Missing modules (auto-handled by registry):<br>" +
         missing.join("<br>");
     }
 
-    console.warn("SPD v12 DEGRADED MODE ACTIVE", missing);
+  } else {
+
+    if (out) {
+      out.innerHTML = "🟢 SPD v12 READY — FULL SYSTEM ONLINE";
+    }
+
   }
 
+  /***********************
+   * 2. SAFE GRAPH INIT
+   ***********************/
   if (typeof initGraph === "function") {
     initGraph();
   }
 
-  if (out && missing.length === 0) {
-    out.innerHTML = "🟢 SPD v12 READY — FULL SYSTEM ONLINE";
-  }
-
+  /***********************
+   * 3. BOOT AUDIT (SAFE)
+   ***********************/
   if (typeof audit === "function") {
     audit("BOOT", {
       version: "v12",
       mode: missing.length ? "DEGRADED" : "FULL",
-      missing
+      missing,
+      timestamp: new Date().toISOString()
     });
   }
+
+  console.log("SPD v12 BOOT COMPLETE (NO BLOCK MODE)");
 
 });
