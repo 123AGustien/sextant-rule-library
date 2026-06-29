@@ -2,152 +2,135 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11 LIVE | Resilience Simulation Console</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>SPD Simulator - Clean Build</title>
 <style>
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#0b0f1a;
-    color:#e6edf3;
-}
+  body {
+    background: #0b0f14;
+    color: #ffffff;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
 
-.header{
-    padding:18px;
-    background:#0f172a;
-    border-bottom:1px solid #1f2937;
-    font-size:20px;
-    font-weight:bold;
-}
+  .panel {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
 
-.status-bar{
-    padding:10px 18px;
-    background:#111827;
-    color:#34d399;
-    border-bottom:1px solid #1f2937;
-    font-size:13px;
-}
+  button {
+    padding: 10px 15px;
+    background: #1c2b3a;
+    color: white;
+    border: 1px solid #2f4b63;
+    cursor: pointer;
+  }
 
-.health-strip{
-    display:flex;
-    justify-content:space-between;
-    padding:10px 18px;
-    font-size:12px;
-    color:#9ca3af;
-}
+  button:hover {
+    background: #27465f;
+  }
 
-.online{color:#34d399;}
-.warn{color:#fbbf24;}
+  canvas {
+    background: #111821;
+    border: 1px solid #2f4b63;
+    margin-top: 10px;
+  }
 
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:16px;
-    padding:16px;
-}
-
-.panel{
-    background:#111827;
-    border:1px solid #1f2937;
-    border-radius:12px;
-    padding:14px;
-}
-
-button{
-    margin:6px;
-    padding:8px;
-    background:#0b1220;
-    color:white;
-    border:1px solid #374151;
-    border-radius:8px;
-    cursor:pointer;
-}
-
-button:hover{
-    border-color:#60a5fa;
-}
-
-#output,#audit,#diag{
-    background:#0b1220;
-    border-radius:8px;
-    padding:10px;
-    min-height:80px;
-    font-size:12px;
-}
-
-canvas{
-    width:100%;
-    height:220px;
-    background:#0b1220;
-    border-radius:8px;
-}
+  #log {
+    margin-top: 15px;
+    font-size: 12px;
+    opacity: 0.8;
+    max-height: 120px;
+    overflow-y: auto;
+  }
 </style>
-
 </head>
 
 <body>
 
-<div class="header">🛰 SPD PILOT SYSTEM · v11</div>
-
-<div class="status-bar">
-SYSTEM ONLINE | Simulation Kernel Active
-</div>
-
-<div class="health-strip">
-<div>FX: <span class="online">ONLINE</span></div>
-<div>DC: <span class="online">STABLE</span></div>
-<div>CYB: <span class="warn">MONITORING</span></div>
-<div>INF: <span class="online">READY</span></div>
-</div>
-
-<div class="grid">
+<h2>🛰 SPD Simulator — Clean Runtime</h2>
 
 <div class="panel">
-<h2>Core Engine</h2>
-<button onclick="runScenario('FX')">FX</button>
-<button onclick="runScenario('DC')">DC</button>
-<button onclick="runScenario('CYB')">CYB</button>
-<button onclick="runScenario('INF')">INF</button>
+  <button onclick="runScenario('FX')">FX Stress</button>
+  <button onclick="runScenario('DC')">DC Load</button>
+  <button onclick="runScenario('CYB')">Cyber Event</button>
+  <button onclick="runScenario('INF')">Infra Strain</button>
 </div>
 
-<div class="panel">
-<h2>Events</h2>
-<button onclick="injectEvent('FX_SPIKE')">FX Spike</button>
-<button onclick="injectEvent('BOND_STRESS')">Bond</button>
-<button onclick="injectEvent('CYBER_ATTACK')">Cyber</button>
-<button onclick="injectEvent('INFRA_FAILURE')">Infra</button>
-</div>
+<canvas id="graph" width="320" height="200"></canvas>
 
-<div class="panel">
-<h2>Output</h2>
-<div id="output">READY</div>
-</div>
+<div id="log"></div>
 
-<div class="panel">
-<h2>Graph</h2>
-<canvas id="graph"></canvas>
-</div>
+<script>
+let state = {
+  FX: 0,
+  DC: 0,
+  CYB: 0,
+  INF: 0
+};
 
-<div class="panel">
-<h2>Diagnostics</h2>
-<pre id="diag">Idle</pre>
-</div>
+let auditLog = [];
 
-<div class="panel">
-<h2>Audit</h2>
-<button onclick="showAudit()">Show</button>
-<button onclick="clearAudit()">Clear</button>
-<pre id="audit"></pre>
-</div>
+function audit(type, data) {
+  auditLog.push({ type, data, time: Date.now() });
 
-</div>
+  document.getElementById("log").innerHTML =
+    auditLog.slice(-5).map(l =>
+      `${l.type}: ${JSON.stringify(l.data)}`
+    ).join("<br>");
+}
 
-<!-- IMPORTANT LOAD ORDER -->
-<script src="engine-core.js"></script>
-<script src="engine-ui.js"></script>
-<script src="cascade-graph.js"></script>
-<script src="boot.js"></script>
+function runScenario(type) {
+  state[type] += 2;
+
+  audit("SCENARIO", { type, state });
+
+  updateGraph(state);
+}
+
+function injectEvent(event) {
+  const map = {
+    FX_SPIKE: "FX",
+    BOND_OUTFLOW: "FX",
+    CYBER_ATTACK: "CYB",
+    POWER_FAILURE: "DC",
+    INFRA_STRESS: "INF"
+  };
+
+  const target = map[event];
+  if (!target) return;
+
+  state[target] += 3;
+
+  audit("EVENT", { event, state });
+
+  updateGraph(state);
+}
+
+function updateGraph(state) {
+  const canvas = document.getElementById("graph");
+  const ctx = canvas.getContext("2d");
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const keys = Object.keys(state);
+  const values = Object.values(state);
+  const max = Math.max(...values, 5);
+
+  keys.forEach((k, i) => {
+    const x = 40 + i * 70;
+    const barHeight = (state[k] / max) * 150;
+
+    ctx.fillStyle = "#00ffd5";
+    ctx.fillRect(x, 180 - barHeight, 30, barHeight);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(k, x, 195);
+  });
+}
+
+// initial render
+updateGraph(state);
+</script>
 
 </body>
 </html>
