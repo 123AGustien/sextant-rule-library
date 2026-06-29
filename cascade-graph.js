@@ -1,47 +1,35 @@
-
 /****************************************
- * SPD v11 CASCADE GRAPH ENGINE (FINAL)
+ * SPD CASCADE GRAPH v12
  ****************************************/
 
 let ctx;
 let canvas;
 
 const nodeState = {
-
-  FX:  { x: 100, y: 100 },
-  DC:  { x: 300, y: 100 },
+  FX: { x: 100, y: 100 },
+  DC: { x: 300, y: 100 },
   CYB: { x: 300, y: 300 },
   INF: { x: 100, y: 300 }
-
 };
 
 const links = [
-
-  ["FX","DC"],
-  ["DC","CYB"],
-  ["CYB","INF"],
-  ["INF","FX"],
-
-  ["FX","CYB"],
-  ["DC","INF"]
-
+  ["FX", "DC"],
+  ["DC", "CYB"],
+  ["CYB", "INF"],
+  ["INF", "FX"],
+  ["FX", "CYB"],
+  ["DC", "INF"]
 ];
-
-/***********************
- * INIT GRAPH (SAFE)
- ***********************/
 
 function initGraph() {
 
   canvas = document.getElementById("graph");
-
   if (!canvas) return;
 
   ctx = canvas.getContext("2d");
 
   const dpr = window.devicePixelRatio || 1;
 
-  // IMPORTANT: reset transform before scaling
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
   canvas.width = 400 * dpr;
@@ -49,21 +37,14 @@ function initGraph() {
 
   ctx.scale(dpr, dpr);
 
-  draw(window.state || {});
-
+  draw(window.state);
 }
 
-/***********************
- * UPDATE
- ***********************/
+window.initGraph = initGraph;
 
-function updateGraph(state) {
+window.updateGraph = function (state) {
   draw(state);
-}
-
-/***********************
- * DRAW
- ***********************/
+};
 
 function draw(state = {}) {
 
@@ -71,25 +52,15 @@ function draw(state = {}) {
 
   ctx.clearRect(0, 0, 400, 400);
 
-  // background
   ctx.fillStyle = "#08111f";
   ctx.fillRect(0, 0, 400, 400);
 
-  // links
-  for (let i = 0; i < links.length; i++) {
-    drawLink(links[i][0], links[i][1], state);
-  }
+  links.forEach(([a, b]) => drawLink(a, b, state));
 
-  // nodes
-  for (let key in nodeState) {
-    drawNode(key, state[key] || 0);
-  }
-
+  Object.keys(nodeState).forEach(k => {
+    drawNode(k, state[k] || 0);
+  });
 }
-
-/***********************
- * NODE
- ***********************/
 
 function drawNode(name, value) {
 
@@ -107,32 +78,24 @@ function drawNode(name, value) {
   ctx.fillStyle = color;
   ctx.fill();
 
+  ctx.strokeStyle = "#fff";
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "#ffffff";
   ctx.stroke();
 
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = "#fff";
   ctx.font = "bold 14px Arial";
   ctx.fillText(name, n.x - 16, n.y + 5);
 
   ctx.font = "12px Arial";
   ctx.fillText(value, n.x - 4, n.y + 42);
-
 }
-
-/***********************
- * LINK
- ***********************/
 
 function drawLink(a, b, state) {
 
   const na = nodeState[a];
   const nb = nodeState[b];
 
-  const risk = Math.max(
-    state[a] || 0,
-    state[b] || 0
-  );
+  const risk = Math.max(state[a] || 0, state[b] || 0);
 
   let color = "#334155";
   let width = 2;
@@ -152,15 +115,7 @@ function drawLink(a, b, state) {
   ctx.moveTo(na.x, na.y);
   ctx.lineTo(nb.x, nb.y);
 
-  ctx.lineWidth = width;
   ctx.strokeStyle = color;
+  ctx.lineWidth = width;
   ctx.stroke();
-
 }
-
-/***********************
- * EXPORT
- ***********************/
-
-window.initGraph = initGraph;
-window.updateGraph = updateGraph;
