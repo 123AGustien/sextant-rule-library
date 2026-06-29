@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.3 // ADAPTATION & GOVERNANCE LAYER</title>
+<title>SPD v11.4 // DIGITAL TWIN GRAPH CORE</title>
 
 <style>
 body {
@@ -19,64 +19,87 @@ body {
   font-size: 14px;
 }
 
-.ojk, .gov {
-  background:#0b1220;
-  padding:12px;
-  font-size:12px;
-  border-bottom:1px solid #1f3b5c;
+/* STATUS */
+#statusBar {
+  text-align:center;
+  padding:8px;
+  background:#0a0f18;
+  font-size:13px;
 }
 
+/* PANELS */
 .panel {
-  display: flex;
-  justify-content: space-around;
-  padding: 20px;
+  display:flex;
+  justify-content:space-around;
+  padding:20px;
 }
 
 .card {
-  background: #0e1a2b;
-  padding: 20px;
-  width: 20%;
-  text-align: center;
-  border-radius: 8px;
+  background:#0e1a2b;
+  width:20%;
+  padding:20px;
+  text-align:center;
+  border-radius:8px;
 }
 
-.value {
-  font-size: 26px;
-  margin-top: 10px;
-}
+.value { font-size:26px; }
 
-.buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+/* GRAPH */
+#graph {
+  position: relative;
+  height: 220px;
   margin: 10px;
-  flex-wrap: wrap;
+}
+
+.node {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #1f3b5c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition: all 0.3s;
+  font-size:12px;
+  z-index:2;
+}
+
+.edge {
+  position:absolute;
+  height:2px;
+  background:#2a4d77;
+  transform-origin:left center;
+  z-index:1;
+}
+
+/* BUTTONS */
+.buttons {
+  text-align:center;
+  margin:10px;
 }
 
 button {
-  padding: 8px 12px;
-  background: #1f3b5c;
-  color: white;
-  border: none;
-  cursor: pointer;
+  padding:8px 12px;
+  margin:4px;
+  background:#1f3b5c;
+  color:white;
+  border:none;
+  cursor:pointer;
 }
 
-#statusBar {
-  text-align: center;
-  padding: 8px;
-  font-size: 13px;
-  background: #0a0f18;
-}
+button:hover { background:#2a4d77; }
 
+/* AUDIT */
 #audit {
-  position: absolute;
-  bottom: 0;
-  height: 140px;
-  width: 100%;
-  background: #0a0f18;
-  overflow-y: auto;
-  font-size: 12px;
-  padding: 10px;
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:130px;
+  background:#0a0f18;
+  overflow-y:auto;
+  font-size:12px;
+  padding:10px;
 }
 </style>
 </head>
@@ -84,62 +107,35 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v11.3 // ADAPTATION & GOVERNANCE LAYER
-</div>
-
-<!-- ================= OJK LAYER ================= -->
-<div class="ojk">
-<b>OJK SANDBOX INTERFACE</b><br>
-Scenario-based systemic risk simulation (non-execution model)
-<br><br>
-
-Scenario:
-<select id="scenarioInfo">
-  <option value="BOND_CRISIS">Bond Crisis</option>
-  <option value="CYBER_WAR">Cyber War</option>
-  <option value="GRID_FAILURE">Grid Failure</option>
-</select>
-
-<button onclick="loadScenarioInfo()">Load Brief</button>
-<button onclick="toggleExplain()">Explain Mode</button>
-<button onclick="exportAudit()">Export Audit</button>
-
-<div id="scenarioPanel" style="margin-top:8px;color:#9ecbff;"></div>
-</div>
-
-<!-- ================= GOVERNANCE LAYER ================= -->
-<div class="gov">
-<b>🛰 GOVERNANCE ADAPTATION LAYER</b><br><br>
-
-Regulatory Mode:
-<select id="regMode">
-  <option value="SANDBOX">Sandbox</option>
-  <option value="CONTROLLED">Controlled</option>
-  <option value="AUDIT_HEAVY">Audit Heavy</option>
-</select>
-
-<button onclick="applyMode()">Apply Mode</button>
-<button onclick="addFeedback()">Add Feedback Rule</button>
-<button onclick="exportConfig()">Export Config</button>
-
-<div id="modePanel" style="margin-top:8px;color:#9ecbff;"></div>
+🛰 SPD v11.4 // PROBABILISTIC DIGITAL TWIN GRAPH CORE
 </div>
 
 <div id="statusBar">STATUS: READY</div>
 
-<!-- ================= CORE SIM ================= -->
 <div class="panel">
-  <div class="card">FX<div class="value" id="FX">0</div></div>
-  <div class="card">DC<div class="value" id="DC">0</div></div>
-  <div class="card">CYB<div class="value" id="CYB">0</div></div>
-  <div class="card">INF<div class="value" id="INF">0</div></div>
+  <div class="card">FX<div class="value" id="FX"></div></div>
+  <div class="card">DC<div class="value" id="DC"></div></div>
+  <div class="card">CYB<div class="value" id="CYB"></div></div>
+  <div class="card">INF<div class="value" id="INF"></div></div>
+</div>
+
+<div id="graph">
+  <div id="node_FX" class="node">FX</div>
+  <div id="node_DC" class="node">DC</div>
+  <div id="node_CYB" class="node">CYB</div>
+  <div id="node_INF" class="node">INF</div>
+
+  <div id="edge_FXDC" class="edge"></div>
+  <div id="edge_DCCYB" class="edge"></div>
+  <div id="edge_CYBINF" class="edge"></div>
+  <div id="edge_INFFX" class="edge"></div>
 </div>
 
 <div class="buttons">
-  <button onclick="runScenario('BOND_CRISIS')">BOND CRISIS</button>
-  <button onclick="runScenario('CYBER_WAR')">CYBER WAR</button>
-  <button onclick="runScenario('GRID_FAILURE')">GRID FAILURE</button>
-  <button onclick="inject('FX')">FX STRESS</button>
+  <button onclick="trigger('FX')">FX STRESS</button>
+  <button onclick="trigger('DC')">DC LOAD</button>
+  <button onclick="trigger('CYB')">CYBER EVENT</button>
+  <button onclick="trigger('INF')">INFRA STRAIN</button>
   <button onclick="reset()">RESET</button>
 </div>
 
@@ -147,213 +143,120 @@ Regulatory Mode:
 
 <script>
 
-/* ================= CORE STATE ================= */
+/* ================= STATE ================= */
 
 const NODES = {
-  FX:{value:0,sens:0.7},
-  DC:{value:0,sens:0.9},
-  CYB:{value:0,sens:0.8},
-  INF:{value:0,sens:0.85}
+  FX:{v:0,s:0.7,x:80,y:80},
+  DC:{v:0,s:0.9,x:220,y:40},
+  CYB:{v:0,s:0.8,x:360,y:80},
+  INF:{v:0,s:0.85,x:220,y:140}
 };
 
-const EDGES = [
-  {from:"FX",to:"DC",w:0.8},
-  {from:"DC",to:"CYB",w:0.7},
-  {from:"CYB",to:"INF",w:0.6},
-  {from:"INF",to:"FX",w:0.5}
+const LINKS = [
+  ["FX","DC"],
+  ["DC","CYB"],
+  ["CYB","INF"],
+  ["INF","FX"]
 ];
-
-const SCENARIOS = {
-  BOND_CRISIS:{FX:35,DC:10,CYB:5},
-  CYBER_WAR:{CYB:40,DC:25,INF:10},
-  GRID_FAILURE:{INF:50,DC:20,FX:15}
-};
-
-const SCENARIO_DOCS = {
-  BOND_CRISIS:{
-    objective:"Sovereign bond stress propagation model",
-    assumptions:["FX leads shock","DC liquidity stress","CYB secondary reaction"],
-    expected:"FX → DC cascade likely"
-  },
-  CYBER_WAR:{
-    objective:"Cyber disruption propagation model",
-    assumptions:["CYB primary shock","infra degradation follows"],
-    expected:"CYB dominates instability"
-  },
-  GRID_FAILURE:{
-    objective:"Infrastructure failure propagation",
-    assumptions:["INF primary source"],
-    expected:"INF → DC → FX reverse cascade possible"
-  }
-};
-
-/* ================= GOVERNANCE ================= */
-
-let GOVERNANCE = {
-  mode:"SANDBOX",
-  volatilityCap:1.0,
-  cascadeSensitivity:1.0,
-  feedbackRules:[]
-};
 
 let log=[];
 
-/* ================= SCENARIO ================= */
+/* ================= ENGINE ================= */
 
-function runScenario(name){
-  const s = SCENARIOS[name];
-  for(let k in s){
-    NODES[k].value += s[k];
-  }
-  audit("SCENARIO",{name});
-  render();
+function trigger(n){
+  NODES[n].v += 10;
+  audit("USER",{n});
 }
-
-/* ================= INJECT ================= */
-
-function inject(n){
-  NODES[n].value += 10;
-  audit("INJECT",{n});
-}
-
-/* ================= CASCADE ENGINE ================= */
 
 function cascade(){
-  EDGES.forEach(e=>{
-    const f=NODES[e.from];
-    const t=NODES[e.to];
+  LINKS.forEach(([a,b])=>{
+    const A=NODES[a], B=NODES[b];
 
-    let p = (f.value * e.w * t.sens / 100);
-
-    p *= GOVERNANCE.cascadeSensitivity;
-
-    if(p > GOVERNANCE.volatilityCap){
-      p = GOVERNANCE.volatilityCap;
-    }
-
-    GOVERNANCE.feedbackRules.forEach(r=>{
-      if(r.includes(e.to) && r.includes("reduce")){
-        p *= 0.8;
-      }
-    });
+    const p = (A.v * A.s * B.s) / 120;
 
     if(Math.random() < p){
-      t.value += 5;
-      audit("CASCADE",{from:e.from,to:e.to,prob:p.toFixed(3)});
+      B.v += 4;
+      audit("CASCADE",{from:a,to:b,p:p.toFixed(3)});
     }
   });
 }
 
-/* ================= TICK ================= */
+function decay(){
+  for(let k in NODES){
+    NODES[k].v *= 0.97;
+  }
+}
 
 function tick(){
-  for(let k in NODES){
-    NODES[k].value *= 0.97;
-  }
   cascade();
+  decay();
   render();
 }
 
 setInterval(tick,1000);
 
-/* ================= RESET ================= */
+/* ================= GRAPH ================= */
+
+function renderGraph(){
+
+  for(let k in NODES){
+    const n=NODES[k];
+    const el=document.getElementById("node_"+k);
+
+    const size = 40 + n.v;
+    el.style.left = n.x+"px";
+    el.style.top = n.y+"px";
+    el.style.width = size+"px";
+    el.style.height = size+"px";
+
+    el.style.background =
+      n.v>40?"#ff3b3b":
+      n.v>20?"#ffb020":
+      "#1f3b5c";
+
+    el.innerText = k+" "+n.v.toFixed(0);
+  }
+
+  LINKS.forEach(([a,b])=>{
+    const A=NODES[a], B=NODES[b];
+    const el=document.getElementById("edge_"+a+b);
+
+    const dx=B.x-A.x;
+    const dy=B.y-A.y;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const ang=Math.atan2(dy,dx)*180/Math.PI;
+
+    el.style.width=len+"px";
+    el.style.left=A.x+"px";
+    el.style.top=A.y+"px";
+    el.style.transform=`rotate(${ang}deg)`;
+  });
+}
+
+/* ================= UI ================= */
+
+function render(){
+  FX.innerText=NODES.FX.v.toFixed(1);
+  DC.innerText=NODES.DC.v.toFixed(1);
+  CYB.innerText=NODES.CYB.v.toFixed(1);
+  INF.innerText=NODES.INF.v.toFixed(1);
+
+  renderGraph();
+
+  audit.innerHTML=log.slice(-10).map(e=>
+    `[${e.type}] ${JSON.stringify(e.data)}`
+  ).join("<br>");
+}
 
 function reset(){
-  for(let k in NODES){
-    NODES[k].value = 0;
-  }
+  for(let k in NODES) NODES[k].v=0;
   audit("RESET",{});
-  render();
 }
 
 /* ================= AUDIT ================= */
 
 function audit(type,data){
-  log.push({
-    time:new Date().toISOString(),
-    type,
-    data,
-    snapshot:{
-      FX:NODES.FX.value,
-      DC:NODES.DC.value,
-      CYB:NODES.CYB.value,
-      INF:NODES.INF.value
-    }
-  });
-}
-
-/* ================= GOVERNANCE CONTROLS ================= */
-
-function applyMode(){
-  const m=document.getElementById("regMode").value;
-  GOVERNANCE.mode=m;
-
-  if(m==="SANDBOX"){
-    GOVERNANCE.volatilityCap=1.0;
-    GOVERNANCE.cascadeSensitivity=1.0;
-  }
-
-  if(m==="CONTROLLED"){
-    GOVERNANCE.volatilityCap=0.6;
-    GOVERNANCE.cascadeSensitivity=0.7;
-  }
-
-  if(m==="AUDIT_HEAVY"){
-    GOVERNANCE.volatilityCap=0.4;
-    GOVERNANCE.cascadeSensitivity=0.5;
-  }
-
-  updateModePanel();
-}
-
-function addFeedback(){
-  const r=prompt("Enter rule (e.g. CYB:reduce)");
-  if(r){
-    GOVERNANCE.feedbackRules.push(r);
-    audit("FEEDBACK",{r});
-    updateModePanel();
-  }
-}
-
-function updateModePanel(){
-  document.getElementById("modePanel").innerHTML=
-  `Mode: ${GOVERNANCE.mode}<br>
-  Vol Cap: ${GOVERNANCE.volatilityCap}<br>
-  Sensitivity: ${GOVERNANCE.cascadeSensitivity}<br>
-  Rules: ${GOVERNANCE.feedbackRules.length}`;
-}
-
-/* ================= SCENARIO INFO ================= */
-
-function loadScenarioInfo(){
-  const k=document.getElementById("scenarioInfo").value;
-  const s=SCENARIO_DOCS[k];
-
-  document.getElementById("scenarioPanel").innerHTML=
-  `<b>${k}</b><br>${s.objective}<br><br>${s.assumptions.map(a=>"• "+a).join("<br>")}<br><br>${s.expected}`;
-}
-
-/* ================= EXPORT ================= */
-
-function exportAudit(){
-  const blob=new Blob([JSON.stringify(log,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="SPD_v11_3_AUDIT.json";
-  a.click();
-}
-
-/* ================= RENDER ================= */
-
-function render(){
-  FX.innerText=NODES.FX.value.toFixed(1);
-  DC.innerText=NODES.DC.value.toFixed(1);
-  CYB.innerText=NODES.CYB.value.toFixed(1);
-  INF.innerText=NODES.INF.value.toFixed(1);
-
-  audit.innerHTML=log.slice(-10).map(e=>
-    `[${e.time}] ${e.type}`
-  ).join("<br>");
+  log.push({type,data,time:new Date().toISOString()});
 }
 
 /* INIT */
