@@ -1,15 +1,19 @@
-/***********************
- * SPD v10 DEPENDENCY LOCK
- ***********************/
+/**************************************
+ * SPD v11 DEPENDENCY LOCK
+ * Safe Boot & System Validation
+ **************************************/
 
 (function () {
+
+  "use strict";
 
   const REQUIRED = [
     "audit",
     "runScenario",
     "injectEvent",
-    "initGraph",
     "updateGraph",
+    "updateUI",
+    "updateResilienceScore",
     "showAudit",
     "clearAudit"
   ];
@@ -18,58 +22,112 @@
 
     const missing = [];
 
-    for (let fn of REQUIRED) {
+    REQUIRED.forEach(fn => {
       if (typeof window[fn] !== "function") {
         missing.push(fn);
       }
-    }
+    });
 
-    const status = {
+    return {
       ok: missing.length === 0,
       missing: missing
     };
-
-    render(status);
-    return status.ok;
   }
 
-  function render(status) {
+  function renderOutput(status) {
 
-    const out = document.getElementById("output");
+    const output = document.getElementById("output");
 
-    if (!out) return;
+    if (!output) return;
 
-    if (!status.ok) {
+    if (status.ok) {
 
-      out.innerHTML =
-        "🟥 SPD DEPENDENCY ERROR<br><br>" +
-        "Missing:<br>" +
-        status.missing.join("<br>") +
-        "<br><br>System blocked safely.";
+      output.innerHTML =
+        "🟢 SPD DEPENDENCY OK — SYSTEM READY";
 
     } else {
-      out.innerHTML =
-        "🟢 SPD DEPENDENCY OK — SYSTEM READY";
+
+      output.innerHTML =
+        "🔴 SPD DEPENDENCY ERROR<br><br>" +
+        "<strong>Missing Functions</strong><br>" +
+        status.missing.join("<br>") +
+        "<br><br>System boot blocked.";
+
     }
+
+  }
+
+  function renderDiagnostics(status) {
+
+    const diag = document.getElementById("diag");
+
+    if (!diag) return;
+
+    if (status.ok) {
+
+      diag.innerHTML =
+`System Diagnostics
+
+Dependency Check : PASS
+Simulation Engine : READY
+Audit Engine      : READY
+Graph Engine      : READY
+UI Engine         : READY
+Resilience Engine : READY
+
+System Integrity : 100%
+Boot Status      : SUCCESS`;
+
+    } else {
+
+      diag.innerHTML =
+`System Diagnostics
+
+Dependency Check : FAILED
+
+Missing:
+
+${status.missing.join("\n")}
+
+Boot Status : BLOCKED`;
+
+    }
+
   }
 
   function boot() {
 
-    const ok = checkDependencies();
+    const status = checkDependencies();
 
-    if (!ok) return;
+    renderOutput(status);
+    renderDiagnostics(status);
 
-    // safe boot signal
-    if (typeof audit === "function") {
-      audit("DEPENDENCY_BOOT", { status: "OK" });
+    if (!status.ok) {
+      console.error("SPD Dependency Check Failed");
+      return;
     }
 
-    // start graph safely AFTER validation
-    if (typeof initGraph === "function") {
-      initGraph();
+    if (typeof window.audit === "function") {
+
+      window.audit("SYSTEM_BOOT", {
+        version: "SPD v11",
+        status: "READY",
+        timestamp: new Date().toISOString()
+      });
+
     }
 
-    console.log("SPD v10 DEPENDENCY LOCK ACTIVE");
+    if (typeof window.updateUI === "function")
+      window.updateUI();
+
+    if (typeof window.updateGraph === "function")
+      window.updateGraph(window.state);
+
+    if (typeof window.updateResilienceScore === "function")
+      window.updateResilienceScore();
+
+    console.log("SPD v11 Dependency Lock Active");
+
   }
 
   window.addEventListener("load", boot);
