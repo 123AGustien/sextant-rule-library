@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.6 // CLEAN DIGITAL TWIN CORE</title>
+<title>SPD v11.7 // OJK PRODUCTION DIGITAL TWIN</title>
 
 <style>
 body {
@@ -26,7 +26,6 @@ body {
   font-size: 13px;
 }
 
-/* PANELS */
 .panel {
   display: flex;
   justify-content: space-around;
@@ -45,7 +44,6 @@ body {
   font-size: 26px;
 }
 
-/* GRAPH */
 #graph {
   position: relative;
   height: 240px;
@@ -63,9 +61,9 @@ body {
   justify-content: center;
   font-size: 12px;
   transition: 0.25s;
+  cursor: pointer;
 }
 
-/* CONTROLS */
 .buttons {
   text-align: center;
   margin: 8px;
@@ -80,18 +78,17 @@ button {
   cursor: pointer;
 }
 
-/* EXPLAIN PANEL */
 #explain {
   position: absolute;
   right: 10px;
   top: 60px;
-  width: 240px;
+  width: 280px;
+  height: 260px;
   background: #0a0f18;
   padding: 10px;
   font-size: 11px;
-  border-left: 2px solid #1f3b5c;
-  height: 200px;
   overflow-y: auto;
+  border-left: 2px solid #1f3b5c;
 }
 </style>
 </head>
@@ -99,7 +96,7 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v11.6 // CLEAN ARCHITECTURE DIGITAL TWIN CORE (OJK READY)
+🛰 SPD v11.7 // OJK PRODUCTION DIGITAL TWIN SIMULATOR
 </div>
 
 <div id="statusBar">STATUS: READY</div>
@@ -112,10 +109,10 @@ button {
 </div>
 
 <div id="graph">
-  <div class="node" id="nFX">FX</div>
-  <div class="node" id="nDC">DC</div>
-  <div class="node" id="nCYB">CYB</div>
-  <div class="node" id="nINF">INF</div>
+  <div class="node" id="nFX" onclick="trace('FX')">FX</div>
+  <div class="node" id="nDC" onclick="trace('DC')">DC</div>
+  <div class="node" id="nCYB" onclick="trace('CYB')">CYB</div>
+  <div class="node" id="nINF" onclick="trace('INF')">INF</div>
 </div>
 
 <div class="buttons">
@@ -131,7 +128,7 @@ button {
 <script>
 
 /* =========================
-   SINGLE SOURCE OF TRUTH
+   STATE CORE
 ========================= */
 
 const state = {
@@ -148,10 +145,15 @@ const LINKS = [
   ["INF","FX"]
 ];
 
+/* =========================
+   MEMORY SYSTEMS
+========================= */
+
 let log = [];
+let explanationLog = [];
 
 /* =========================
-   ENGINE LAYER
+   ENGINE
 ========================= */
 
 function inject(node){
@@ -160,21 +162,34 @@ function inject(node){
 }
 
 function cascade(){
-  LINKS.forEach(([a,b])=>{
+
+  LINKS.forEach(([a,b]) => {
+
     const A = state[a];
     const B = state[b];
 
     const p = (A.v * A.s * B.s) / 120;
 
     if(Math.random() < p){
+
       const impact = 3 + Math.random() * 4;
       B.v += impact;
 
-      logEvent("CASCADE", `${a}→${b}`, impact);
-      explain(`${a} influenced ${b} (+${impact.toFixed(1)})`);
+      logEvent("CASCADE", {
+        from: a,
+        to: b,
+        p: p.toFixed(3),
+        impact: impact.toFixed(2)
+      });
+
+      explain(`CASCADE: ${a} → ${b} | p=${p.toFixed(3)} | +${impact.toFixed(1)}`);
     }
   });
 }
+
+/* =========================
+   DECAY ENGINE
+========================= */
 
 function decay(){
   for(let k in state){
@@ -196,28 +211,54 @@ function tick(){
 setInterval(tick, 1000);
 
 /* =========================
-   RENDER ENGINE (CLEAN)
+   TRACE ENGINE
 ========================= */
 
-function render(){
+function trace(node){
 
-  for(let k in state){
-    const n = state[k];
-    const el = document.getElementById(k);
+  const events = log.filter(e =>
+    (e.data?.from === node || e.data?.to === node || e.data === node)
+  ).slice(-10);
 
-    el.innerText = k + " " + n.v.toFixed(0);
+  explain(`🔍 TRACE NODE: ${node}`);
 
-    document.getElementById("n"+k).style.left = n.x + "px";
-    document.getElementById("n"+k).style.top  = n.y + "px";
+  events.forEach(e => {
+    explain(
+      `${e.type} | ${JSON.stringify(e.data)}`
+    );
+  });
+}
 
-    document.getElementById("n"+k).style.transform =
-      `scale(${1 + n.v/50})`;
+/* =========================
+   LOG ENGINE
+========================= */
 
-    document.getElementById("n"+k).style.background =
-      n.v > 40 ? "#ff3b3b" :
-      n.v > 20 ? "#ffb020" :
-      "#1f3b5c";
-  }
+function logEvent(type, data){
+  log.push({
+    time: new Date(),
+    type,
+    data
+  });
+}
+
+/* =========================
+   EXPLAIN ENGINE (FIXED)
+========================= */
+
+function explain(msg){
+
+  explanationLog.push({
+    time: new Date(),
+    msg
+  });
+
+  const box = document.getElementById("explain");
+
+  box.innerHTML =
+    "🧠 EXPLANATION LAYER<br><br>" +
+    explanationLog.slice(-12).map(e =>
+      `[${e.time.toLocaleTimeString()}] ${e.msg}`
+    ).join("<br>");
 }
 
 /* =========================
@@ -228,25 +269,43 @@ function reset(){
   for(let k in state){
     state[k].v = 0;
   }
-  logEvent("RESET");
-  explain("System reset to baseline state");
+  logEvent("RESET", {});
+  explain("SYSTEM RESET → baseline restored");
 }
 
 /* =========================
-   EXPLAIN + AUDIT
+   RENDER ENGINE
 ========================= */
 
-function logEvent(type, detail, impact){
-  log.push({
-    time: new Date().toISOString(),
-    type,
-    detail,
-    impact
-  });
-}
+function render(){
 
-function explain(msg){
-  document.getElementById("explain").innerText = msg;
+  FX.innerText = state.FX.v.toFixed(1);
+  DC.innerText = state.DC.v.toFixed(1);
+  CYB.innerText = state.CYB.v.toFixed(1);
+  INF.innerText = state.INF.v.toFixed(1);
+
+  document.getElementById("nFX").style.left = state.FX.x + "px";
+  document.getElementById("nFX").style.top  = state.FX.y + "px";
+
+  document.getElementById("nDC").style.left = state.DC.x + "px";
+  document.getElementById("nDC").style.top  = state.DC.y + "px";
+
+  document.getElementById("nCYB").style.left = state.CYB.x + "px";
+  document.getElementById("nCYB").style.top  = state.CYB.y + "px";
+
+  document.getElementById("nINF").style.left = state.INF.x + "px";
+  document.getElementById("nINF").style.top  = state.INF.y + "px";
+
+  for(let k in state){
+    const el = document.getElementById("n"+k);
+
+    el.style.transform = `scale(${1 + state[k].v/50})`;
+
+    el.style.background =
+      state[k].v > 40 ? "#ff3b3b" :
+      state[k].v > 20 ? "#ffb020" :
+      "#1f3b5c";
+  }
 }
 
 /* INIT */
