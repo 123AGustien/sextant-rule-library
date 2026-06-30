@@ -1,6 +1,97 @@
 {
-  "FIN-001": { "name": "POWER SURGE", "impact": 2 },
-  "DC-001": { "name": "COOLING FAILURE", "impact": 3 },
-  "CYB-001": { "name": "RANSOMWARE ATTACK", "impact": 5 },
-  "INF-001": { "name": "NETWORK OUTAGE", "impact": 4 }
+  "FIN-001": {
+    "name": "FOREIGN EXCHANGE STRESS",
+    "domain": "FIN",
+    "button": "FX SHOCK",
+    "impact": 2,
+
+    "checklist": [
+      "Exchange-rate volatility above threshold",
+      "Sustained currency depreciation",
+      "Foreign capital outflows increasing",
+      "Government bond market under pressure",
+      "Liquidity tightening observed",
+      "Central bank intervention initiated"
+    ],
+
+    "cascade": ["DC", "CYB"],
+
+    "recovery": [
+      "Increase market monitoring",
+      "Review liquidity position",
+      "Coordinate policy response"
+    ]
+  },
+
+  "DC-001": {
+    "name": "DATA CENTRE LOAD",
+    "domain": "DC",
+    "button": "DATA CENTER LOAD",
+    "impact": 3,
+
+    "checklist": [
+      "Power utilisation above threshold",
+      "Cooling capacity reduced",
+      "Server utilisation high",
+      "Network congestion detected",
+      "Backup systems active",
+      "Redundancy degraded"
+    ],
+
+    "cascade": ["CYB", "INF"],
+
+    "recovery": [
+      "Redistribute workloads",
+      "Increase cooling capacity",
+      "Verify backup systems"
+    ]
+  },
+
+  "CYB-001": {
+    "name": "CYBER SECURITY INCIDENT",
+    "domain": "CYB",
+    "button": "CYBER EVENT",
+    "impact": 5,
+
+    "checklist": [
+      "Suspicious authentication activity",
+      "Malware detected",
+      "Privilege escalation identified",
+      "Critical asset affected",
+      "Possible data exfiltration",
+      "Service disruption observed"
+    ],
+
+    "cascade": ["INF"],
+
+    "recovery": [
+      "Isolate affected systems",
+      "Activate incident response",
+      "Verify system integrity"
+    ]
+  },
+
+  "INF-001": {
+    "name": "INFRASTRUCTURE FAILURE",
+    "domain": "INF",
+    "button": "INFRA FAILURE",
+    "impact": 4,
+
+    "checklist": [
+      "Power disruption",
+      "Communications affected",
+      "Transport disruption",
+      "Physical infrastructure damage",
+      "Utility service degradation",
+      "Multiple infrastructure failures"
+    ],
+
+    "cascade": ["DC", "CYB"],
+
+    "recovery": [
+      "Activate contingency plan",
+      "Restore critical services",
+      "Coordinate infrastructure recovery"
+    ]
+  }
 }
