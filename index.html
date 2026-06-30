@@ -43,6 +43,7 @@ button {
   padding:8px;
   margin:4px;
   cursor:pointer;
+  border-radius:4px;
 }
 
 button:hover { background:#1b3550; }
@@ -60,6 +61,7 @@ button:hover { background:#1b3550; }
   padding:10px;
   border:1px solid #1b2a3a;
   font-size:12px;
+  white-space:pre-wrap;
 }
 
 .ruleTitle {
@@ -108,6 +110,9 @@ canvas {
 <h3>🧠 Solutions</h3>
 <div id="solutionPanel" class="stateBox"></div>
 
+<h3>🧩 ACTION CONTROLS</h3>
+<div id="actionPanel" class="stateBox"></div>
+
 <h3>🚨 AUTO SUGGEST v2</h3>
 <div id="autoSuggestPanel" class="stateBox"></div>
 
@@ -146,15 +151,18 @@ CYB:["STABLE","WATCH","DEGRADED","CRITICAL"],
 INF:["STABLE","WATCH","DEGRADED","CRITICAL"]
 };
 
-/* ---------------- SAFE ---------------- */
-function el(id){
-  return document.getElementById(id);
-}
+/* ---------------- ACTIONS ---------------- */
+const actionsMap = {
+FX:["Inject Liquidity Support","Hedge FX Exposure","Stabilise Currency"],
+DC:["Throttle Compute Load","Boost Cooling","Redistribute Servers"],
+CYB:["Isolate Systems","Run Forensics","Enable Incident Response"],
+INF:["Activate Backup Grid","Reroute Services","Engage Recovery"]
+};
 
 /* ---------------- AUTO SUGGEST v2 ---------------- */
 function updateAutoSuggest(){
 
-  const panel = el("autoSuggestPanel");
+  const panel = document.getElementById("autoSuggestPanel");
   if(!panel) return;
 
   const weights = { FX:1.2, DC:1.0, CYB:1.5, INF:1.3 };
@@ -163,8 +171,7 @@ function updateAutoSuggest(){
   let total = 0;
 
   for(let k in state){
-    const v = state[k] || 0;
-    score[k] = v * weights[k];
+    score[k] = state[k] * weights[k];
     total += score[k];
   }
 
@@ -177,21 +184,14 @@ function updateAutoSuggest(){
     return "P3 LOW";
   }
 
-  const actions = {
-    FX:["Stabilise liquidity","Hedge FX exposure"],
-    DC:["Reduce compute load","Balance cooling"],
-    CYB:["Isolate systems","Run forensics"],
-    INF:["Activate fallback","Reroute services"]
-  };
-
   let html = `<div class='ruleTitle'>TOTAL RISK: ${total.toFixed(2)}</div>`;
 
   sorted.forEach(([k,v])=>{
     html += `<div class='ruleTitle'>${k} → ${priority(v)}</div>`;
     html += `<div class='ruleItem'>Risk: ${v.toFixed(2)}</div>`;
 
-    (actions[k]||[]).forEach(a=>{
-      html += `<div class='ruleItem'>✔ ${a}</div>`;
+    (actionsMap[k]||[]).forEach(a=>{
+      html += `<div class='ruleItem'>⚡ ${a}</div>`;
     });
 
     html += "<br>";
@@ -200,12 +200,51 @@ function updateAutoSuggest(){
   panel.innerHTML = html;
 }
 
-/* ---------------- RULE GUIDE ---------------- */
+/* ---------------- ACTION ENGINE ---------------- */
+function applyAction(type,index){
+
+  state[type] = Math.max(0, state[type]-2);
+
+  log.push(`${new Date().toISOString()} | ACTION | ${type}:${index}`);
+
+  updateRuleGuide(type);
+  updateSolutionPanel();
+  updateAutoSuggest();
+  updateActionPanel();
+
+  render();
+}
+
+/* ---------------- ACTION PANEL ---------------- */
+function updateActionPanel(){
+
+  const panel = document.getElementById("actionPanel");
+  if(!panel) return;
+
+  let html = "";
+
+  for(let k in actionsMap){
+
+    html += `<div class='ruleTitle'>${k} ACTIONS</div>`;
+
+    actionsMap[k].forEach((a,i)=>{
+      html += `<button onclick="applyAction('${k}',${i})">${a}</button>`;
+    });
+
+    html += "<br><br>";
+  }
+
+  panel.innerHTML = html;
+}
+
+/* ---------------- RULES ---------------- */
 function updateRuleGuide(type){
-  const panel = el("ruleGuide");
+
+  const panel = document.getElementById("ruleGuide");
   if(!panel || !rules[type]) return;
 
   let html = `<div class='ruleTitle'>${type} RULES</div>`;
+
   rules[type].forEach(r=>{
     html += `<div class='ruleItem'>✔ ${r}</div>`;
   });
@@ -213,17 +252,17 @@ function updateRuleGuide(type){
   panel.innerHTML = html;
 }
 
-/* ---------------- SOLUTION PANEL ---------------- */
+/* ---------------- SOLUTIONS ---------------- */
 function updateSolutionPanel(){
 
-  const panel = el("solutionPanel");
+  const panel = document.getElementById("solutionPanel");
   if(!panel) return;
 
   let html = "";
 
   for(let k in state){
 
-    let v = state[k] || 0;
+    let v = state[k];
     let tier = v<3?0:v<6?1:v<10?2:3;
 
     html += `<div class='ruleTitle'>${k} → ${solutions[k][tier]}</div>`;
@@ -236,18 +275,19 @@ function updateSolutionPanel(){
 /* ---------------- ENGINE ---------------- */
 function runScenario(type){
 
-  state[type] = (state[type]||0) + 2;
+  state[type] = (state[type]||0)+2;
 
   if(type==="FX"){
     state.DC++;
     state.CYB++;
   }
 
-  log.push(`${new Date().toISOString()} | ${type}`);
+  log.push(`${new Date().toISOString()} | SCENARIO | ${type}`);
 
   updateRuleGuide(type);
   updateSolutionPanel();
   updateAutoSuggest();
+  updateActionPanel();
 
   render();
 }
@@ -258,11 +298,12 @@ function resetSystem(){
   state = { FX:0, DC:0, CYB:0, INF:0 };
   log = [];
 
-  log.push(`${new Date().toISOString()} | SYSTEM_RESET`);
+  log.push(`${new Date().toISOString()} | SYSTEM RESET`);
 
   updateRuleGuide("FX");
   updateSolutionPanel();
   updateAutoSuggest();
+  updateActionPanel();
 
   render();
 }
@@ -270,10 +311,9 @@ function resetSystem(){
 /* ---------------- GRAPH ---------------- */
 function drawGraph(){
 
-  const c = el("riskGraph");
-  if(!c) return;
-
+  const c = document.getElementById("riskGraph");
   const ctx = c.getContext("2d");
+
   ctx.clearRect(0,0,c.width,c.height);
 
   const keys = Object.keys(state);
@@ -299,17 +339,19 @@ function drawGraph(){
 /* ---------------- RENDER ---------------- */
 function render(){
 
-  const stateBox = el("stateBox");
-  const logBox = el("log");
+  document.getElementById("stateBox").innerText =
+    JSON.stringify(state,null,2);
 
-  if(stateBox) stateBox.innerText = JSON.stringify(state,null,2);
-  if(logBox) logBox.innerText = log.slice(-20).join("\n");
+  document.getElementById("log").innerText =
+    log.slice(-20).join("\n");
 
   drawGraph();
   updateAutoSuggest();
   updateSolutionPanel();
+  updateActionPanel();
 }
 
+/* INIT */
 render();
 
 </script>
