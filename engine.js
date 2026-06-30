@@ -1,6 +1,7 @@
+
 /***********************
  * SPD CORE ENGINE v13
- * MAX CASCADE UPGRADE
+ * STABLE CASCADE CORE
  ***********************/
 
 window.state = {
@@ -33,7 +34,7 @@ function ensure(type) {
 }
 
 /* -----------------------
-   CASCADE ENGINE (CORE)
+   CASCADE ENGINE (IMMUTABLE)
 ------------------------*/
 function applyCascade(eventType, state, intensity = 1) {
 
@@ -66,16 +67,17 @@ function applyCascade(eventType, state, intensity = 1) {
 }
 
 /* -----------------------
-   DECAY ENGINE (SYSTEM STABILITY)
+   DECAY ENGINE (IMMUTABLE + SAFE)
 ------------------------*/
 function applyDecay(state) {
 
-  Object.keys(state).forEach(k => {
-    state[k] *= 0.98; // slow stabilization
-    if (state[k] < 0.01) state[k] = 0;
+  const s = { ...state };
+
+  Object.keys(s).forEach(k => {
+    s[k] = Math.max(0, s[k] * 0.98);
   });
 
-  return state;
+  return s;
 }
 
 /* -----------------------
@@ -89,9 +91,7 @@ function calculateResilience(state) {
     state.CYB * 1.5 +
     state.INF * 1.3;
 
-  const max = 100;
-
-  return Math.max(0, Math.min(max, max - stress));
+  return Math.max(0, Math.min(100, 100 - stress));
 }
 
 /* -----------------------
@@ -107,29 +107,27 @@ function buildGraph(state) {
 }
 
 /* -----------------------
-   MAIN SCENARIO ENGINE
+   MAIN ENGINE
 ------------------------*/
 window.runScenario = function (type) {
 
   ensure(type);
 
-  window.state[type] += 2;
+  let next = { ...window.state };
 
-  // cascade propagation
-  window.state = applyCascade(type, window.state, 1);
+  next[type] += 2;
+  next = applyCascade(type, next, 1);
+  next = applyDecay(next);
 
-  // system decay
-  window.state = applyDecay(window.state);
+  window.state = next;
 
-  // audit
   window.audit("SCENARIO", {
     type,
     state: { ...window.state }
   });
 
-  // UI hooks
   window.updateUI?.();
-  window.updateGraph?.(buildGraph(window.state));
+  window.drawGraph?.(window.state);
   window.updateResilienceScore?.(calculateResilience(window.state));
 };
 
@@ -150,12 +148,15 @@ window.injectEvent = function (event) {
 
   ensure(t);
 
+  let next = { ...window.state };
+
   const intensity = 1.5;
 
-  window.state[t] += 3 * intensity;
+  next[t] += 3 * intensity;
+  next = applyCascade(t, next, intensity);
+  next = applyDecay(next);
 
-  window.state = applyCascade(t, window.state, intensity);
-  window.state = applyDecay(window.state);
+  window.state = next;
 
   window.audit("EVENT", {
     event,
@@ -164,6 +165,6 @@ window.injectEvent = function (event) {
   });
 
   window.updateUI?.();
-  window.updateGraph?.(buildGraph(window.state));
+  window.drawGraph?.(window.state);
   window.updateResilienceScore?.(calculateResilience(window.state));
 };
