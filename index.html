@@ -84,6 +84,17 @@ canvas {
   border: 1px solid #1b2a3a;
   margin-top: 10px;
 }
+
+/* RULE GUIDANCE */
+.ruleTitle{
+  color:#6dffb3;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.ruleItem{
+  margin:4px 0;
+}
 </style>
 </head>
 
@@ -114,6 +125,12 @@ canvas {
 
 <h3>⚡ FX Cascade Model</h3>
 <div id="fxModel">Stable</div>
+
+<!-- ✅ RULE GUIDANCE INSERTED HERE -->
+<h3>📘 Rule Guidance</h3>
+<div id="ruleGuide" class="stateBox">
+Select a scenario to display the governing rule.
+</div>
 
 <h3>📊 Risk Graph</h3>
 <canvas id="riskGraph" width="520" height="220"></canvas>
@@ -154,6 +171,77 @@ function save() {
   localStorage.setItem("spd_log_v12", JSON.stringify(log));
 }
 
+/* RULE ENGINE */
+const rules = {
+
+FX:{
+id:"FIN-001",
+title:"Foreign Exchange Stress",
+steps:[
+"1. Check exchange-rate volatility.",
+"2. Confirm capital outflow indicators.",
+"3. Review liquidity conditions.",
+"4. Assess market confidence.",
+"5. Determine escalation level.",
+"6. Press FX SHOCK once for each confirmed escalation."
+]
+},
+
+DC:{
+id:"DC-001",
+title:"Data Centre Load",
+steps:[
+"1. Check server utilisation.",
+"2. Check cooling capacity.",
+"3. Review power consumption.",
+"4. Verify redundancy.",
+"5. Determine operational impact.",
+"6. Press DATA CENTER LOAD once for each confirmed escalation."
+]
+},
+
+CYB:{
+id:"CYB-001",
+title:"Cyber Security Incident",
+steps:[
+"1. Verify cyber alert.",
+"2. Confirm affected systems.",
+"3. Assess attack severity.",
+"4. Check containment.",
+"5. Determine operational impact.",
+"6. Press CYBER EVENT once for each confirmed escalation."
+]
+},
+
+INF:{
+id:"INF-001",
+title:"Infrastructure Failure",
+steps:[
+"1. Verify infrastructure disruption.",
+"2. Assess critical services.",
+"3. Review dependency impact.",
+"4. Estimate restoration time.",
+"5. Determine escalation.",
+"6. Press INFRA FAILURE once for each confirmed escalation."
+]
+}
+
+};
+
+function updateRuleGuide(type){
+
+const r = rules[type];
+if(!r) return;
+
+let html = "<div class='ruleTitle'>" + r.id + " - " + r.title + "</div>";
+
+r.steps.forEach(s => {
+html += "<div class='ruleItem'>✔ " + s + "</div>";
+});
+
+document.getElementById("ruleGuide").innerHTML = html;
+}
+
 /* ENGINE */
 function runScenario(type) {
   state[type] += 2;
@@ -164,6 +252,9 @@ function runScenario(type) {
   }
 
   audit("SCENARIO_TRIGGER: " + type);
+
+  updateRuleGuide(type);
+
   save();
   render();
 }
@@ -191,7 +282,7 @@ function exportLog() {
   a.click();
 }
 
-/* FX STATUS */
+/* FX MODEL */
 function updateFXModel() {
   let fx = state.FX;
 
@@ -201,6 +292,7 @@ function updateFXModel() {
   if (fx > 10) status = "SYSTEMIC RISK";
 
   document.getElementById("fxModel").innerText = status;
+
   document.getElementById("status").innerText =
     fx > 6 ? "SYSTEM: DEGRADED" : "SYSTEM: ONLINE";
 }
@@ -215,7 +307,6 @@ function drawGraph() {
 
   ctx.clearRect(0, 0, c.width, c.height);
 
-  // grid
   ctx.strokeStyle = "#1b2a3a";
   for (let i = 0; i < 5; i++) {
     ctx.beginPath();
@@ -224,10 +315,9 @@ function drawGraph() {
     ctx.stroke();
   }
 
-  // bars
   values.forEach((v, i) => {
     let x = i * 120 + 40;
-    let h = v * 10;
+    let h = Math.min(180, v * 12);
 
     ctx.fillStyle = v > 8 ? "#ff4d4d" : v > 4 ? "#ffcc00" : "#4dff88";
     ctx.fillRect(x, 200 - h, 40, h);
@@ -241,7 +331,7 @@ function drawGraph() {
   ctx.fillText("LIVE SYSTEM RISK MAP", 10, 20);
 }
 
-/* RENDER */
+/* RENDER LOOP */
 function render() {
   document.getElementById("stateBox").innerText = JSON.stringify(state, null, 2);
   document.getElementById("log").innerText = log.slice(-25).join("\n");
