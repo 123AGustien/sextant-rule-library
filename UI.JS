@@ -1,13 +1,10 @@
  /***********************
   * SPD BOOT ENGINE v12
-  * SYSTEM INTEGRITY LAYER
+  * SYSTEM INTEGRITY LAYER (SAFE)
   ***********************/
 
 document.addEventListener("DOMContentLoaded", function () {
 
-  // ─────────────────────────────
-  // CORE MODULE CHECK (REAL SYSTEM ONLY)
-  // ─────────────────────────────
   const REQUIRED = [
     "audit",
     "runScenario",
@@ -20,65 +17,58 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const missing = REQUIRED.filter(fn => typeof window[fn] !== "function");
 
-  // UI target fallback (your system uses log panel, not "output")
-  const out =
-    document.getElementById("log") ||
-    document.getElementById("stateBox") ||
-    document.body;
-
-  // ─────────────────────────────
-  // SYSTEM STATE REPORT
-  // ─────────────────────────────
   const mode = missing.length ? "DEGRADED" : "FULL";
 
+  // ─────────────────────────────
+  // SAFE BOOT OUTPUT (DEDICATED)
+  // ─────────────────────────────
+  let bootPanel = document.getElementById("bootStatus");
+
+  if (!bootPanel) {
+    bootPanel = document.createElement("div");
+    bootPanel.id = "bootStatus";
+    bootPanel.style.padding = "10px";
+    bootPanel.style.fontSize = "12px";
+    bootPanel.style.border = "1px solid #223447";
+    bootPanel.style.background = "#05070b";
+    bootPanel.style.color = "#cfe8ff";
+
+    document.body.prepend(bootPanel);
+  }
+
+  // ─────────────────────────────
+  // STATUS DISPLAY
+  // ─────────────────────────────
   if (missing.length > 0) {
 
     console.warn("🟡 SPD v12 DEGRADED MODE", missing);
 
-    if (out) {
-      out.innerHTML =
-        "🟡 SPD BOOT STATUS: DEGRADED MODE<br><br>" +
-        "<b>Missing Modules:</b><br>" +
-        missing.map(m => "• " + m).join("<br>");
-    }
+    bootPanel.innerHTML =
+      "🟡 SPD BOOT STATUS: DEGRADED MODE<br><br>" +
+      "<b>Missing Modules:</b><br>" +
+      missing.map(m => "• " + m).join("<br>");
 
   } else {
 
     console.log("🟢 SPD v12 SYSTEM READY");
 
-    if (out) {
-      out.innerHTML = "🟢 SPD v12 READY — SYSTEM ONLINE";
-    }
+    bootPanel.innerHTML =
+      "🟢 SPD v12 READY — SYSTEM ONLINE";
   }
 
   // ─────────────────────────────
-  // SAFE OPTIONAL HOOKS (NON-BREAKING)
+  // SAFE OPTIONAL HOOKS
   // ─────────────────────────────
-  if (typeof window.initGraph === "function") {
-    window.initGraph();
-  }
+  window.initGraph?.();
 
-  // ─────────────────────────────
-  // BOOT AUDIT EVENT (SAFE CALL)
-  // ─────────────────────────────
-  if (typeof window.audit === "function") {
-    window.audit("BOOT", {
-      version: "v12",
-      mode,
-      missing,
-      timestamp: new Date().toISOString()
-    });
-  }
+  window.audit?.("BOOT", {
+    version: "v12",
+    mode,
+    missing,
+    timestamp: new Date().toISOString()
+  });
 
-  // ─────────────────────────────
-  // INITIAL UI RENDER
-  // ─────────────────────────────
-  if (typeof window.renderUI === "function") {
-    window.renderUI();
-  }
+  window.renderUI?.();
 
-  // ─────────────────────────────
-  // FINAL LOG
-  // ─────────────────────────────
   console.log("SPD v12 BOOT COMPLETE");
 });
