@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // OJK DIGITAL COCKPIT (GRAPH)</title>
+<title>SPD v12 // FULL AUTONOMOUS COCKPIT</title>
 
 <style>
 body {
@@ -34,44 +34,28 @@ body {
   overflow: auto;
 }
 
-.right {
-  background: #060a10;
-}
+.right { background: #060a10; }
 
 button {
   background: #132235;
   color: #cfe8ff;
   border: 1px solid #2b425a;
-  padding: 8px 10px;
+  padding: 8px;
   margin: 4px;
   cursor: pointer;
-  border-radius: 4px;
 }
 
-button:hover {
-  background: #1b3550;
-}
+button:hover { background: #1b3550; }
 
 .badge {
   padding: 4px 8px;
-  border-radius: 5px;
   background: #0f2a1f;
   border: 1px solid #1f5a3a;
   color: #6dffb3;
   font-size: 12px;
 }
 
-.log {
-  font-size: 12px;
-  white-space: pre-wrap;
-  max-height: 45vh;
-  overflow: auto;
-  background: #05070b;
-  padding: 8px;
-  border: 1px solid #1b2a3a;
-}
-
-.stateBox {
+.stateBox, .log {
   background: #05070b;
   padding: 10px;
   border: 1px solid #1b2a3a;
@@ -84,168 +68,142 @@ canvas {
   margin-top: 10px;
 }
 
-.ruleTitle{
+.ruleTitle {
   color:#6dffb3;
   font-weight:bold;
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
 
-.ruleItem{
-  margin:4px 0;
-}
+.ruleItem { margin: 3px 0; }
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  🛰 SPD v12 // OJK DIGITAL COCKPIT ENGINE (GRAPH MODE)
-  <span id="status" class="badge">SYSTEM: ONLINE</span>
+🛰 SPD v12 // AUTONOMOUS COCKPIT
+<span id="status" class="badge">SYSTEM ONLINE</span>
 </div>
 
 <div class="grid">
 
-<!-- LEFT PANEL -->
+<!-- LEFT -->
 <div class="panel">
 
 <h3>⚙ Scenario Engine</h3>
 
 <button onclick="runScenario('FX')">FX SHOCK</button>
-<button onclick="runScenario('DC')">DATA CENTER LOAD</button>
+<button onclick="runScenario('DC')">DATA CENTER</button>
 <button onclick="runScenario('CYB')">CYBER EVENT</button>
 <button onclick="runScenario('INF')">INFRA FAILURE</button>
 
-<button onclick="resetSystem()">RESET</button>
-<button onclick="exportLog()">EXPORT LOG</button>
-
-<h3>📊 System State</h3>
+<h3>📊 State</h3>
 <pre id="stateBox" class="stateBox"></pre>
 
-<h3>⚡ FX Cascade Model</h3>
-<div id="fxModel">Stable</div>
+<h3>📘 Rules</h3>
+<div id="ruleGuide" class="stateBox"></div>
 
-<h3>📘 Rule Guidance</h3>
-<div id="ruleGuide" class="stateBox">Select a scenario to display the governing rule.</div>
+<h3>🧠 Solutions</h3>
+<div id="solutionPanel" class="stateBox"></div>
 
-<h3>🧠 Solution Panel</h3>
-<div id="solutionPanel" class="stateBox">No evaluation yet.</div>
+<h3>🚨 AUTO SUGGEST</h3>
+<div id="autoSuggestPanel" class="stateBox"></div>
 
-<h3>📊 Risk Graph</h3>
+<h3>📊 Graph</h3>
 <canvas id="riskGraph" width="520" height="220"></canvas>
 
 </div>
 
-<!-- RIGHT PANEL -->
+<!-- RIGHT -->
 <div class="panel right">
-
-<h3>📡 Audit Console</h3>
+<h3>📡 Audit</h3>
 <div id="log" class="log"></div>
-
 </div>
 
 </div>
 
 <script>
-let state = loadState();
-let log = loadLog();
 
-function now() {
-  return new Date().toISOString();
-}
+/* ---------------- STATE ---------------- */
+let state = { FX:0, DC:0, CYB:0, INF:0 };
+let log = [];
 
-/* STORAGE */
-function loadState() {
-  return JSON.parse(localStorage.getItem("spd_state_v12")) || {
-    FX: 0, DC: 0, CYB: 0, INF: 0
-  };
-}
-
-function loadLog() {
-  return JSON.parse(localStorage.getItem("spd_log_v12")) || [];
-}
-
-function save() {
-  localStorage.setItem("spd_state_v12", JSON.stringify(state));
-  localStorage.setItem("spd_log_v12", JSON.stringify(log));
-}
-
-/* RULES */
+/* ---------------- RULES ---------------- */
 const rules = {
-FX:{id:"FIN-001",title:"Foreign Exchange Stress",steps:[
-"Check volatility","Confirm outflows","Review liquidity","Assess confidence"
-]},
-DC:{id:"DC-001",title:"Data Centre Load",steps:[
-"Check utilisation","Cooling capacity","Power load","Redundancy"
-]},
-CYB:{id:"CYB-001",title:"Cyber Security Incident",steps:[
-"Verify alert","Check systems","Assess attack","Contain threat"
-]},
-INF:{id:"INF-001",title:"Infrastructure Failure",steps:[
-"Verify disruption","Assess services","Check dependencies","Restore priority"
-]}
+FX:["Volatility","Outflow","Liquidity","Confidence"],
+DC:["Load","Cooling","Power","Redundancy"],
+CYB:["Alert","Compromise","Attack","Containment"],
+INF:["Failure","Services","Dependency","Restore"]
 };
 
-function updateRuleGuide(type){
-  const r = rules[type];
-  if(!r) return;
+/* ---------------- SOLUTIONS ---------------- */
+const solutions = {
+FX:[["STABLE","Monitor FX"],["WATCH","Reduce exposure"],["DEGRADED","Hedge FX"],["CRITICAL","Emergency liquidity"]],
+DC:[["STABLE","Normal load"],["WATCH","Balance load"],["DEGRADED","Reduce services"],["CRITICAL","Failover"]],
+CYB:[["STABLE","Monitor logs"],["WATCH","Increase security"],["DEGRADED","Isolate systems"],["CRITICAL","Disconnect"]],
+INF:[["STABLE","Normal ops"],["WATCH","Check systems"],["DEGRADED","Reroute"],["CRITICAL","Emergency restore"]]
+};
 
-  let html = `<div class='ruleTitle'>${r.id} - ${r.title}</div>`;
-  r.steps.forEach(s => html += `<div class='ruleItem'>✔ ${s}</div>`);
+/* ---------------- AUTO SUGGEST ENGINE ---------------- */
+function updateAutoSuggest() {
+
+  const risks = Object.entries(state)
+    .sort((a,b)=>b[1]-a[1]);
+
+  const top = risks[0];
+
+  const suggestions = [];
+
+  if (top[1] > 6) {
+    suggestions.push(`PRIORITY: Stabilise ${top[0]}`);
+  }
+
+  if (state.CYB > 5) suggestions.push("Isolate cyber systems");
+  if (state.FX > 5) suggestions.push("Inject liquidity buffer");
+  if (state.DC > 5) suggestions.push("Reduce data centre load");
+  if (state.INF > 5) suggestions.push("Activate infrastructure fallback");
+
+  let html = "";
+
+  if (suggestions.length === 0) {
+    html = "🟢 System stable — no action required";
+  } else {
+    suggestions.forEach(s => {
+      html += `<div class='ruleItem'>⚡ ${s}</div>`;
+    });
+  }
+
+  document.getElementById("autoSuggestPanel").innerHTML = html;
+}
+
+/* ---------------- RULE PANEL ---------------- */
+function updateRuleGuide(type){
+  let html = `<div class='ruleTitle'>${type} RULES</div>`;
+  rules[type].forEach(r => html += `<div class='ruleItem'>✔ ${r}</div>`);
   document.getElementById("ruleGuide").innerHTML = html;
 }
 
-/* SOLUTION ENGINE */
-const solutions = {
-FX:{0:[0,3,"STABLE","Monitor FX","No action"],
-    1:[3,6,"WATCH","Track volatility","Reduce exposure"],
-    2:[6,10,"DEGRADED","Tight FX controls","Increase buffers"],
-    3:[10,999,"CRITICAL","Hedge FX","Liquidity support"]},
-
-DC:{0:[0,3,"STABLE","Normal load","No action"],
-    1:[3,6,"WATCH","Balance load","Check cooling"],
-    2:[6,10,"DEGRADED","Reduce services","Load balancing"],
-    3:[10,999,"CRITICAL","Failover","Emergency cooling"]},
-
-CYB:{0:[0,3,"STABLE","Low threat","Monitor IDS"],
-    1:[3,6,"WATCH","Increase monitoring","Validate endpoints"],
-    2:[6,10,"DEGRADED","Isolate systems","Forensics"],
-    3:[10,999,"CRITICAL","Full response","Disconnect systems"]},
-
-INF:{0:[0,3,"STABLE","Normal infra","No action"],
-    1:[3,6,"WATCH","Check redundancy","Monitor nodes"],
-    2:[6,10,"DEGRADED","Reroute services","Backup systems"],
-    3:[10,999,"CRITICAL","Failover","Emergency restore"]}
-};
-
-function getLevel(v){
-  if(v < 3) return 0;
-  if(v < 6) return 1;
-  if(v < 10) return 2;
-  return 3;
-}
-
+/* ---------------- SOLUTION PANEL ---------------- */
 function updateSolutionPanel(){
 
-  const el = document.getElementById("solutionPanel");
   let html = "";
 
-  function render(k,v){
-    const s = solutions[k][getLevel(v)];
-    html += `<div class='ruleTitle'>${k} → ${s[2]}</div>`;
-    html += `<div class='ruleItem'>${s[3]}</div>`;
-    html += `<div class='ruleItem'>✔ ${s[4]}</div><br>`;
+  for (let k in state) {
+    let v = state[k];
+    let tier = v < 3 ? 0 : v < 6 ? 1 : v < 10 ? 2 : 3;
+
+    const s = solutions[k][tier];
+
+    html += `<div class='ruleTitle'>${k} → ${s[0]}</div>`;
+    html += `<div class='ruleItem'>${s[1]}</div><br>`;
   }
 
-  render("FX",state.FX);
-  render("DC",state.DC);
-  render("CYB",state.CYB);
-  render("INF",state.INF);
-
-  el.innerHTML = html;
+  document.getElementById("solutionPanel").innerHTML = html;
 }
 
-/* ENGINE */
+/* ---------------- ENGINE ---------------- */
 function runScenario(type){
+
   state[type] += 2;
 
   if(type==="FX"){
@@ -253,96 +211,54 @@ function runScenario(type){
     state.CYB += 1;
   }
 
-  audit("SCENARIO_TRIGGER:"+type);
+  log.push(`${new Date().toISOString()} | ${type}`);
 
   updateRuleGuide(type);
   updateSolutionPanel();
+  updateAutoSuggest();
 
-  save();
   render();
 }
 
-/* LOG */
-function audit(e){
-  log.push(`${now()} | ${e}`);
-}
-
-/* RESET */
-function resetSystem(){
-  state={FX:0,DC:0,CYB:0,INF:0};
-  log=[];
-  audit("SYSTEM_RESET");
-  save();
-  render();
-}
-
-/* EXPORT */
-function exportLog(){
-  const blob=new Blob([JSON.stringify(log,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="spd_v12_log.json";
-  a.click();
-}
-
-/* FX MODEL */
-function updateFXModel(){
-  let fx=state.FX;
-
-  let status="STABLE";
-  if(fx>3)status="ELEVATED VOLATILITY";
-  if(fx>6)status="STRESS STATE";
-  if(fx>10)status="SYSTEMIC RISK";
-
-  document.getElementById("fxModel").innerText=status;
-  document.getElementById("status").innerText=fx>6?"SYSTEM: DEGRADED":"SYSTEM: ONLINE";
-}
-
-/* GRAPH */
+/* ---------------- GRAPH ---------------- */
 function drawGraph(){
-  const c=document.getElementById("riskGraph");
-  const ctx=c.getContext("2d");
 
-  const keys=["FX","DC","CYB","INF"];
-  const vals=[state.FX,state.DC,state.CYB,state.INF];
+  const c = document.getElementById("riskGraph");
+  const ctx = c.getContext("2d");
 
   ctx.clearRect(0,0,c.width,c.height);
 
-  ctx.strokeStyle="#1b2a3a";
-  for(let i=0;i<5;i++){
-    ctx.beginPath();
-    ctx.moveTo(0,i*40);
-    ctx.lineTo(520,i*40);
-    ctx.stroke();
-  }
+  const keys = Object.keys(state);
+  const vals = Object.values(state);
 
   vals.forEach((v,i)=>{
-    let x=i*120+40;
-    let h=Math.min(180,v*12);
+    let x = i*120+40;
+    let h = Math.min(180,v*12);
 
-    ctx.fillStyle=v>8?"#ff4d4d":v>4?"#ffcc00":"#4dff88";
+    ctx.fillStyle = v>8?"#ff4d4d":v>4?"#ffcc00":"#4dff88";
     ctx.fillRect(x,200-h,40,h);
 
     ctx.fillStyle="#cfe8ff";
     ctx.fillText(keys[i],x,210);
-    ctx.fillText(v,x,190-h);
   });
-
-  ctx.fillStyle="#6dffb3";
-  ctx.fillText("LIVE SYSTEM RISK MAP",10,20);
 }
 
-/* RENDER */
+/* ---------------- RENDER ---------------- */
 function render(){
-  document.getElementById("stateBox").innerText=JSON.stringify(state,null,2);
-  document.getElementById("log").innerText=log.slice(-25).join("\n");
 
-  updateFXModel();
+  document.getElementById("stateBox").innerText =
+    JSON.stringify(state,null,2);
+
+  document.getElementById("log").innerText =
+    log.slice(-20).join("\n");
+
   drawGraph();
-  updateSolutionPanel();
+  updateAutoSuggest();
 }
 
+/* INIT */
 render();
+
 </script>
 
 </body>
