@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // OJK DIGITAL COCKPIT</title>
+<title>SPD v12 // OJK DIGITAL COCKPIT (GRAPH)</title>
 
 <style>
 body {
@@ -12,7 +12,6 @@ body {
   font-family: Arial, sans-serif;
 }
 
-/* HEADER */
 .header {
   padding: 12px;
   background: #0c1624;
@@ -23,14 +22,12 @@ body {
   font-size: 13px;
 }
 
-/* GRID LAYOUT */
 .grid {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   height: calc(100vh - 50px);
 }
 
-/* PANELS */
 .panel {
   padding: 12px;
   border-right: 1px solid #1b2a3a;
@@ -41,7 +38,6 @@ body {
   background: #060a10;
 }
 
-/* BUTTONS */
 button {
   background: #132235;
   color: #cfe8ff;
@@ -56,7 +52,6 @@ button:hover {
   background: #1b3550;
 }
 
-/* STATUS BADGE */
 .badge {
   padding: 4px 8px;
   border-radius: 5px;
@@ -66,23 +61,28 @@ button:hover {
   font-size: 12px;
 }
 
-/* LOG */
 .log {
   font-size: 12px;
   white-space: pre-wrap;
-  max-height: 60vh;
+  max-height: 45vh;
   overflow: auto;
   background: #05070b;
   padding: 8px;
   border: 1px solid #1b2a3a;
 }
 
-/* STATE BOX */
 .stateBox {
   background: #05070b;
   padding: 10px;
   border: 1px solid #1b2a3a;
   font-size: 12px;
+}
+
+/* GRAPH */
+canvas {
+  background: #05070b;
+  border: 1px solid #1b2a3a;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -90,13 +90,13 @@ button:hover {
 <body>
 
 <div class="header">
-  🛰 SPD v12 // OJK DIGITAL COCKPIT ENGINE
+  🛰 SPD v12 // OJK DIGITAL COCKPIT ENGINE (GRAPH MODE)
   <span id="status" class="badge">SYSTEM: ONLINE</span>
 </div>
 
 <div class="grid">
 
-<!-- LEFT CONTROL PANEL -->
+<!-- LEFT PANEL -->
 <div class="panel">
 
 <h3>⚙ Scenario Engine</h3>
@@ -115,9 +115,12 @@ button:hover {
 <h3>⚡ FX Cascade Model</h3>
 <div id="fxModel">Stable</div>
 
+<h3>📊 Risk Graph</h3>
+<canvas id="riskGraph" width="520" height="220"></canvas>
+
 </div>
 
-<!-- RIGHT LOG PANEL -->
+<!-- RIGHT PANEL -->
 <div class="panel right">
 
 <h3>📡 Audit Console</h3>
@@ -135,7 +138,7 @@ function now() {
   return new Date().toISOString();
 }
 
-/* LOAD PERSISTENCE */
+/* STORAGE */
 function loadState() {
   return JSON.parse(localStorage.getItem("spd_state_v12")) || {
     FX: 0, DC: 0, CYB: 0, INF: 0
@@ -146,31 +149,15 @@ function loadLog() {
   return JSON.parse(localStorage.getItem("spd_log_v12")) || [];
 }
 
-/* SAVE */
 function save() {
   localStorage.setItem("spd_state_v12", JSON.stringify(state));
   localStorage.setItem("spd_log_v12", JSON.stringify(log));
 }
 
-/* RENDER */
-function render() {
-  document.getElementById("stateBox").innerText = JSON.stringify(state, null, 2);
-  document.getElementById("log").innerText = log.slice(-25).join("\n");
-
-  updateFXModel();
-}
-
-/* LOGGING */
-function audit(event) {
-  log.push(`${now()} | ${event}`);
-  save();
-}
-
-/* SCENARIO ENGINE */
+/* ENGINE */
 function runScenario(type) {
   state[type] += 2;
 
-  // FX cascade logic
   if (type === "FX") {
     state.DC += 1;
     state.CYB += 1;
@@ -179,6 +166,11 @@ function runScenario(type) {
   audit("SCENARIO_TRIGGER: " + type);
   save();
   render();
+}
+
+/* LOG */
+function audit(event) {
+  log.push(`${now()} | ${event}`);
 }
 
 /* RESET */
@@ -190,7 +182,7 @@ function resetSystem() {
   render();
 }
 
-/* EXPORT LOG */
+/* EXPORT */
 function exportLog() {
   const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
@@ -199,20 +191,63 @@ function exportLog() {
   a.click();
 }
 
-/* FX MODEL VISUAL */
+/* FX STATUS */
 function updateFXModel() {
-  const fx = state.FX;
+  let fx = state.FX;
 
   let status = "STABLE";
-
   if (fx > 3) status = "ELEVATED VOLATILITY";
   if (fx > 6) status = "STRESS STATE";
   if (fx > 10) status = "SYSTEMIC RISK";
 
   document.getElementById("fxModel").innerText = status;
-
   document.getElementById("status").innerText =
     fx > 6 ? "SYSTEM: DEGRADED" : "SYSTEM: ONLINE";
+}
+
+/* GRAPH */
+function drawGraph() {
+  const c = document.getElementById("riskGraph");
+  const ctx = c.getContext("2d");
+
+  const keys = ["FX", "DC", "CYB", "INF"];
+  const values = [state.FX, state.DC, state.CYB, state.INF];
+
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  // grid
+  ctx.strokeStyle = "#1b2a3a";
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    ctx.moveTo(0, i * 40);
+    ctx.lineTo(520, i * 40);
+    ctx.stroke();
+  }
+
+  // bars
+  values.forEach((v, i) => {
+    let x = i * 120 + 40;
+    let h = v * 10;
+
+    ctx.fillStyle = v > 8 ? "#ff4d4d" : v > 4 ? "#ffcc00" : "#4dff88";
+    ctx.fillRect(x, 200 - h, 40, h);
+
+    ctx.fillStyle = "#cfe8ff";
+    ctx.fillText(keys[i], x, 210);
+    ctx.fillText(v, x, 190 - h);
+  });
+
+  ctx.fillStyle = "#6dffb3";
+  ctx.fillText("LIVE SYSTEM RISK MAP", 10, 20);
+}
+
+/* RENDER */
+function render() {
+  document.getElementById("stateBox").innerText = JSON.stringify(state, null, 2);
+  document.getElementById("log").innerText = log.slice(-25).join("\n");
+
+  updateFXModel();
+  drawGraph();
 }
 
 /* INIT */
