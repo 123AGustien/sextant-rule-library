@@ -78,14 +78,12 @@ button:hover {
   font-size: 12px;
 }
 
-/* GRAPH */
 canvas {
   background: #05070b;
   border: 1px solid #1b2a3a;
   margin-top: 10px;
 }
 
-/* RULE GUIDANCE */
 .ruleTitle{
   color:#6dffb3;
   font-weight:bold;
@@ -126,11 +124,11 @@ canvas {
 <h3>⚡ FX Cascade Model</h3>
 <div id="fxModel">Stable</div>
 
-<!-- ✅ RULE GUIDANCE INSERTED HERE -->
 <h3>📘 Rule Guidance</h3>
-<div id="ruleGuide" class="stateBox">
-Select a scenario to display the governing rule.
-</div>
+<div id="ruleGuide" class="stateBox">Select a scenario to display the governing rule.</div>
+
+<h3>🧠 Solution Panel</h3>
+<div id="solutionPanel" class="stateBox">No evaluation yet.</div>
 
 <h3>📊 Risk Graph</h3>
 <canvas id="riskGraph" width="520" height="220"></canvas>
@@ -171,176 +169,179 @@ function save() {
   localStorage.setItem("spd_log_v12", JSON.stringify(log));
 }
 
-/* RULE ENGINE */
+/* RULES */
 const rules = {
-
-FX:{
-id:"FIN-001",
-title:"Foreign Exchange Stress",
-steps:[
-"1. Check exchange-rate volatility.",
-"2. Confirm capital outflow indicators.",
-"3. Review liquidity conditions.",
-"4. Assess market confidence.",
-"5. Determine escalation level.",
-"6. Press FX SHOCK once for each confirmed escalation."
-]
-},
-
-DC:{
-id:"DC-001",
-title:"Data Centre Load",
-steps:[
-"1. Check server utilisation.",
-"2. Check cooling capacity.",
-"3. Review power consumption.",
-"4. Verify redundancy.",
-"5. Determine operational impact.",
-"6. Press DATA CENTER LOAD once for each confirmed escalation."
-]
-},
-
-CYB:{
-id:"CYB-001",
-title:"Cyber Security Incident",
-steps:[
-"1. Verify cyber alert.",
-"2. Confirm affected systems.",
-"3. Assess attack severity.",
-"4. Check containment.",
-"5. Determine operational impact.",
-"6. Press CYBER EVENT once for each confirmed escalation."
-]
-},
-
-INF:{
-id:"INF-001",
-title:"Infrastructure Failure",
-steps:[
-"1. Verify infrastructure disruption.",
-"2. Assess critical services.",
-"3. Review dependency impact.",
-"4. Estimate restoration time.",
-"5. Determine escalation.",
-"6. Press INFRA FAILURE once for each confirmed escalation."
-]
-}
-
+FX:{id:"FIN-001",title:"Foreign Exchange Stress",steps:[
+"Check volatility","Confirm outflows","Review liquidity","Assess confidence"
+]},
+DC:{id:"DC-001",title:"Data Centre Load",steps:[
+"Check utilisation","Cooling capacity","Power load","Redundancy"
+]},
+CYB:{id:"CYB-001",title:"Cyber Security Incident",steps:[
+"Verify alert","Check systems","Assess attack","Contain threat"
+]},
+INF:{id:"INF-001",title:"Infrastructure Failure",steps:[
+"Verify disruption","Assess services","Check dependencies","Restore priority"
+]}
 };
 
 function updateRuleGuide(type){
+  const r = rules[type];
+  if(!r) return;
 
-const r = rules[type];
-if(!r) return;
+  let html = `<div class='ruleTitle'>${r.id} - ${r.title}</div>`;
+  r.steps.forEach(s => html += `<div class='ruleItem'>✔ ${s}</div>`);
+  document.getElementById("ruleGuide").innerHTML = html;
+}
 
-let html = "<div class='ruleTitle'>" + r.id + " - " + r.title + "</div>";
+/* SOLUTION ENGINE */
+const solutions = {
+FX:{0:[0,3,"STABLE","Monitor FX","No action"],
+    1:[3,6,"WATCH","Track volatility","Reduce exposure"],
+    2:[6,10,"DEGRADED","Tight FX controls","Increase buffers"],
+    3:[10,999,"CRITICAL","Hedge FX","Liquidity support"]},
 
-r.steps.forEach(s => {
-html += "<div class='ruleItem'>✔ " + s + "</div>";
-});
+DC:{0:[0,3,"STABLE","Normal load","No action"],
+    1:[3,6,"WATCH","Balance load","Check cooling"],
+    2:[6,10,"DEGRADED","Reduce services","Load balancing"],
+    3:[10,999,"CRITICAL","Failover","Emergency cooling"]},
 
-document.getElementById("ruleGuide").innerHTML = html;
+CYB:{0:[0,3,"STABLE","Low threat","Monitor IDS"],
+    1:[3,6,"WATCH","Increase monitoring","Validate endpoints"],
+    2:[6,10,"DEGRADED","Isolate systems","Forensics"],
+    3:[10,999,"CRITICAL","Full response","Disconnect systems"]},
+
+INF:{0:[0,3,"STABLE","Normal infra","No action"],
+    1:[3,6,"WATCH","Check redundancy","Monitor nodes"],
+    2:[6,10,"DEGRADED","Reroute services","Backup systems"],
+    3:[10,999,"CRITICAL","Failover","Emergency restore"]}
+};
+
+function getLevel(v){
+  if(v < 3) return 0;
+  if(v < 6) return 1;
+  if(v < 10) return 2;
+  return 3;
+}
+
+function updateSolutionPanel(){
+
+  const el = document.getElementById("solutionPanel");
+  let html = "";
+
+  function render(k,v){
+    const s = solutions[k][getLevel(v)];
+    html += `<div class='ruleTitle'>${k} → ${s[2]}</div>`;
+    html += `<div class='ruleItem'>${s[3]}</div>`;
+    html += `<div class='ruleItem'>✔ ${s[4]}</div><br>`;
+  }
+
+  render("FX",state.FX);
+  render("DC",state.DC);
+  render("CYB",state.CYB);
+  render("INF",state.INF);
+
+  el.innerHTML = html;
 }
 
 /* ENGINE */
-function runScenario(type) {
+function runScenario(type){
   state[type] += 2;
 
-  if (type === "FX") {
+  if(type==="FX"){
     state.DC += 1;
     state.CYB += 1;
   }
 
-  audit("SCENARIO_TRIGGER: " + type);
+  audit("SCENARIO_TRIGGER:"+type);
 
   updateRuleGuide(type);
+  updateSolutionPanel();
 
   save();
   render();
 }
 
 /* LOG */
-function audit(event) {
-  log.push(`${now()} | ${event}`);
+function audit(e){
+  log.push(`${now()} | ${e}`);
 }
 
 /* RESET */
-function resetSystem() {
-  state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
-  log = [];
+function resetSystem(){
+  state={FX:0,DC:0,CYB:0,INF:0};
+  log=[];
   audit("SYSTEM_RESET");
   save();
   render();
 }
 
 /* EXPORT */
-function exportLog() {
-  const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "spd_v12_audit_log.json";
+function exportLog(){
+  const blob=new Blob([JSON.stringify(log,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="spd_v12_log.json";
   a.click();
 }
 
 /* FX MODEL */
-function updateFXModel() {
-  let fx = state.FX;
+function updateFXModel(){
+  let fx=state.FX;
 
-  let status = "STABLE";
-  if (fx > 3) status = "ELEVATED VOLATILITY";
-  if (fx > 6) status = "STRESS STATE";
-  if (fx > 10) status = "SYSTEMIC RISK";
+  let status="STABLE";
+  if(fx>3)status="ELEVATED VOLATILITY";
+  if(fx>6)status="STRESS STATE";
+  if(fx>10)status="SYSTEMIC RISK";
 
-  document.getElementById("fxModel").innerText = status;
-
-  document.getElementById("status").innerText =
-    fx > 6 ? "SYSTEM: DEGRADED" : "SYSTEM: ONLINE";
+  document.getElementById("fxModel").innerText=status;
+  document.getElementById("status").innerText=fx>6?"SYSTEM: DEGRADED":"SYSTEM: ONLINE";
 }
 
 /* GRAPH */
-function drawGraph() {
-  const c = document.getElementById("riskGraph");
-  const ctx = c.getContext("2d");
+function drawGraph(){
+  const c=document.getElementById("riskGraph");
+  const ctx=c.getContext("2d");
 
-  const keys = ["FX", "DC", "CYB", "INF"];
-  const values = [state.FX, state.DC, state.CYB, state.INF];
+  const keys=["FX","DC","CYB","INF"];
+  const vals=[state.FX,state.DC,state.CYB,state.INF];
 
-  ctx.clearRect(0, 0, c.width, c.height);
+  ctx.clearRect(0,0,c.width,c.height);
 
-  ctx.strokeStyle = "#1b2a3a";
-  for (let i = 0; i < 5; i++) {
+  ctx.strokeStyle="#1b2a3a";
+  for(let i=0;i<5;i++){
     ctx.beginPath();
-    ctx.moveTo(0, i * 40);
-    ctx.lineTo(520, i * 40);
+    ctx.moveTo(0,i*40);
+    ctx.lineTo(520,i*40);
     ctx.stroke();
   }
 
-  values.forEach((v, i) => {
-    let x = i * 120 + 40;
-    let h = Math.min(180, v * 12);
+  vals.forEach((v,i)=>{
+    let x=i*120+40;
+    let h=Math.min(180,v*12);
 
-    ctx.fillStyle = v > 8 ? "#ff4d4d" : v > 4 ? "#ffcc00" : "#4dff88";
-    ctx.fillRect(x, 200 - h, 40, h);
+    ctx.fillStyle=v>8?"#ff4d4d":v>4?"#ffcc00":"#4dff88";
+    ctx.fillRect(x,200-h,40,h);
 
-    ctx.fillStyle = "#cfe8ff";
-    ctx.fillText(keys[i], x, 210);
-    ctx.fillText(v, x, 190 - h);
+    ctx.fillStyle="#cfe8ff";
+    ctx.fillText(keys[i],x,210);
+    ctx.fillText(v,x,190-h);
   });
 
-  ctx.fillStyle = "#6dffb3";
-  ctx.fillText("LIVE SYSTEM RISK MAP", 10, 20);
+  ctx.fillStyle="#6dffb3";
+  ctx.fillText("LIVE SYSTEM RISK MAP",10,20);
 }
 
-/* RENDER LOOP */
-function render() {
-  document.getElementById("stateBox").innerText = JSON.stringify(state, null, 2);
-  document.getElementById("log").innerText = log.slice(-25).join("\n");
+/* RENDER */
+function render(){
+  document.getElementById("stateBox").innerText=JSON.stringify(state,null,2);
+  document.getElementById("log").innerText=log.slice(-25).join("\n");
 
   updateFXModel();
   drawGraph();
+  updateSolutionPanel();
 }
 
-/* INIT */
 render();
 </script>
 
