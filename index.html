@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // FULL AUTONOMOUS COCKPIT</title>
+<title>SPD v12 // AUTONOMOUS COCKPIT v2</title>
 
 <style>
 body {
@@ -16,56 +16,50 @@ body {
   padding: 12px;
   background: #0c1624;
   border-bottom: 1px solid #223447;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:13px;
 }
 
 .grid {
-  display: grid;
+  display:grid;
   grid-template-columns: 1.2fr 1fr;
   height: calc(100vh - 50px);
 }
 
 .panel {
-  padding: 12px;
-  border-right: 1px solid #1b2a3a;
-  overflow: auto;
+  padding:12px;
+  border-right:1px solid #1b2a3a;
+  overflow:auto;
 }
 
-.right { background: #060a10; }
+.right { background:#060a10; }
 
 button {
-  background: #132235;
-  color: #cfe8ff;
-  border: 1px solid #2b425a;
-  padding: 8px;
-  margin: 4px;
-  cursor: pointer;
+  background:#132235;
+  color:#cfe8ff;
+  border:1px solid #2b425a;
+  padding:8px;
+  margin:4px;
+  cursor:pointer;
 }
 
-button:hover { background: #1b3550; }
+button:hover { background:#1b3550; }
 
 .badge {
-  padding: 4px 8px;
-  background: #0f2a1f;
-  border: 1px solid #1f5a3a;
-  color: #6dffb3;
-  font-size: 12px;
+  padding:4px 8px;
+  background:#0f2a1f;
+  border:1px solid #1f5a3a;
+  color:#6dffb3;
+  font-size:12px;
 }
 
-.stateBox, .log {
-  background: #05070b;
-  padding: 10px;
-  border: 1px solid #1b2a3a;
-  font-size: 12px;
-}
-
-canvas {
-  background: #05070b;
-  border: 1px solid #1b2a3a;
-  margin-top: 10px;
+.stateBox,.log {
+  background:#05070b;
+  padding:10px;
+  border:1px solid #1b2a3a;
+  font-size:12px;
 }
 
 .ruleTitle {
@@ -74,14 +68,20 @@ canvas {
   margin-bottom:6px;
 }
 
-.ruleItem { margin: 3px 0; }
+.ruleItem { margin:3px 0; }
+
+canvas {
+  background:#05070b;
+  border:1px solid #1b2a3a;
+  margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-🛰 SPD v12 // AUTONOMOUS COCKPIT
+🛰 SPD v12 // AUTONOMOUS COCKPIT v2
 <span id="status" class="badge">SYSTEM ONLINE</span>
 </div>
 
@@ -106,7 +106,7 @@ canvas {
 <h3>🧠 Solutions</h3>
 <div id="solutionPanel" class="stateBox"></div>
 
-<h3>🚨 AUTO SUGGEST</h3>
+<h3>🚨 AUTO SUGGEST v2</h3>
 <div id="autoSuggestPanel" class="stateBox"></div>
 
 <h3>📊 Graph</h3>
@@ -138,77 +138,89 @@ INF:["Failure","Services","Dependency","Restore"]
 
 /* ---------------- SOLUTIONS ---------------- */
 const solutions = {
-FX:[["STABLE","Monitor FX"],["WATCH","Reduce exposure"],["DEGRADED","Hedge FX"],["CRITICAL","Emergency liquidity"]],
-DC:[["STABLE","Normal load"],["WATCH","Balance load"],["DEGRADED","Reduce services"],["CRITICAL","Failover"]],
-CYB:[["STABLE","Monitor logs"],["WATCH","Increase security"],["DEGRADED","Isolate systems"],["CRITICAL","Disconnect"]],
-INF:[["STABLE","Normal ops"],["WATCH","Check systems"],["DEGRADED","Reroute"],["CRITICAL","Emergency restore"]]
+FX:["STABLE","WATCH","DEGRADED","CRITICAL"],
+DC:["STABLE","WATCH","DEGRADED","CRITICAL"],
+CYB:["STABLE","WATCH","DEGRADED","CRITICAL"],
+INF:["STABLE","WATCH","DEGRADED","CRITICAL"]
 };
 
-/* ---------------- AUTO SUGGEST ENGINE ---------------- */
+/* ---------------- AUTO SUGGEST v2 ENGINE ---------------- */
 function updateAutoSuggest() {
 
-  const risks = Object.entries(state)
-    .sort((a,b)=>b[1]-a[1]);
+  const panel = document.getElementById("autoSuggestPanel");
 
-  const top = risks[0];
+  const weights = { FX:1.2, DC:1.0, CYB:1.5, INF:1.3 };
 
-  const suggestions = [];
+  const score = {};
+  let total = 0;
 
-  if (top[1] > 6) {
-    suggestions.push(`PRIORITY: Stabilise ${top[0]}`);
+  for (let k in state) {
+    score[k] = state[k] * weights[k];
+    total += score[k];
   }
 
-  if (state.CYB > 5) suggestions.push("Isolate cyber systems");
-  if (state.FX > 5) suggestions.push("Inject liquidity buffer");
-  if (state.DC > 5) suggestions.push("Reduce data centre load");
-  if (state.INF > 5) suggestions.push("Activate infrastructure fallback");
+  const sorted = Object.entries(score).sort((a,b)=>b[1]-a[1]);
 
-  let html = "";
+  function priority(v){
+    if(v>=18) return "P0 CRITICAL";
+    if(v>=12) return "P1 HIGH";
+    if(v>=6) return "P2 MEDIUM";
+    return "P3 LOW";
+  }
 
-  if (suggestions.length === 0) {
-    html = "🟢 System stable — no action required";
-  } else {
-    suggestions.forEach(s => {
-      html += `<div class='ruleItem'>⚡ ${s}</div>`;
+  const actions = {
+    FX:["Stabilise liquidity","Hedge FX risk"],
+    DC:["Reduce compute load","Balance cooling"],
+    CYB:["Isolate systems","Run forensics"],
+    INF:["Activate fallback","Reroute services"]
+  };
+
+  let html = `<div class='ruleTitle'>TOTAL RISK: ${total.toFixed(2)}</div>`;
+
+  sorted.forEach(([k,v])=>{
+    html += `<div class='ruleTitle'>${k} → ${priority(v)}</div>`;
+    html += `<div class='ruleItem'>Risk: ${v.toFixed(2)}</div>`;
+    actions[k].forEach(a=>{
+      html += `<div class='ruleItem'>✔ ${a}</div>`;
     });
-  }
+    html += "<br>";
+  });
 
-  document.getElementById("autoSuggestPanel").innerHTML = html;
+  panel.innerHTML = html;
 }
 
 /* ---------------- RULE PANEL ---------------- */
 function updateRuleGuide(type){
   let html = `<div class='ruleTitle'>${type} RULES</div>`;
-  rules[type].forEach(r => html += `<div class='ruleItem'>✔ ${r}</div>`);
+  rules[type].forEach(r=>html+=`<div class='ruleItem'>✔ ${r}</div>`);
   document.getElementById("ruleGuide").innerHTML = html;
 }
 
 /* ---------------- SOLUTION PANEL ---------------- */
 function updateSolutionPanel(){
 
-  let html = "";
+  let html="";
 
-  for (let k in state) {
-    let v = state[k];
-    let tier = v < 3 ? 0 : v < 6 ? 1 : v < 10 ? 2 : 3;
+  for(let k in state){
 
-    const s = solutions[k][tier];
+    let v=state[k];
+    let tier = v<3?0:v<6?1:v<10?2:3;
 
-    html += `<div class='ruleTitle'>${k} → ${s[0]}</div>`;
-    html += `<div class='ruleItem'>${s[1]}</div><br>`;
+    html += `<div class='ruleTitle'>${k} → ${solutions[k][tier]}</div>`;
+    html += `<div class='ruleItem'>Action Tier Active</div><br>`;
   }
 
-  document.getElementById("solutionPanel").innerHTML = html;
+  document.getElementById("solutionPanel").innerHTML=html;
 }
 
 /* ---------------- ENGINE ---------------- */
 function runScenario(type){
 
-  state[type] += 2;
+  state[type]+=2;
 
   if(type==="FX"){
-    state.DC += 1;
-    state.CYB += 1;
+    state.DC++;
+    state.CYB++;
   }
 
   log.push(`${new Date().toISOString()} | ${type}`);
@@ -223,19 +235,19 @@ function runScenario(type){
 /* ---------------- GRAPH ---------------- */
 function drawGraph(){
 
-  const c = document.getElementById("riskGraph");
-  const ctx = c.getContext("2d");
+  const c=document.getElementById("riskGraph");
+  const ctx=c.getContext("2d");
 
   ctx.clearRect(0,0,c.width,c.height);
 
-  const keys = Object.keys(state);
-  const vals = Object.values(state);
+  const keys=Object.keys(state);
+  const vals=Object.values(state);
 
   vals.forEach((v,i)=>{
-    let x = i*120+40;
-    let h = Math.min(180,v*12);
+    let x=i*120+40;
+    let h=Math.min(180,v*12);
 
-    ctx.fillStyle = v>8?"#ff4d4d":v>4?"#ffcc00":"#4dff88";
+    ctx.fillStyle=v>8?"#ff4d4d":v>4?"#ffcc00":"#4dff88";
     ctx.fillRect(x,200-h,40,h);
 
     ctx.fillStyle="#cfe8ff";
@@ -246,14 +258,15 @@ function drawGraph(){
 /* ---------------- RENDER ---------------- */
 function render(){
 
-  document.getElementById("stateBox").innerText =
+  document.getElementById("stateBox").innerText=
     JSON.stringify(state,null,2);
 
-  document.getElementById("log").innerText =
+  document.getElementById("log").innerText=
     log.slice(-20).join("\n");
 
   drawGraph();
   updateAutoSuggest();
+  updateSolutionPanel();
 }
 
 /* INIT */
