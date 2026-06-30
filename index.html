@@ -97,6 +97,8 @@ canvas {
 <button onclick="runScenario('CYB')">CYBER EVENT</button>
 <button onclick="runScenario('INF')">INFRA FAILURE</button>
 
+<button onclick="resetSystem()">RESET</button>
+
 <h3>📊 State</h3>
 <pre id="stateBox" class="stateBox"></pre>
 
@@ -116,7 +118,7 @@ canvas {
 
 <!-- RIGHT -->
 <div class="panel right">
-<h3>📡 Audit</h3>
+<h3>📡 Audit Log</h3>
 <div id="log" class="log"></div>
 </div>
 
@@ -144,18 +146,25 @@ CYB:["STABLE","WATCH","DEGRADED","CRITICAL"],
 INF:["STABLE","WATCH","DEGRADED","CRITICAL"]
 };
 
-/* ---------------- AUTO SUGGEST v2 ENGINE ---------------- */
-function updateAutoSuggest() {
+/* ---------------- SAFE ---------------- */
+function el(id){
+  return document.getElementById(id);
+}
 
-  const panel = document.getElementById("autoSuggestPanel");
+/* ---------------- AUTO SUGGEST v2 ---------------- */
+function updateAutoSuggest(){
+
+  const panel = el("autoSuggestPanel");
+  if(!panel) return;
 
   const weights = { FX:1.2, DC:1.0, CYB:1.5, INF:1.3 };
 
-  const score = {};
+  let score = {};
   let total = 0;
 
-  for (let k in state) {
-    score[k] = state[k] * weights[k];
+  for(let k in state){
+    const v = state[k] || 0;
+    score[k] = v * weights[k];
     total += score[k];
   }
 
@@ -169,7 +178,7 @@ function updateAutoSuggest() {
   }
 
   const actions = {
-    FX:["Stabilise liquidity","Hedge FX risk"],
+    FX:["Stabilise liquidity","Hedge FX exposure"],
     DC:["Reduce compute load","Balance cooling"],
     CYB:["Isolate systems","Run forensics"],
     INF:["Activate fallback","Reroute services"]
@@ -180,43 +189,54 @@ function updateAutoSuggest() {
   sorted.forEach(([k,v])=>{
     html += `<div class='ruleTitle'>${k} → ${priority(v)}</div>`;
     html += `<div class='ruleItem'>Risk: ${v.toFixed(2)}</div>`;
-    actions[k].forEach(a=>{
+
+    (actions[k]||[]).forEach(a=>{
       html += `<div class='ruleItem'>✔ ${a}</div>`;
     });
+
     html += "<br>";
   });
 
   panel.innerHTML = html;
 }
 
-/* ---------------- RULE PANEL ---------------- */
+/* ---------------- RULE GUIDE ---------------- */
 function updateRuleGuide(type){
+  const panel = el("ruleGuide");
+  if(!panel || !rules[type]) return;
+
   let html = `<div class='ruleTitle'>${type} RULES</div>`;
-  rules[type].forEach(r=>html+=`<div class='ruleItem'>✔ ${r}</div>`);
-  document.getElementById("ruleGuide").innerHTML = html;
+  rules[type].forEach(r=>{
+    html += `<div class='ruleItem'>✔ ${r}</div>`;
+  });
+
+  panel.innerHTML = html;
 }
 
 /* ---------------- SOLUTION PANEL ---------------- */
 function updateSolutionPanel(){
 
-  let html="";
+  const panel = el("solutionPanel");
+  if(!panel) return;
+
+  let html = "";
 
   for(let k in state){
 
-    let v=state[k];
+    let v = state[k] || 0;
     let tier = v<3?0:v<6?1:v<10?2:3;
 
     html += `<div class='ruleTitle'>${k} → ${solutions[k][tier]}</div>`;
     html += `<div class='ruleItem'>Action Tier Active</div><br>`;
   }
 
-  document.getElementById("solutionPanel").innerHTML=html;
+  panel.innerHTML = html;
 }
 
 /* ---------------- ENGINE ---------------- */
 function runScenario(type){
 
-  state[type]+=2;
+  state[type] = (state[type]||0) + 2;
 
   if(type==="FX"){
     state.DC++;
@@ -232,22 +252,43 @@ function runScenario(type){
   render();
 }
 
+/* ---------------- RESET ---------------- */
+function resetSystem(){
+
+  state = { FX:0, DC:0, CYB:0, INF:0 };
+  log = [];
+
+  log.push(`${new Date().toISOString()} | SYSTEM_RESET`);
+
+  updateRuleGuide("FX");
+  updateSolutionPanel();
+  updateAutoSuggest();
+
+  render();
+}
+
 /* ---------------- GRAPH ---------------- */
 function drawGraph(){
 
-  const c=document.getElementById("riskGraph");
-  const ctx=c.getContext("2d");
+  const c = el("riskGraph");
+  if(!c) return;
 
+  const ctx = c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
 
-  const keys=Object.keys(state);
-  const vals=Object.values(state);
+  const keys = Object.keys(state);
+  const vals = Object.values(state);
 
   vals.forEach((v,i)=>{
-    let x=i*120+40;
-    let h=Math.min(180,v*12);
 
-    ctx.fillStyle=v>8?"#ff4d4d":v>4?"#ffcc00":"#4dff88";
+    let x = i*120+40;
+    let h = Math.min(180,v*12);
+
+    ctx.fillStyle =
+      v>8?"#ff4d4d":
+      v>4?"#ffcc00":
+      "#4dff88";
+
     ctx.fillRect(x,200-h,40,h);
 
     ctx.fillStyle="#cfe8ff";
@@ -258,18 +299,17 @@ function drawGraph(){
 /* ---------------- RENDER ---------------- */
 function render(){
 
-  document.getElementById("stateBox").innerText=
-    JSON.stringify(state,null,2);
+  const stateBox = el("stateBox");
+  const logBox = el("log");
 
-  document.getElementById("log").innerText=
-    log.slice(-20).join("\n");
+  if(stateBox) stateBox.innerText = JSON.stringify(state,null,2);
+  if(logBox) logBox.innerText = log.slice(-20).join("\n");
 
   drawGraph();
   updateAutoSuggest();
   updateSolutionPanel();
 }
 
-/* INIT */
 render();
 
 </script>
