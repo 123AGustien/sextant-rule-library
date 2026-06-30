@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v12 // OJK DIGITAL COCKPIT</title>
+
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at center, #070b12, #020409);
+  color: #cfe8ff;
+  font-family: Arial, sans-serif;
+}
+
+/* HEADER */
+.header {
+  padding: 12px;
+  background: #0c1624;
+  border-bottom: 1px solid #223447;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+/* GRID LAYOUT */
+.grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  height: calc(100vh - 50px);
+}
+
+/* PANELS */
+.panel {
+  padding: 12px;
+  border-right: 1px solid #1b2a3a;
+  overflow: auto;
+}
+
+.right {
+  background: #060a10;
+}
+
+/* BUTTONS */
+button {
+  background: #132235;
+  color: #cfe8ff;
+  border: 1px solid #2b425a;
+  padding: 8px 10px;
+  margin: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: #1b3550;
+}
+
+/* STATUS BADGE */
+.badge {
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: #0f2a1f;
+  border: 1px solid #1f5a3a;
+  color: #6dffb3;
+  font-size: 12px;
+}
+
+/* LOG */
+.log {
+  font-size: 12px;
+  white-space: pre-wrap;
+  max-height: 60vh;
+  overflow: auto;
+  background: #05070b;
+  padding: 8px;
+  border: 1px solid #1b2a3a;
+}
+
+/* STATE BOX */
+.stateBox {
+  background: #05070b;
+  padding: 10px;
+  border: 1px solid #1b2a3a;
+  font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  🛰 SPD v12 // OJK DIGITAL COCKPIT ENGINE
+  <span id="status" class="badge">SYSTEM: ONLINE</span>
+</div>
+
+<div class="grid">
+
+<!-- LEFT CONTROL PANEL -->
+<div class="panel">
+
+<h3>⚙ Scenario Engine</h3>
+
+<button onclick="runScenario('FX')">FX SHOCK</button>
+<button onclick="runScenario('DC')">DATA CENTER LOAD</button>
+<button onclick="runScenario('CYB')">CYBER EVENT</button>
+<button onclick="runScenario('INF')">INFRA FAILURE</button>
+
+<button onclick="resetSystem()">RESET</button>
+<button onclick="exportLog()">EXPORT LOG</button>
+
+<h3>📊 System State</h3>
+<pre id="stateBox" class="stateBox"></pre>
+
+<h3>⚡ FX Cascade Model</h3>
+<div id="fxModel">Stable</div>
+
+</div>
+
+<!-- RIGHT LOG PANEL -->
+<div class="panel right">
+
+<h3>📡 Audit Console</h3>
+<div id="log" class="log"></div>
+
+</div>
+
+</div>
+
+<script>
+let state = loadState();
+let log = loadLog();
+
+function now() {
+  return new Date().toISOString();
+}
+
+/* LOAD PERSISTENCE */
+function loadState() {
+  return JSON.parse(localStorage.getItem("spd_state_v12")) || {
+    FX: 0, DC: 0, CYB: 0, INF: 0
+  };
+}
+
+function loadLog() {
+  return JSON.parse(localStorage.getItem("spd_log_v12")) || [];
+}
+
+/* SAVE */
+function save() {
+  localStorage.setItem("spd_state_v12", JSON.stringify(state));
+  localStorage.setItem("spd_log_v12", JSON.stringify(log));
+}
+
+/* RENDER */
+function render() {
+  document.getElementById("stateBox").innerText = JSON.stringify(state, null, 2);
+  document.getElementById("log").innerText = log.slice(-25).join("\n");
+
+  updateFXModel();
+}
+
+/* LOGGING */
+function audit(event) {
+  log.push(`${now()} | ${event}`);
+  save();
+}
+
+/* SCENARIO ENGINE */
+function runScenario(type) {
+  state[type] += 2;
+
+  // FX cascade logic
+  if (type === "FX") {
+    state.DC += 1;
+    state.CYB += 1;
+  }
+
+  audit("SCENARIO_TRIGGER: " + type);
+  save();
+  render();
+}
+
+/* RESET */
+function resetSystem() {
+  state = { FX: 0, DC: 0, CYB: 0, INF: 0 };
+  log = [];
+  audit("SYSTEM_RESET");
+  save();
+  render();
+}
+
+/* EXPORT LOG */
+function exportLog() {
+  const blob = new Blob([JSON.stringify(log, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "spd_v12_audit_log.json";
+  a.click();
+}
+
+/* FX MODEL VISUAL */
+function updateFXModel() {
+  const fx = state.FX;
+
+  let status = "STABLE";
+
+  if (fx > 3) status = "ELEVATED VOLATILITY";
+  if (fx > 6) status = "STRESS STATE";
+  if (fx > 10) status = "SYSTEMIC RISK";
+
+  document.getElementById("fxModel").innerText = status;
+
+  document.getElementById("status").innerText =
+    fx > 6 ? "SYSTEM: DEGRADED" : "SYSTEM: ONLINE";
+}
+
+/* INIT */
+render();
+</script>
+
+</body>
+</html>
