@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v12 // SEXTANT CLOSED LOOP ARCHITECTURE</title>
+
+<style>
+body {
+  margin: 0;
+  background: #05070b;
+  color: #cfe8ff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.header {
+  padding: 10px;
+  background: #0b1220;
+  font-size: 14px;
+}
+
+#statusBar {
+  text-align: center;
+  padding: 6px;
+  background: #0a0f18;
+  font-size: 13px;
+}
+
+.panel {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+
+.card {
+  background: #0e1a2b;
+  width: 16%;
+  padding: 10px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.value {
+  font-size: 24px;
+}
+
+#graph {
+  position: relative;
+  height: 240px;
+  margin: 10px;
+}
+
+.node {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #1f3b5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: 0.25s;
+}
+
+button {
+  padding: 7px 10px;
+  margin: 3px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+#explain {
+  position: absolute;
+  right: 10px;
+  top: 60px;
+  width: 300px;
+  height: 260px;
+  background: #0a0f18;
+  padding: 10px;
+  font-size: 11px;
+  overflow-y: auto;
+  border-left: 2px solid #1f3b5c;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+🛰 SPD v12 // SEXTANT CLOSED LOOP ARCHITECTURE + ENERGY ENGINE
+</div>
+
+<div id="statusBar">STATUS: ACTIVE</div>
+
+<div class="panel">
+  <div class="card">FX<div id="FX" class="value">0.0</div></div>
+  <div class="card">DC<div id="DC" class="value">0.0</div></div>
+  <div class="card">CYB<div id="CYB" class="value">0.0</div></div>
+  <div class="card">INF<div id="INF" class="value">0.0</div></div>
+  <div class="card">ENG<div id="ENG" class="value">0.0</div></div>
+</div>
+
+<div id="graph">
+  <div class="node" id="nFX">FX</div>
+  <div class="node" id="nDC">DC</div>
+  <div class="node" id="nCYB">CYB</div>
+  <div class="node" id="nINF">INF</div>
+  <div class="node" id="nENG">ENG</div>
+</div>
+
+<div style="text-align:center;">
+  <button onclick="inject('FX')">FX STRESS</button>
+  <button onclick="inject('DC')">DC LOAD</button>
+  <button onclick="inject('CYB')">CYBER EVENT</button>
+  <button onclick="inject('INF')">INFRA STRAIN</button>
+  <button onclick="energyShock()">ENERGY SHOCK</button>
+  <button onclick="reset()">RESET</button>
+</div>
+
+<div id="explain">Explain: idle</div>
+
+<script>
+
+/* =========================
+   SEXTANT GLOBAL STATE
+========================= */
+
+window.SEXTANT = {
+  domains: {
+    FIN: { risk: 0 },
+    DC:  { risk: 0 },
+    CYB: { risk: 0 },
+    INF: { risk: 0 },
+    ENG: { risk: 0, mode: "NORMAL" }
+  },
+  state: {
+    FX: 0, DC: 0, CYB: 0, INF: 0
+  }
+};
+
+/* =========================
+   VISUAL STATE
+========================= */
+
+const state = {
+  FX: { v: 0, s: 0.7, x: 80, y: 80 },
+  DC: { v: 0, s: 0.9, x: 220, y: 40 },
+  CYB:{ v: 0, s: 0.8, x: 360, y: 80 },
+  INF:{ v: 0, s: 0.85, x: 220, y: 140 },
+  ENG:{ v: 0, s: 0.75, x: 140, y: 140 }
+};
+
+let log = [];
+let explanationLog = [];
+
+/* =========================
+   ENERGY ENGINE (WIRED)
+========================= */
+
+const EnergyEngine = {
+
+  evaluate(state) {
+
+    let risk = 0;
+
+    if (state.ENG.v < 20) risk += 1;
+    if (state.INF.v > 25) risk += 1;
+    if (state.DC.v > 25) risk += 1;
+    if (state.CYB.v > 25) risk += 1;
+
+    const mode =
+      risk < 2 ? "NORMAL" :
+      risk < 4 ? "TRANSITION" :
+      "CONTINGENCY";
+
+    window.SEXTANT.domains.ENG = { risk, mode };
+
+    return { risk, mode };
+  }
+};
+
+/* =========================
+   CLOSED LOOP CASCADE
+========================= */
+
+function cascade(){
+
+  const eng = EnergyEngine.evaluate(state);
+  state.ENG.v = eng.risk * 10;
+
+  const pBase = 0.04 + eng.risk * 0.01;
+
+  const links = [
+    ["FX","DC"],
+    ["DC","CYB"],
+    ["CYB","INF"],
+    ["INF","FX"],
+    ["ENG","INF"],
+    ["ENG","DC"],
+    ["CYB","ENG"]
+  ];
+
+  links.forEach(([a,b]) => {
+
+    const A = state[a];
+    const B = state[b];
+
+    const p = pBase * (A.v * A.s * B.s) / 120;
+
+    if(Math.random() < p){
+      const impact = 2 + Math.random() * 5;
+      B.v += impact;
+
+      logEvent("CASCADE", {from:a,to:b,impact});
+      explain(`${a} → ${b} +${impact.toFixed(1)}`);
+    }
+  });
+}
+
+/* =========================
+   CORE FUNCTIONS
+========================= */
+
+function inject(node){
+  state[node].v += 10;
+  logEvent("INJECT", node);
+}
+
+function energyShock(){
+  state.ENG.v += 25;
+  explain("⚡ ENERGY SHOCK ACTIVATED");
+}
+
+function reset(){
+  for(let k in state) state[k].v = 0;
+  explain("SYSTEM RESET");
+}
+
+/* =========================
+   ENGINE LOOP
+========================= */
+
+function tick(){
+  cascade();
+  decay();
+  render();
+}
+
+setInterval(tick, 900);
+
+/* =========================
+   DECAY
+========================= */
+
+function decay(){
+  for(let k in state){
+    state[k].v *= 0.97;
+  }
+}
+
+/* =========================
+   LOG + EXPLAIN
+========================= */
+
+function logEvent(type,data){
+  log.push({time:new Date(),type,data});
+}
+
+function explain(msg){
+  explanationLog.push({time:new Date(),msg});
+
+  document.getElementById("explain").innerHTML =
+    "🧠 SEXTANT CLOSED LOOP<br><br>" +
+    explanationLog.slice(-12).map(e =>
+      `[${e.time.toLocaleTimeString()}] ${e.msg}`
+    ).join("<br>");
+}
+
+/* =========================
+   RENDER ENGINE
+========================= */
+
+function render(){
+
+  FX.innerText = state.FX.v.toFixed(1);
+  DC.innerText = state.DC.v.toFixed(1);
+  CYB.innerText = state.CYB.v.toFixed(1);
+  INF.innerText = state.INF.v.toFixed(1);
+  ENG.innerText = state.ENG.v.toFixed(1);
+
+  for(let k in state){
+    const el = document.getElementById("n"+k);
+
+    el.style.left = state[k].x + "px";
+    el.style.top  = state[k].y + "px";
+
+    el.style.transform = `scale(${1 + state[k].v/60})`;
+
+    el.style.background =
+      state[k].v > 40 ? "#ff3b3b" :
+      state[k].v > 20 ? "#ffb020" :
+      "#1f3b5c";
+  }
+}
+
+/* INIT */
+render();
+
+</script>
+
+</body>
+</html>
