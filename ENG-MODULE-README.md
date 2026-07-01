@@ -2,9 +2,9 @@
 
 ## Sextant Protocol – Ekstensi Rule Library
 
-Modul **Ketahanan Energi (ENG)** adalah sistem keputusan terstruktur di dalam framework simulasi Sextant Protocol.
+Modul **Ketahanan Energi (ENG)** adalah sistem keputusan terstruktur dalam framework Sextant Protocol untuk mensimulasikan stabilitas energi nasional.
 
-Modul ini memodelkan stabilitas sistem energi nasional dalam kondisi:
+Modul ini memodelkan respons sistem terhadap:
 - Fluktuasi harga minyak dunia
 - Tekanan harga CPO (minyak sawit)
 - Tekanan subsidi bahan bakar
@@ -14,7 +14,7 @@ Modul ini memodelkan stabilitas sistem energi nasional dalam kondisi:
 
 # 🧠 Tujuan
 
-Modul ENG mensimulasikan bagaimana sistem energi nasional merespons guncangan melalui tiga lapisan kontrol:
+Modul ENG digunakan untuk mensimulasikan bagaimana sistem energi nasional merespons guncangan melalui tiga lapisan kontrol:
 
 1. Peredam guncangan jangka pendek  
 2. Perlindungan fiskal negara  
@@ -35,38 +35,38 @@ Meredam guncangan pasar secara langsung agar tidak terjadi lonjakan ekstrem.
 - Mekanisme stabilisasi harga BBM
 
 ### Dampak
-Mencegah transmisi langsung volatilitas harga global ke ekonomi domestik.
+Mencegah transmisi volatilitas harga global ke ekonomi domestik.
 
 ---
 
 ## 2. 💰 Lapisan Perlindungan Fiskal (Kontrol Anggaran)
 
 ### Tujuan
-Mencegah pembengkakan subsidi dan ketidakseimbangan fiskal.
+Mencegah pembengkakan subsidi dan tekanan fiskal berlebih.
 
 ### Tindakan
-- Rekalibrasi subsidi secara dinamis
-- Penyesuaian pungutan ekspor (dana sawit)
+- Rekalibrasi subsidi dinamis
+- Penyesuaian pungutan ekspor CPO
 - Pembatasan eksposur subsidi berdasarkan selisih harga minyak
 
 ### Dampak
-Menjaga stabilitas anggaran negara di tengah tekanan biaya energi.
+Menjaga stabilitas anggaran negara.
 
 ---
 
 ## 3. 🛢 Lapisan Ketahanan Energi (Jangka Panjang)
 
 ### Tujuan
-Mengurangi ketergantungan struktural terhadap energi impor.
+Mengurangi ketergantungan energi impor.
 
 ### Tindakan
 - Membangun cadangan energi strategis
-- Meningkatkan kapasitas produksi biodiesel dalam negeri
-- Diversifikasi bahan baku (tidak hanya sawit)
-- Mengurangi ketergantungan impor minyak mentah
+- Meningkatkan kapasitas biodiesel domestik
+- Diversifikasi bahan baku selain sawit
+- Mengurangi impor minyak mentah
 
 ### Dampak
-Memperkuat kemandirian energi nasional secara berkelanjutan.
+Memperkuat kemandirian energi nasional.
 
 ---
 
@@ -86,7 +86,7 @@ Modul ENG terintegrasi dalam cockpit SPD bersama:
 
 FX | DC | CYB | INF | ENG
 
-Kontribusi modul:
+Kontribusi:
 - Skoring risiko
 - Auto Suggest v2
 - Simulasi dampak berantai
@@ -96,26 +96,52 @@ Kontribusi modul:
 
 # 🔄 Alur Keputusan
 
+Guncangan energi terdeteksi  
+→ Engine ENG aktif  
+→ Pemilihan lapisan solusi  
+→ Eksekusi aksi  
+→ Stabilitas sistem  
+→ Audit tercatat  
+
+---
+
+# 📊 Filosofi Desain
+
+Modul ENG bukan sistem aturan statis, tetapi sistem kontrol adaptif berbasis skenario.
+
+---
+
+# 🚀 Ringkasan
+
+Modul ENG memungkinkan simulasi:
+- Stabilitas harga jangka pendek
+- Perlindungan fiskal negara
+- Ketahanan energi jangka panjang
+
+---
+
+# 🛰 END OF MODULE
+
 # 🛰 Energy Resilience Module (ENG)
 
 ## Sextant Protocol – Rule Library Extension
 
-The **Energy Resilience Module (ENG)** is a governed decision system within the Sextant Protocol simulation framework.
+The **Energy Resilience Module (ENG)** is a structured decision system within the Sextant Protocol framework designed to simulate national energy stability.
 
-It models national energy stability under conditions of:
-- Oil price volatility
+This module models system responses to:
+- Global oil price volatility
 - Palm oil (CPO) price pressure
 - Fuel subsidy stress
-- Import dependency risk
+- Energy import dependency risk
 
 ---
 
 # 🧠 Purpose
 
-The ENG module simulates how a national energy system responds to shocks and maintains stability across three control layers:
+The ENG module is used to simulate how a national energy system responds to shocks through three control layers:
 
 1. Short-term shock absorption  
-2. Fiscal stability protection  
+2. Fiscal protection  
 3. Long-term structural resilience  
 
 ---
@@ -125,56 +151,56 @@ The ENG module simulates how a national energy system responds to shocks and mai
 ## 1. 🔄 Price Buffer Layer (Short-term Stabilizer)
 
 ### Purpose
-Absorb immediate market shocks and prevent sudden disruptions.
+Absorb immediate market shocks and prevent extreme volatility.
 
 ### Actions
-- Adjust biodiesel blending ratio (B40 ↔ B50)
-- Apply temporary subsidy adjustments
-- Implement fuel price smoothing mechanisms
+- Adjust biodiesel blending (B40 ↔ B50)
+- Temporary subsidy adjustment
+- Fuel price smoothing mechanism
 
 ### Outcome
-Prevents sudden transmission of global energy price volatility into domestic markets.
+Prevents transmission of global price volatility into the domestic economy.
 
 ---
 
 ## 2. 💰 Fiscal Protection Layer (Budget Control)
 
 ### Purpose
-Prevent subsidy system collapse and fiscal imbalance.
+Prevent excessive subsidy pressure and fiscal imbalance.
 
 ### Actions
 - Dynamic subsidy recalibration
 - Export levy adjustment (CPO fund balancing)
-- Cap subsidy exposure per barrel price spread
+- Cap subsidy exposure based on oil price spreads
 
 ### Outcome
-Maintains government fiscal stability under energy cost pressure.
+Maintains government fiscal stability.
 
 ---
 
-## 3. 🛢 Strategic Energy Layer (Long-Term Resilience)
+## 3. 🛢 Strategic Energy Layer (Long-term Resilience)
 
 ### Purpose
-Reduce structural dependency on external energy sources.
+Reduce dependency on imported energy sources.
 
 ### Actions
 - Build strategic fuel reserves
-- Increase domestic biodiesel production capacity
+- Increase domestic biodiesel capacity
 - Diversify feedstock sources beyond palm oil
-- Reduce crude oil import dependency
+- Reduce crude oil imports
 
 ### Outcome
-Strengthens long-term national energy independence.
+Strengthens long-term energy independence.
 
 ---
 
 # 🧩 System Behavior
 
-The ENG module operates across three modes:
+The ENG module operates in three modes:
 
-- 🟢 NORMAL → cost optimization and efficiency
-- 🟡 TRANSITION → balancing supply, subsidy, and price
-- 🔴 CONTINGENCY → energy security prioritization
+- 🟢 NORMAL → cost efficiency
+- 🟡 TRANSITION → balanced adjustment
+- 🔴 CONTINGENCY → energy security priority
 
 ---
 
@@ -184,12 +210,38 @@ The ENG module integrates into the SPD cockpit alongside:
 
 FX | DC | CYB | INF | ENG
 
-It contributes to:
+Contributions:
 - Risk scoring
 - Auto Suggest v2
 - Cascade simulation
-- Audit logging
+- System audit logging
 
 ---
 
 # 🔄 Decision Flow
+
+Energy shock detected  
+→ ENG engine activated  
+→ Solution layer selected  
+→ Actions executed  
+→ System stabilization  
+→ Audit recorded  
+
+---
+
+# 📊 Design Philosophy
+
+The ENG module is not a static rule system, but a scenario-based adaptive control system.
+
+---
+
+# 🚀 Summary
+
+The ENG module enables simulation of:
+- Short-term price stability
+- Fiscal protection mechanisms
+- Long-term energy resilience
+
+---
+
+# 🛰 END OF MODULE
