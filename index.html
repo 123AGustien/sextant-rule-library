@@ -1,81 +1,95 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // AUTONOMOUS COCKPIT v2</title>
+<title>SPD v11.7 // OJK PRODUCTION DIGITAL TWIN</title>
 
 <style>
 body {
   margin: 0;
-  background: radial-gradient(circle at center, #070b12, #020409);
+  background: #05070b;
   color: #cfe8ff;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 .header {
-  padding: 12px;
-  background: #0c1624;
-  border-bottom: 1px solid #223447;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:13px;
+  padding: 10px;
+  background: #0b1220;
+  font-size: 14px;
 }
 
-.grid {
-  display:grid;
-  grid-template-columns: 1.2fr 1fr;
-  height: calc(100vh - 50px);
+#statusBar {
+  text-align: center;
+  padding: 6px;
+  background: #0a0f18;
+  font-size: 13px;
 }
 
 .panel {
-  padding:12px;
-  border-right:1px solid #1b2a3a;
-  overflow:auto;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
 }
 
-.right { background:#060a10; }
+.card {
+  background: #0e1a2b;
+  width: 22%;
+  padding: 12px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.value {
+  font-size: 26px;
+}
+
+#graph {
+  position: relative;
+  height: 240px;
+  margin: 10px;
+}
+
+.node {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #1f3b5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: 0.25s;
+  cursor: pointer;
+}
+
+.buttons {
+  text-align: center;
+  margin: 8px;
+}
 
 button {
-  background:#132235;
-  color:#cfe8ff;
-  border:1px solid #2b425a;
-  padding:8px;
-  margin:4px;
-  cursor:pointer;
-  border-radius:4px;
+  padding: 7px 10px;
+  margin: 3px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 
-button:hover { background:#1b3550; }
-
-.badge {
-  padding:4px 8px;
-  background:#0f2a1f;
-  border:1px solid #1f5a3a;
-  color:#6dffb3;
-  font-size:12px;
-}
-
-.stateBox,.log {
-  background:#05070b;
-  padding:10px;
-  border:1px solid #1b2a3a;
-  font-size:12px;
-  white-space:pre-wrap;
-}
-
-.ruleTitle {
-  color:#6dffb3;
-  font-weight:bold;
-  margin-bottom:6px;
-}
-
-.ruleItem { margin:3px 0; }
-
-canvas {
-  background:#05070b;
-  border:1px solid #1b2a3a;
-  margin-top:10px;
+#explain {
+  position: absolute;
+  right: 10px;
+  top: 60px;
+  width: 280px;
+  height: 260px;
+  background: #0a0f18;
+  padding: 10px;
+  font-size: 11px;
+  overflow-y: auto;
+  border-left: 2px solid #1f3b5c;
 }
 </style>
 </head>
@@ -83,272 +97,206 @@ canvas {
 <body>
 
 <div class="header">
-🛰 SPD v12 // AUTONOMOUS COCKPIT v2
-<span id="status" class="badge">SYSTEM ONLINE</span>
+🛰 SPD v11.7 // OJK PRODUCTION DIGITAL TWIN SIMULATOR
 </div>
 
-<div class="grid">
+<div id="statusBar">STATUS: READY</div>
 
-<!-- LEFT -->
 <div class="panel">
-
-<h3>⚙ Scenario Engine</h3>
-
-<button onclick="runScenario('FX')">FX SHOCK</button>
-<button onclick="runScenario('DC')">DATA CENTER</button>
-<button onclick="runScenario('CYB')">CYBER EVENT</button>
-<button onclick="runScenario('INF')">INFRA FAILURE</button>
-
-<button onclick="resetSystem()">RESET</button>
-
-<h3>📊 State</h3>
-<pre id="stateBox" class="stateBox"></pre>
-
-<h3>📘 Rules</h3>
-<div id="ruleGuide" class="stateBox"></div>
-
-<h3>🧠 Solutions</h3>
-<div id="solutionPanel" class="stateBox"></div>
-
-<h3>🧩 ACTION CONTROLS</h3>
-<div id="actionPanel" class="stateBox"></div>
-
-<h3>🚨 AUTO SUGGEST v2</h3>
-<div id="autoSuggestPanel" class="stateBox"></div>
-
-<h3>📊 Graph</h3>
-<canvas id="riskGraph" width="520" height="220"></canvas>
-
+  <div class="card">FX<div id="FX" class="value">0.0</div></div>
+  <div class="card">DC<div id="DC" class="value">0.0</div></div>
+  <div class="card">CYB<div id="CYB" class="value">0.0</div></div>
+  <div class="card">INF<div id="INF" class="value">0.0</div></div>
 </div>
 
-<!-- RIGHT -->
-<div class="panel right">
-<h3>📡 Audit Log</h3>
-<div id="log" class="log"></div>
+<div id="graph">
+  <div class="node" id="nFX" onclick="trace('FX')">FX</div>
+  <div class="node" id="nDC" onclick="trace('DC')">DC</div>
+  <div class="node" id="nCYB" onclick="trace('CYB')">CYB</div>
+  <div class="node" id="nINF" onclick="trace('INF')">INF</div>
 </div>
 
+<div class="buttons">
+  <button onclick="inject('FX')">FX STRESS</button>
+  <button onclick="inject('DC')">DC LOAD</button>
+  <button onclick="inject('CYB')">CYBER EVENT</button>
+  <button onclick="inject('INF')">INFRA STRAIN</button>
+  <button onclick="reset()">RESET</button>
 </div>
+
+<div id="explain">Explain: idle</div>
 
 <script>
 
-/* ---------------- STATE ---------------- */
-let state = { FX:0, DC:0, CYB:0, INF:0 };
+/* =========================
+   STATE CORE
+
+const state = {
+  FX: { v: 0, s: 0.7, x: 80, y: 80 },
+  DC: { v: 0, s: 0.9, x: 220, y: 40 },
+  CYB:{ v: 0, s: 0.8, x: 360, y: 80 },
+  INF:{ v: 0, s: 0.85, x: 220, y: 140 }
+};
+
+const LINKS = [
+  ["FX","DC"],
+  ["DC","CYB"],
+  ["CYB","INF"],
+  ["INF","FX"]
+];
+
+/* =========================
+   MEMORY SYSTEMS
+
 let log = [];
+let explanationLog = [];
 
-/* ---------------- RULES ---------------- */
-const rules = {
-FX:["Volatility","Outflow","Liquidity","Confidence"],
-DC:["Load","Cooling","Power","Redundancy"],
-CYB:["Alert","Compromise","Attack","Containment"],
-INF:["Failure","Services","Dependency","Restore"]
-};
+/* =========================
+   ENGINE
 
-/* ---------------- SOLUTIONS ---------------- */
-const solutions = {
-FX:["STABLE","WATCH","DEGRADED","CRITICAL"],
-DC:["STABLE","WATCH","DEGRADED","CRITICAL"],
-CYB:["STABLE","WATCH","DEGRADED","CRITICAL"],
-INF:["STABLE","WATCH","DEGRADED","CRITICAL"]
-};
+function inject(node){
+  state[node].v += 10;
+  logEvent("INJECT", node);
+}
 
-/* ---------------- ACTIONS ---------------- */
-const actionsMap = {
-FX:["Inject Liquidity Support","Hedge FX Exposure","Stabilise Currency"],
-DC:["Throttle Compute Load","Boost Cooling","Redistribute Servers"],
-CYB:["Isolate Systems","Run Forensics","Enable Incident Response"],
-INF:["Activate Backup Grid","Reroute Services","Engage Recovery"]
-};
+function cascade(){
 
-/* ---------------- AUTO SUGGEST v2 ---------------- */
-function updateAutoSuggest(){
+  LINKS.forEach(([a,b]) => {
 
-  const panel = document.getElementById("autoSuggestPanel");
-  if(!panel) return;
+    const A = state[a];
+    const B = state[b];
 
-  const weights = { FX:1.2, DC:1.0, CYB:1.5, INF:1.3 };
+    const p = (A.v * A.s * B.s) / 120;
 
-  let score = {};
-  let total = 0;
+    if(Math.random() < p){
 
+      const impact = 3 + Math.random() * 4;
+      B.v += impact;
+
+      logEvent("CASCADE", {
+        from: a,
+        to: b,
+        p: p.toFixed(3),
+        impact: impact.toFixed(2)
+      });
+
+      explain(`CASCADE: ${a} → ${b} | p=${p.toFixed(3)} | +${impact.toFixed(1)}`);
+    }
+  });
+}
+
+/* =========================
+   DECAY ENGINE
+
+function decay(){
   for(let k in state){
-    score[k] = state[k] * weights[k];
-    total += score[k];
+    state[k].v *= 0.97;
+    state[k].v = Math.max(0, state[k].v);
   }
-
-  const sorted = Object.entries(score).sort((a,b)=>b[1]-a[1]);
-
-  function priority(v){
-    if(v>=18) return "P0 CRITICAL";
-    if(v>=12) return "P1 HIGH";
-    if(v>=6) return "P2 MEDIUM";
-    return "P3 LOW";
-  }
-
-  let html = `<div class='ruleTitle'>TOTAL RISK: ${total.toFixed(2)}</div>`;
-
-  sorted.forEach(([k,v])=>{
-    html += `<div class='ruleTitle'>${k} → ${priority(v)}</div>`;
-    html += `<div class='ruleItem'>Risk: ${v.toFixed(2)}</div>`;
-
-    (actionsMap[k]||[]).forEach(a=>{
-      html += `<div class='ruleItem'>⚡ ${a}</div>`;
-    });
-
-    html += "<br>";
-  });
-
-  panel.innerHTML = html;
 }
 
-/* ---------------- ACTION ENGINE ---------------- */
-function applyAction(type,index){
+/* =========================
+   TIME ENGINE
 
-  state[type] = Math.max(0, state[type]-2);
-
-  log.push(`${new Date().toISOString()} | ACTION | ${type}:${index}`);
-
-  updateRuleGuide(type);
-  updateSolutionPanel();
-  updateAutoSuggest();
-  updateActionPanel();
-
+function tick(){
+  cascade();
+  decay();
   render();
 }
 
-/* ---------------- ACTION PANEL ---------------- */
-function updateActionPanel(){
+setInterval(tick, 1000);
 
-  const panel = document.getElementById("actionPanel");
-  if(!panel) return;
+/* =========================
+   TRACE ENGINE
 
-  let html = "";
+function trace(node){
 
-  for(let k in actionsMap){
+  const events = log.filter(e =>
+    (e.data?.from === node || e.data?.to === node || e.data === node)
+  ).slice(-10);
 
-    html += `<div class='ruleTitle'>${k} ACTIONS</div>`;
+  explain(`🔍 TRACE NODE: ${node}`);
 
-    actionsMap[k].forEach((a,i)=>{
-      html += `<button onclick="applyAction('${k}',${i})">${a}</button>`;
-    });
-
-    html += "<br><br>";
-  }
-
-  panel.innerHTML = html;
+  events.forEach(e => {
+    explain(
+      `${e.type} | ${JSON.stringify(e.data)}`
+    );
+  });
 }
 
-/* ---------------- RULES ---------------- */
-function updateRuleGuide(type){
+/* =========================
+   LOG ENGINE
 
-  const panel = document.getElementById("ruleGuide");
-  if(!panel || !rules[type]) return;
+function logEvent(type, data){
+  log.push({
+    time: new Date(),
+    type,
+    data
+  });
+}
 
-  let html = `<div class='ruleTitle'>${type} RULES</div>`;
+/* =========================
+   EXPLAIN ENGINE (FIXED)
 
-  rules[type].forEach(r=>{
-    html += `<div class='ruleItem'>✔ ${r}</div>`;
+function explain(msg){
+
+  explanationLog.push({
+    time: new Date(),
+    msg
   });
 
-  panel.innerHTML = html;
+  const box = document.getElementById("explain");
+
+  box.innerHTML =
+    "🧠 EXPLANATION LAYER<br><br>" +
+    explanationLog.slice(-12).map(e =>
+      `[${e.time.toLocaleTimeString()}] ${e.msg}`
+    ).join("<br>");
 }
 
-/* ---------------- SOLUTIONS ---------------- */
-function updateSolutionPanel(){
+/* =========================
+   RESET
 
-  const panel = document.getElementById("solutionPanel");
-  if(!panel) return;
-
-  let html = "";
-
+function reset(){
   for(let k in state){
-
-    let v = state[k];
-    let tier = v<3?0:v<6?1:v<10?2:3;
-
-    html += `<div class='ruleTitle'>${k} → ${solutions[k][tier]}</div>`;
-    html += `<div class='ruleItem'>Action Tier Active</div><br>`;
+    state[k].v = 0;
   }
-
-  panel.innerHTML = html;
+  logEvent("RESET", {});
+  explain("SYSTEM RESET → baseline restored");
 }
 
-/* ---------------- ENGINE ---------------- */
-function runScenario(type){
+/* =========================
+   RENDER ENGINE
 
-  state[type] = (state[type]||0)+2;
-
-  if(type==="FX"){
-    state.DC++;
-    state.CYB++;
-  }
-
-  log.push(`${new Date().toISOString()} | SCENARIO | ${type}`);
-
-  updateRuleGuide(type);
-  updateSolutionPanel();
-  updateAutoSuggest();
-  updateActionPanel();
-
-  render();
-}
-
-/* ---------------- RESET ---------------- */
-function resetSystem(){
-
-  state = { FX:0, DC:0, CYB:0, INF:0 };
-  log = [];
-
-  log.push(`${new Date().toISOString()} | SYSTEM RESET`);
-
-  updateRuleGuide("FX");
-  updateSolutionPanel();
-  updateAutoSuggest();
-  updateActionPanel();
-
-  render();
-}
-
-/* ---------------- GRAPH ---------------- */
-function drawGraph(){
-
-  const c = document.getElementById("riskGraph");
-  const ctx = c.getContext("2d");
-
-  ctx.clearRect(0,0,c.width,c.height);
-
-  const keys = Object.keys(state);
-  const vals = Object.values(state);
-
-  vals.forEach((v,i)=>{
-
-    let x = i*120+40;
-    let h = Math.min(180,v*12);
-
-    ctx.fillStyle =
-      v>8?"#ff4d4d":
-      v>4?"#ffcc00":
-      "#4dff88";
-
-    ctx.fillRect(x,200-h,40,h);
-
-    ctx.fillStyle="#cfe8ff";
-    ctx.fillText(keys[i],x,210);
-  });
-}
-
-/* ---------------- RENDER ---------------- */
 function render(){
 
-  document.getElementById("stateBox").innerText =
-    JSON.stringify(state,null,2);
+  FX.innerText = state.FX.v.toFixed(1);
+  DC.innerText = state.DC.v.toFixed(1);
+  CYB.innerText = state.CYB.v.toFixed(1);
+  INF.innerText = state.INF.v.toFixed(1);
 
-  document.getElementById("log").innerText =
-    log.slice(-20).join("\n");
+  document.getElementById("nFX").style.left = state.FX.x + "px";
+  document.getElementById("nFX").style.top  = state.FX.y + "px";
 
-  drawGraph();
-  updateAutoSuggest();
-  updateSolutionPanel();
-  updateActionPanel();
+  document.getElementById("nDC").style.left = state.DC.x + "px";
+  document.getElementById("nDC").style.top  = state.DC.y + "px";
+
+  document.getElementById("nCYB").style.left = state.CYB.x + "px";
+  document.getElementById("nCYB").style.top  = state.CYB.y + "px";
+
+  document.getElementById("nINF").style.left = state.INF.x + "px";
+  document.getElementById("nINF").style.top  = state.INF.y + "px";
+
+  for(let k in state){
+    const el = document.getElementById("n"+k);
+
+    el.style.transform = `scale(${1 + state[k].v/50})`;
+
+    el.style.background =
+      state[k].v > 40 ? "#ff3b3b" :
+      state[k].v > 20 ? "#ffb020" :
+      "#1f3b5c";
+  }
 }
 
 /* INIT */
