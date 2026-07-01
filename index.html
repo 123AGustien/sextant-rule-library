@@ -2,40 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD // CORE COCKPIT</title>
+<title>SPD v12 // COCKPIT DASHBOARD CORE</title>
 
 <style>
-body { margin:0; background:#05070b; color:#cfe8ff; font-family:Arial; }
-.header { padding:10px; background:#0b1220; text-align:center; }
-#statusBar { text-align:center; padding:6px; background:#0a0f18; }
+body {
+  margin:0;
+  background:#05070b;
+  color:#cfe8ff;
+  font-family:Arial;
+}
 
-.panel { display:flex; justify-content:space-around; padding:10px; }
-.card { background:#0e1a2b; width:18%; padding:12px; text-align:center; }
-.value { font-size:24px; }
+.header {
+  padding:10px;
+  background:#0b1220;
+  text-align:center;
+}
 
-#graph { position:relative; height:260px; }
+#statusBar {
+  text-align:center;
+  padding:6px;
+  background:#0a0f18;
+}
 
-.node {
-  position:absolute;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  background:#1f3b5c;
+.panel {
   display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
+  justify-content:space-around;
+  padding:10px;
 }
 
-button {
-  margin:3px;
-  padding:7px;
-  background:#1f3b5c;
-  color:white;
-  border:none;
+.card {
+  background:#0e1a2b;
+  width:18%;
+  padding:12px;
+  text-align:center;
 }
 
-#log {
+.value {
+  font-size:24px;
+}
+
+#alerts {
   position:absolute;
   right:10px;
   top:60px;
@@ -46,13 +52,25 @@ button {
   overflow:auto;
   padding:10px;
 }
+
+#systemView {
+  position:absolute;
+  left:10px;
+  top:60px;
+  width:260px;
+  height:260px;
+  background:#0a0f18;
+  font-size:12px;
+  padding:10px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">🛰 SPD FULL ECOSYSTEM // SCENARIO CORE</div>
-<div id="statusBar">STATUS: NOMINAL</div>
+<div class="header">🛰 SPD COCKPIT DASHBOARD v12</div>
+
+<div id="statusBar">STATUS: INIT</div>
 
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0</div></div>
@@ -62,106 +80,135 @@ button {
   <div class="card">ENG<div id="ENG" class="value">0</div></div>
 </div>
 
-<div id="graph">
-  <div class="node" onclick="inject('FX')" style="left:80px;top:90px;">FX</div>
-  <div class="node" onclick="inject('DC')" style="left:220px;top:40px;">DC</div>
-  <div class="node" onclick="inject('CYB')" style="left:360px;top:90px;">CYB</div>
-  <div class="node" onclick="inject('INF')" style="left:220px;top:150px;">INF</div>
-  <div class="node" onclick="inject('ENG')" style="left:220px;top:220px;">ENG</div>
-</div>
+<div id="systemView"></div>
+<div id="alerts"></div>
 
 <div style="text-align:center;">
-  <button onclick="scenario('FX_SHOCK')">FX SHOCK</button>
-  <button onclick="scenario('CYBER')">CYBER</button>
-  <button onclick="scenario('INFRA')">INFRA</button>
-  <button onclick="scenario('STABILISE')">STABILISE</button>
-  <button onclick="location.href='energy.html'">ENERGY MODULE</button>
+  <button onclick="inject('FX')">FX +</button>
+  <button onclick="inject('DC')">DC +</button>
+  <button onclick="inject('CYB')">CYB +</button>
+  <button onclick="inject('INF')">INF +</button>
+  <button onclick="inject('ENG')">ENG +</button>
+  <button onclick="reset()">RESET</button>
 </div>
 
-<div id="log">SYSTEM READY</div>
-
 <script>
-const state = {
-  FX:{v:0}, DC:{v:0}, CYB:{v:0}, INF:{v:0}, ENG:{v:0}
-};
 
-const LINKS = [
-  ["FX","DC",0.9],
-  ["DC","CYB",0.7],
-  ["CYB","INF",0.8],
-  ["INF","FX",0.6],
-  ["ENG","FX",0.5],
-  ["ENG","DC",0.5],
-  ["ENG","CYB",0.5],
-  ["ENG","INF",0.5]
-];
+/* ---------------- STATE ---------------- */
+const domains = {
+  FX:{risk:0,mode:"OK"},
+  DC:{risk:0,mode:"OK"},
+  CYB:{risk:0,mode:"OK"},
+  INF:{risk:0,mode:"OK"},
+  ENG:{risk:0,mode:"OK"}
+};
 
 let log = [];
 
-function inject(n){
-  state[n].v += 10;
-  log.push(n + " +10");
-}
+/* ---------------- ENGINE ---------------- */
+const COCKPIT_DASHBOARD = {
 
-function scenario(type){
+  render(domains) {
 
-  if(type==="FX_SHOCK"){ state.FX.v += 25; log.push("FX SHOCK"); }
-  if(type==="CYBER"){ state.CYB.v += 25; log.push("CYBER EVENT"); }
-  if(type==="INFRA"){ state.INF.v += 25; log.push("INFRA FAILURE"); }
+    const summary = this.summarize(domains);
+    const globalRisk = this.globalRisk(summary);
 
-  if(type==="STABILISE"){
-    for(let k in state) state[k].v *= 0.6;
-    log.push("STABILISATION DEPLOYED");
-  }
-}
+    return {
+      globalRisk,
+      status: this.getStatus(globalRisk),
+      tiles: {
+        FX: this.tile(domains.FX),
+        DC: this.tile(domains.DC),
+        CYB: this.tile(domains.CYB),
+        INF: this.tile(domains.INF),
+        ENG: this.tile(domains.ENG)
+      },
+      alerts: this.getAlerts(domains),
+      systemView: this.systemView(globalRisk)
+    };
+  },
 
-function cascade(){
-  LINKS.forEach(([a,b,w])=>{
-    const p = state[a].v * w;
-    if(Math.random() < p/150){
-      state[b].v += Math.random()*3;
-      log.push(a+"→"+b);
+  summarize(domains) {
+    return Object.keys(domains).reduce((a,k)=>{
+      a[k]=domains[k].risk;
+      return a;
+    },{});
+  },
+
+  globalRisk(summary) {
+    return Object.values(summary).reduce((a,b)=>a+b,0);
+  },
+
+  getStatus(risk) {
+    if (risk >= 18) return "CRITICAL";
+    if (risk >= 10) return "WARNING";
+    return "STABLE";
+  },
+
+  tile(d) {
+    return {
+      risk:d.risk,
+      mode:d.mode,
+      alert:d.risk>=7
+    };
+  },
+
+  getAlerts(domains){
+    const a=[];
+    for(const k in domains){
+      if(domains[k].risk>=7) a.push(k+"_CRITICAL");
     }
-  });
+    return a;
+  },
+
+  systemView(risk){
+    return {
+      label:
+        risk>=18?"SYSTEM COLLAPSE RISK":
+        risk>=10?"SYSTEM UNDER STRESS":
+        "SYSTEM STABLE",
+      risk
+    };
+  }
+};
+
+/* ---------------- ACTIONS ---------------- */
+function inject(k){
+  domains[k].risk += 2;
+  log.push(k+" +2");
 }
 
-function decay(){
-  for(let k in state) state[k].v *= 0.98;
+function reset(){
+  for(const k in domains) domains[k].risk = 0;
+  log=[];
 }
 
-function status(){
-  let total = Object.values(state).reduce((s,x)=>s+x.v,0);
-  let bar = document.getElementById("statusBar");
+/* ---------------- RENDER ---------------- */
+function renderUI(){
 
-  if(total>200){ bar.innerText="STATUS: STRESSED"; bar.style.background="#3a0f0f"; }
-  else if(total>100){ bar.innerText="STATUS: ELEVATED"; bar.style.background="#3a2a0f"; }
-  else { bar.innerText="STATUS: NOMINAL"; bar.style.background="#0a0f18"; }
+  const view = COCKPIT_DASHBOARD.render(domains);
+
+  FX.innerText = domains.FX.risk;
+  DC.innerText = domains.DC.risk;
+  CYB.innerText = domains.CYB.risk;
+  INF.innerText = domains.INF.risk;
+  ENG.innerText = domains.ENG.risk;
+
+  statusBar.innerText = "STATUS: " + view.status;
+
+  systemView.innerHTML =
+    "<b>"+view.systemView.label+"</b><br><br>" +
+    "GLOBAL RISK: " + view.globalRisk;
+
+  alerts.innerHTML =
+    "<b>ALERTS</b><br>" + view.alerts.join("<br>") +
+    "<br><br><b>LOG</b><br>" + log.slice(-10).join("<br>");
 }
 
-function render(){
-  document.getElementById("FX").innerText = state.FX.v.toFixed(1);
-  document.getElementById("DC").innerText = state.DC.v.toFixed(1);
-  document.getElementById("CYB").innerText = state.CYB.v.toFixed(1);
-  document.getElementById("INF").innerText = state.INF.v.toFixed(1);
-  document.getElementById("ENG").innerText = state.ENG.v.toFixed(1);
+/* ---------------- LOOP ---------------- */
+setInterval(renderUI, 800);
+renderUI();
 
-  document.querySelectorAll(".node").forEach(n=>{
-    let k = n.innerText;
-    n.style.transform = `scale(${1+state[k].v/70})`;
-  });
-
-  document.getElementById("log").innerHTML = log.slice(-12).join("<br>");
-}
-
-function tick(){
-  cascade();
-  decay();
-  status();
-  render();
-}
-
-setInterval(tick,900);
-render();
 </script>
 
 </body>
