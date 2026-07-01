@@ -1,46 +1,74 @@
-/***********************
- * SPD BOOT ENGINE v12
- ***********************/
+ /***********************
+  * SPD BOOT ENGINE v12
+  * SYSTEM INTEGRITY LAYER (SAFE)
+  ***********************/
 
 document.addEventListener("DOMContentLoaded", function () {
 
   const REQUIRED = [
     "audit",
     "runScenario",
-    "injectEvent",
-    "updateUI",
-    "updateGraph",
-    "updateResilienceScore"
+    "resetSystem",
+    "exportLog",
+    "renderUI",
+    "drawGraph",
+    "updateFXModel"
   ];
 
   const missing = REQUIRED.filter(fn => typeof window[fn] !== "function");
 
-  const out = document.getElementById("output");
+  const mode = missing.length ? "DEGRADED" : "FULL";
 
+  // ─────────────────────────────
+  // SAFE BOOT OUTPUT (DEDICATED)
+  // ─────────────────────────────
+  let bootPanel = document.getElementById("bootStatus");
+
+  if (!bootPanel) {
+    bootPanel = document.createElement("div");
+    bootPanel.id = "bootStatus";
+    bootPanel.style.padding = "10px";
+    bootPanel.style.fontSize = "12px";
+    bootPanel.style.border = "1px solid #223447";
+    bootPanel.style.background = "#05070b";
+    bootPanel.style.color = "#cfe8ff";
+
+    document.body.prepend(bootPanel);
+  }
+
+  // ─────────────────────────────
+  // STATUS DISPLAY
+  // ─────────────────────────────
   if (missing.length > 0) {
 
-    console.warn("SPD v12 DEGRADED MODE", missing);
+    console.warn("🟡 SPD v12 DEGRADED MODE", missing);
 
-    if (out) {
-      out.innerHTML =
-        "🟡 SPD DEGRADED MODE<br><br>" +
-        missing.join("<br>");
-    }
+    bootPanel.innerHTML =
+      "🟡 SPD BOOT STATUS: DEGRADED MODE<br><br>" +
+      "<b>Missing Modules:</b><br>" +
+      missing.map(m => "• " + m).join("<br>");
 
   } else {
 
-    if (out) {
-      out.innerHTML = "🟢 SPD v12 READY — SYSTEM ONLINE";
-    }
+    console.log("🟢 SPD v12 SYSTEM READY");
+
+    bootPanel.innerHTML =
+      "🟢 SPD v12 READY — SYSTEM ONLINE";
   }
 
+  // ─────────────────────────────
+  // SAFE OPTIONAL HOOKS
+  // ─────────────────────────────
   window.initGraph?.();
 
   window.audit?.("BOOT", {
     version: "v12",
-    mode: missing.length ? "DEGRADED" : "FULL",
-    missing
+    mode,
+    missing,
+    timestamp: new Date().toISOString()
   });
+
+  window.renderUI?.();
 
   console.log("SPD v12 BOOT COMPLETE");
 });

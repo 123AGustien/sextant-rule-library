@@ -1,6 +1,8 @@
 
 # 📘 Sextant Rule Library
 
+It is a deterministic, manually-driven simulation engine with structural self-check, not a fully autonomous self-verifying system.
+
 Governed decision layer for the **Sextant Protocol** resilience simulation framework.
 
 The Rule Library provides structured, version-controlled resilience rules that enable simulation engines to evaluate scenarios consistently across financial, cyber, infrastructure, operational, and energy domains.

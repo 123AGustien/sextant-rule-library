@@ -130,7 +130,6 @@ button {
 
 /* =========================
    STATE CORE
-========================= */
 
 const state = {
   FX: { v: 0, s: 0.7, x: 80, y: 80 },
@@ -148,14 +147,12 @@ const LINKS = [
 
 /* =========================
    MEMORY SYSTEMS
-========================= */
 
 let log = [];
 let explanationLog = [];
 
 /* =========================
    ENGINE
-========================= */
 
 function inject(node){
   state[node].v += 10;
@@ -190,7 +187,6 @@ function cascade(){
 
 /* =========================
    DECAY ENGINE
-========================= */
 
 function decay(){
   for(let k in state){
@@ -201,7 +197,6 @@ function decay(){
 
 /* =========================
    TIME ENGINE
-========================= */
 
 function tick(){
   cascade();
@@ -213,7 +208,6 @@ setInterval(tick, 1000);
 
 /* =========================
    TRACE ENGINE
-========================= */
 
 function trace(node){
 
@@ -232,7 +226,6 @@ function trace(node){
 
 /* =========================
    LOG ENGINE
-========================= */
 
 function logEvent(type, data){
   log.push({
@@ -244,7 +237,6 @@ function logEvent(type, data){
 
 /* =========================
    EXPLAIN ENGINE (FIXED)
-========================= */
 
 function explain(msg){
 
@@ -264,7 +256,6 @@ function explain(msg){
 
 /* =========================
    RESET
-========================= */
 
 function reset(){
   for(let k in state){
@@ -276,7 +267,6 @@ function reset(){
 
 /* =========================
    RENDER ENGINE
-========================= */
 
 function render(){
 
