@@ -1,7 +1,7 @@
 export const EnergyEngine = {
 
   domain: "ENG",
-  version: "1.1",
+  version: "1.2",
 
   evaluate(state, event) {
 
@@ -21,6 +21,7 @@ export const EnergyEngine = {
       risk,
       severity,
       mode,
+
       solutionLayer,
 
       actions: this.getActions(risk),
@@ -48,7 +49,7 @@ export const EnergyEngine = {
     if (state.oilPrice < 75) risk += 1;
     if (state.oilPrice > 95) risk += 2;
 
-    // Palm oil market
+    // Palm oil (CPO)
     if (state.cpoPrice > 1100) risk += 1;
 
     // Fiscal pressure
@@ -60,13 +61,11 @@ export const EnergyEngine = {
     // Import dependency
     if (state.importDependency > 0.5) risk += 1;
 
-    // Biodiesel production
+    // Biofuel capacity
     if (state.biofuelCapacity < 0.5) risk += 1;
 
-    // Event impact
-    if (event?.impact) {
-      risk += event.impact;
-    }
+    // Event injection
+    if (event?.impact) risk += event.impact;
 
     return risk;
 
@@ -75,9 +74,7 @@ export const EnergyEngine = {
   getMode(risk) {
 
     if (risk <= 2) return "NORMAL";
-
     if (risk <= 5) return "TRANSITION";
-
     return "CONTINGENCY";
 
   },
@@ -85,20 +82,16 @@ export const EnergyEngine = {
   getSeverity(risk) {
 
     if (risk >= 7) return "HIGH";
-
     if (risk >= 4) return "MEDIUM";
-
     return "LOW";
 
   },
 
   getSolutionLayer(mode) {
 
-    if (mode === "NORMAL")
-      return "Price Buffer Layer";
+    if (mode === "NORMAL") return "Price Buffer Layer";
 
-    if (mode === "TRANSITION")
-      return "Fiscal Protection Layer";
+    if (mode === "TRANSITION") return "Fiscal Protection Layer";
 
     return "Strategic Energy Layer";
 
@@ -109,19 +102,12 @@ export const EnergyEngine = {
     if (risk >= 7) {
 
       return [
-
         "Increase biodiesel blend immediately",
-
         "Activate strategic fuel reserves",
-
         "Reduce fuel imports",
-
         "Stabilize subsidy exposure",
-
         "Protect fiscal liquidity",
-
         "Prioritize domestic fuel distribution"
-
       ];
 
     }
@@ -129,31 +115,20 @@ export const EnergyEngine = {
     if (risk >= 4) {
 
       return [
-
         "Adjust biodiesel blend gradually",
-
         "Monitor subsidy pressure",
-
         "Balance fuel imports",
-
-        "Review strategic reserve level",
-
+        "Review reserve levels",
         "Stabilize pricing mechanism"
-
       ];
 
     }
 
     return [
-
       "Optimize fuel efficiency",
-
       "Maintain current fuel blend",
-
       "Monitor global oil market",
-
       "Maintain strategic reserves"
-
     ];
 
   },
@@ -163,26 +138,16 @@ export const EnergyEngine = {
     if (mode === "CONTINGENCY") {
 
       return {
-
+        layer: "Strategic Energy Layer",
         strategy: "ENERGY SECURITY PRIORITY",
-
-        objective:
-          "Maintain national energy security under severe market disruption.",
-
+        objective: "Maintain national energy security under severe disruption",
         response: [
-
-          "Maximize biodiesel utilization",
-
+          "Maximize biodiesel usage",
           "Activate strategic fuel reserves",
-
           "Secure domestic fuel supply",
-
           "Reduce external dependency",
-
           "Protect fiscal stability"
-
         ]
-
       };
 
     }
@@ -190,45 +155,29 @@ export const EnergyEngine = {
     if (mode === "TRANSITION") {
 
       return {
-
+        layer: "Fiscal Protection Layer",
         strategy: "BALANCED ADJUSTMENT",
-
-        objective:
-          "Balance energy affordability, fiscal sustainability, and supply reliability.",
-
+        objective: "Balance affordability, stability, and supply security",
         response: [
-
           "Optimize biodiesel blend ratio",
-
           "Manage subsidy exposure",
-
-          "Smooth fuel price adjustments",
-
+          "Smooth price adjustments",
           "Strengthen fiscal monitoring"
-
         ]
-
       };
 
     }
 
     return {
 
+      layer: "Price Buffer Layer",
       strategy: "COST OPTIMIZATION",
-
-      objective:
-        "Maintain efficient and resilient national energy operations.",
-
+      objective: "Maintain efficient and stable energy operations",
       response: [
-
         "Maintain current fuel mix",
-
         "Optimize procurement",
-
         "Monitor global prices",
-
         "Maintain reserve readiness"
-
       ]
 
     };
@@ -240,17 +189,11 @@ export const EnergyEngine = {
     if (mode === "CONTINGENCY") {
 
       return [
-
-        "Higher FX pressure",
-
-        "Inflation risk increases",
-
-        "Fiscal deficit pressure",
-
+        "FX pressure increase",
+        "Inflation risk increase",
+        "Fiscal deficit expansion",
         "Fuel import disruption",
-
         "Energy supply instability"
-
       ];
 
     }
@@ -258,29 +201,19 @@ export const EnergyEngine = {
     if (mode === "TRANSITION") {
 
       return [
-
         "Moderate FX volatility",
-
         "Controlled inflation pressure",
-
         "Budget tightening",
-
         "Fuel supply adjustment"
-
       ];
 
     }
 
     return [
-
       "Stable macroeconomic conditions",
-
       "Low FX impact",
-
       "Controlled subsidy exposure",
-
       "Stable energy supply"
-
     ];
 
   }
