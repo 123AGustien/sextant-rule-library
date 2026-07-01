@@ -135,10 +135,6 @@ button {
 
 <script>
 
-/* =====================
-   STATE
-===================== */
-
 const state = {
   FX:{v:0,s:0.7},
   DC:{v:0,s:0.9},
@@ -149,12 +145,7 @@ const state = {
 
 let log = [];
 
-/* =====================
-   ENERGY ENGINE (STABLE)
-===================== */
-
 function energyEngine(){
-
   const risk =
     state.ENG.v * 0.4 +
     state.INF.v * 0.25 +
@@ -169,21 +160,12 @@ function energyEngine(){
   return {risk, mode};
 }
 
-/* =====================
-   INJECT
-===================== */
-
 function inject(n){
   state[n].v += 10;
   log.push(`${n} +10`);
 }
 
-/* =====================
-   CLOSED LOOP
-===================== */
-
 function tick(){
-
   const eng = energyEngine();
 
   const links = [
@@ -196,9 +178,7 @@ function tick(){
   ];
 
   links.forEach(([a,b])=>{
-
     const p = (state[a].v * state[a].s * state[b].s) / 220;
-
     if(Math.random() < p){
       state[b].v += 1 + Math.random()*3;
       log.push(`${a} → ${b}`);
@@ -209,19 +189,11 @@ function tick(){
   render(eng);
 }
 
-/* =====================
-   DECAY
-===================== */
-
 function decay(){
   for(let k in state){
     state[k].v *= 0.96;
   }
 }
-
-/* =====================
-   RENDER SAFE
-===================== */
 
 function render(eng){
 
@@ -236,7 +208,6 @@ function render(eng){
   document.getElementById("suggest").innerHTML = `
     <b>ENG MODE:</b> ${eng.mode}<br>
     <b>RISK:</b> ${eng.risk.toFixed(2)}<br><br>
-
     FX → Liquidity Stabilisation<br>
     DC → Load Balancing<br>
     CYB → Threat Isolation<br>
@@ -252,10 +223,6 @@ function render(eng){
       "#1f3b5c";
   }
 }
-
-/* =====================
-   RESET
-===================== */
 
 function reset(){
   for(let k in state){
