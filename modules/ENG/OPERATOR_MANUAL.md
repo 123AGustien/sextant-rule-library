@@ -15,7 +15,11 @@ This guide explains how to use the ENG module inside the SPD v12 cockpit.
 
 # 📘 Cara Mengoperasikan Layar ENG (Panduan Sederhana)
 
-Panduan ini menjelaskan cara menggunakan modul ENG di dalam cockpit SPD v12.
+Panduan ini menjelaskan cara menggunakan modul ENG di dalam
+
+
+
+ cockpit SPD v12.
 
 ---
 
@@ -72,4 +76,8 @@ state = {
   reserveLevel: 0.6,
   importDependency: 0.4,
   biofuelCapacity: 0.6
+
+
+
+
 }
