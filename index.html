@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v10 // STABLE COCKPIT</title>
+
+<style>
+body { margin:0; background:#05070b; color:#cfe8ff; font-family:Arial; }
+.header { padding:10px; background:#0b1220; text-align:center; }
+#statusBar { text-align:center; padding:6px; background:#0a0f18; }
+.panel { display:flex; justify-content:space-around; padding:10px; }
+.card { background:#0e1a2b; width:22%; padding:12px; text-align:center; }
+.value { font-size:26px; }
+#graph { position:relative; height:240px; }
+.node { position:absolute; width:55px; height:55px; border-radius:50%;
+background:#1f3b5c; display:flex; align-items:center; justify-content:center; }
+button { margin:3px; padding:7px; background:#1f3b5c; color:white; border:none; }
+#log { position:absolute; right:10px; top:60px; width:250px; height:250px;
+background:#0a0f18; font-size:11px; overflow:auto; padding:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="header">🛰 SPD v10 STABLE COCKPIT</div>
+<div id="statusBar">STATUS: STABLE</div>
+
+<div class="panel">
+  <div class="card">FX<div id="FX" class="value">0</div></div>
+  <div class="card">DC<div id="DC" class="value">0</div></div>
+  <div class="card">CYB<div id="CYB" class="value">0</div></div>
+  <div class="card">INF<div id="INF" class="value">0</div></div>
+</div>
+
+<div id="graph">
+  <div class="node" id="nFX" onclick="inject('FX')" style="left:80px;top:80px;">FX</div>
+  <div class="node" id="nDC" onclick="inject('DC')" style="left:220px;top:40px;">DC</div>
+  <div class="node" id="nCYB" onclick="inject('CYB')" style="left:360px;top:80px;">CYB</div>
+  <div class="node" id="nINF" onclick="inject('INF')" style="left:220px;top:140px;">INF</div>
+</div>
+
+<div style="text-align:center;">
+  <button onclick="inject('FX')">FX</button>
+  <button onclick="inject('DC')">DC</button>
+  <button onclick="inject('CYB')">CYB</button>
+  <button onclick="inject('INF')">INF</button>
+  <button onclick="reset()">RESET</button>
+</div>
+
+<div id="log">LOG READY</div>
+
+<script>
+const state = {
+  FX:{v:0,x:80,y:80},
+  DC:{v:0,x:220,y:40},
+  CYB:{v:0,x:360,y:80},
+  INF:{v:0,x:220,y:140}
+};
+
+const LINKS = [["FX","DC"],["DC","CYB"],["CYB","INF"],["INF","FX"]];
+let log = [];
+
+function inject(n){ state[n].v += 10; log.push(n+" +10"); }
+
+function cascade(){
+  LINKS.forEach(([a,b])=>{
+    if(Math.random() < state[a].v/120){
+      state[b].v += Math.random()*3;
+      log.push(a+"→"+b);
+    }
+  });
+}
+
+function decay(){
+  for(let k in state) state[k].v *= 0.97;
+}
+
+function render(){
+  FX.innerText = state.FX.v.toFixed(1);
+  DC.innerText = state.DC.v.toFixed(1);
+  CYB.innerText = state.CYB.v.toFixed(1);
+  INF.innerText = state.INF.v.toFixed(1);
+
+  for(let k in state){
+    const el = document.getElementById("n"+k);
+    el.style.transform = `scale(${1+state[k].v/60})`;
+  }
+
+  document.getElementById("log").innerHTML = log.slice(-10).join("<br>");
+}
+
+function reset(){ for(let k in state){ state[k].v=0; } log=[]; }
+
+function tick(){ cascade(); decay(); render(); }
+
+render();
+setInterval(tick,900);
+</script>
+
+</body>
+</html>
