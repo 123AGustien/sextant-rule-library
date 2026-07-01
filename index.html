@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.7 // OJK PRODUCTION DIGITAL TWIN</title>
+<title>SPD v12 // FULL CLOSED LOOP DIGITAL TWIN</title>
 
 <style>
 body {
@@ -35,7 +34,7 @@ body {
 
 .card {
   background: #0e1a2b;
-  width: 22%;
+  width: 18%;
   padding: 12px;
   text-align: center;
   border-radius: 6px;
@@ -65,20 +64,6 @@ body {
   cursor: pointer;
 }
 
-.buttons {
-  text-align: center;
-  margin: 8px;
-}
-
-button {
-  padding: 7px 10px;
-  margin: 3px;
-  background: #1f3b5c;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
 #explain {
   position: absolute;
   right: 10px;
@@ -91,13 +76,22 @@ button {
   overflow-y: auto;
   border-left: 2px solid #1f3b5c;
 }
+
+button {
+  padding: 7px 10px;
+  margin: 3px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-🛰 SPD v11.7 // OJK PRODUCTION DIGITAL TWIN SIMULATOR
+🛰 SPD v12 // FULL CLOSED LOOP DIGITAL TWIN (ENERGY + FIN + CYB + INF + DC)
 </div>
 
 <div id="statusBar">STATUS: READY</div>
@@ -107,20 +101,23 @@ button {
   <div class="card">DC<div id="DC" class="value">0.0</div></div>
   <div class="card">CYB<div id="CYB" class="value">0.0</div></div>
   <div class="card">INF<div id="INF" class="value">0.0</div></div>
+  <div class="card">ENG<div id="ENG" class="value">0.0</div></div>
 </div>
 
 <div id="graph">
-  <div class="node" id="nFX" onclick="trace('FX')">FX</div>
-  <div class="node" id="nDC" onclick="trace('DC')">DC</div>
-  <div class="node" id="nCYB" onclick="trace('CYB')">CYB</div>
-  <div class="node" id="nINF" onclick="trace('INF')">INF</div>
+  <div class="node" id="nFX">FX</div>
+  <div class="node" id="nDC">DC</div>
+  <div class="node" id="nCYB">CYB</div>
+  <div class="node" id="nINF">INF</div>
+  <div class="node" id="nENG">ENG</div>
 </div>
 
-<div class="buttons">
+<div style="text-align:center;">
   <button onclick="inject('FX')">FX STRESS</button>
   <button onclick="inject('DC')">DC LOAD</button>
   <button onclick="inject('CYB')">CYBER EVENT</button>
   <button onclick="inject('INF')">INFRA STRAIN</button>
+  <button onclick="inject('ENG')">ENERGY SHOCK</button>
   <button onclick="reset()">RESET</button>
 </div>
 
@@ -129,32 +126,34 @@ button {
 <script>
 
 /* =========================
-   STATE CORE
+   CORE STATE (VISUAL)
 ========================= */
 
 const state = {
   FX: { v: 0, s: 0.7, x: 80, y: 80 },
   DC: { v: 0, s: 0.9, x: 220, y: 40 },
   CYB:{ v: 0, s: 0.8, x: 360, y: 80 },
-  INF:{ v: 0, s: 0.85, x: 220, y: 140 }
+  INF:{ v: 0, s: 0.85, x: 220, y: 140 },
+  ENG:{ v: 0, s: 0.75, x: 140, y: 140 }
 };
-
-const LINKS = [
-  ["FX","DC"],
-  ["DC","CYB"],
-  ["CYB","INF"],
-  ["INF","FX"]
-];
-
-/* =========================
-   MEMORY SYSTEMS
-========================= */
 
 let log = [];
 let explanationLog = [];
 
 /* =========================
-   ENGINE
+   ENERGY ENGINE (FULL)
+========================= */
+
+function energyRisk(){
+  return (
+    state.ENG.v * 0.4 +
+    state.INF.v * 0.2 +
+    state.DC.v * 0.15
+  );
+}
+
+/* =========================
+   INJECT
 ========================= */
 
 function inject(node){
@@ -162,45 +161,52 @@ function inject(node){
   logEvent("INJECT", node);
 }
 
+/* =========================
+   CLOSED LOOP CASCADE
+========================= */
+
 function cascade(){
 
-  LINKS.forEach(([a,b]) => {
+  const pBase = 0.05 + energyRisk() * 0.01;
+
+  const links = [
+    ["FX","DC"],
+    ["DC","CYB"],
+    ["CYB","INF"],
+    ["INF","FX"],
+    ["ENG","INF"],
+    ["ENG","DC"]
+  ];
+
+  links.forEach(([a,b]) => {
 
     const A = state[a];
     const B = state[b];
 
-    const p = (A.v * A.s * B.s) / 120;
+    const p = pBase * (A.v * A.s * B.s) / 120;
 
     if(Math.random() < p){
-
-      const impact = 3 + Math.random() * 4;
+      const impact = 2 + Math.random() * 5;
       B.v += impact;
 
-      logEvent("CASCADE", {
-        from: a,
-        to: b,
-        p: p.toFixed(3),
-        impact: impact.toFixed(2)
-      });
-
-      explain(`CASCADE: ${a} → ${b} | p=${p.toFixed(3)} | +${impact.toFixed(1)}`);
+      logEvent("CASCADE", {from:a,to:b,impact});
+      explain(`${a} → ${b} +${impact.toFixed(1)}`);
     }
   });
 }
 
 /* =========================
-   DECAY ENGINE
+   DECAY
 ========================= */
 
 function decay(){
   for(let k in state){
     state[k].v *= 0.97;
-    state[k].v = Math.max(0, state[k].v);
   }
 }
 
 /* =========================
-   TIME ENGINE
+   ENGINE LOOP
 ========================= */
 
 function tick(){
@@ -209,54 +215,25 @@ function tick(){
   render();
 }
 
-setInterval(tick, 1000);
+setInterval(tick, 900);
 
 /* =========================
-   TRACE ENGINE
+   LOG
 ========================= */
 
-function trace(node){
-
-  const events = log.filter(e =>
-    (e.data?.from === node || e.data?.to === node || e.data === node)
-  ).slice(-10);
-
-  explain(`🔍 TRACE NODE: ${node}`);
-
-  events.forEach(e => {
-    explain(
-      `${e.type} | ${JSON.stringify(e.data)}`
-    );
-  });
+function logEvent(type,data){
+  log.push({time:new Date(),type,data});
 }
 
 /* =========================
-   LOG ENGINE
-========================= */
-
-function logEvent(type, data){
-  log.push({
-    time: new Date(),
-    type,
-    data
-  });
-}
-
-/* =========================
-   EXPLAIN ENGINE (FIXED)
+   EXPLAIN
 ========================= */
 
 function explain(msg){
+  explanationLog.push({time:new Date(),msg});
 
-  explanationLog.push({
-    time: new Date(),
-    msg
-  });
-
-  const box = document.getElementById("explain");
-
-  box.innerHTML =
-    "🧠 EXPLANATION LAYER<br><br>" +
+  document.getElementById("explain").innerHTML =
+    "🧠 CLOSED LOOP SYSTEM<br><br>" +
     explanationLog.slice(-12).map(e =>
       `[${e.time.toLocaleTimeString()}] ${e.msg}`
     ).join("<br>");
@@ -270,12 +247,11 @@ function reset(){
   for(let k in state){
     state[k].v = 0;
   }
-  logEvent("RESET", {});
-  explain("SYSTEM RESET → baseline restored");
+  explain("SYSTEM RESET");
 }
 
 /* =========================
-   RENDER ENGINE
+   RENDER
 ========================= */
 
 function render(){
@@ -284,23 +260,15 @@ function render(){
   DC.innerText = state.DC.v.toFixed(1);
   CYB.innerText = state.CYB.v.toFixed(1);
   INF.innerText = state.INF.v.toFixed(1);
-
-  document.getElementById("nFX").style.left = state.FX.x + "px";
-  document.getElementById("nFX").style.top  = state.FX.y + "px";
-
-  document.getElementById("nDC").style.left = state.DC.x + "px";
-  document.getElementById("nDC").style.top  = state.DC.y + "px";
-
-  document.getElementById("nCYB").style.left = state.CYB.x + "px";
-  document.getElementById("nCYB").style.top  = state.CYB.y + "px";
-
-  document.getElementById("nINF").style.left = state.INF.x + "px";
-  document.getElementById("nINF").style.top  = state.INF.y + "px";
+  ENG.innerText = state.ENG.v.toFixed(1);
 
   for(let k in state){
     const el = document.getElementById("n"+k);
 
-    el.style.transform = `scale(${1 + state[k].v/50})`;
+    el.style.left = state[k].x + "px";
+    el.style.top  = state[k].y + "px";
+
+    el.style.transform = `scale(${1 + state[k].v/60})`;
 
     el.style.background =
       state[k].v > 40 ? "#ff3b3b" :
