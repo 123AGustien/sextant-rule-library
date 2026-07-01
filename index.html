@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD // CORE COCKPIT v12</title>
+<title>SPD v12 // ENG ENERGY MODULE UPGRADE</title>
 
 <style>
 body {
@@ -12,21 +12,18 @@ body {
   font-family:Arial;
 }
 
-/* HEADER */
 .header {
   padding:10px;
   background:#0b1220;
   text-align:center;
 }
 
-/* STATUS */
 #statusBar {
   text-align:center;
   padding:6px;
   background:#0a0f18;
 }
 
-/* PANELS */
 .panel {
   display:flex;
   justify-content:space-around;
@@ -40,72 +37,39 @@ body {
   text-align:center;
 }
 
-.value {
-  font-size:24px;
-}
+.value { font-size:22px; }
 
-/* GRAPH */
-#graph {
-  position:relative;
-  height:260px;
-}
-
-.node {
-  position:absolute;
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  background:#1f3b5c;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-
-/* BUTTONS */
-button {
-  margin:3px;
-  padding:7px;
-  background:#1f3b5c;
-  color:white;
-  border:none;
-}
-
-/* LOG */
-#log {
+#alerts {
   position:absolute;
   right:10px;
   top:60px;
-  width:260px;
-  height:260px;
+  width:280px;
+  height:280px;
   background:#0a0f18;
   font-size:11px;
   overflow:auto;
   padding:10px;
 }
 
-/* RULE PANEL (FIXED MISSING PIECE) */
-#rulePanel {
+#systemView {
   position:absolute;
   left:10px;
   top:60px;
-  width:260px;
-  height:260px;
+  width:280px;
+  height:280px;
   background:#0a0f18;
-  font-size:11px;
-  overflow:auto;
+  font-size:12px;
   padding:10px;
-  border:1px solid #1f3b5c;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🛰 SPD FULL ECOSYSTEM // CORE COCKPIT v12</div>
-<div id="statusBar">STATUS: NOMINAL</div>
+<div class="header">🛰 SPD v12 // ENERGY RESILIENCE MODULE</div>
 
-<!-- MAIN PANEL -->
+<div id="statusBar">STATUS: INIT</div>
+
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0</div></div>
   <div class="card">DC<div id="DC" class="value">0</div></div>
@@ -114,152 +78,180 @@ button {
   <div class="card">ENG<div id="ENG" class="value">0</div></div>
 </div>
 
-<!-- GRAPH -->
-<div id="graph">
-  <div class="node" onclick="inject('FX')" style="left:80px;top:90px;">FX</div>
-  <div class="node" onclick="inject('DC')" style="left:220px;top:40px;">DC</div>
-  <div class="node" onclick="inject('CYB')" style="left:360px;top:90px;">CYB</div>
-  <div class="node" onclick="inject('INF')" style="left:220px;top:150px;">INF</div>
-  <div class="node" onclick="inject('ENG')" style="left:220px;top:220px;">ENG</div>
-</div>
+<div id="systemView"></div>
+<div id="alerts"></div>
 
-<!-- CONTROL -->
 <div style="text-align:center;">
-  <button onclick="scenario('FX_SHOCK')">FX SHOCK</button>
-  <button onclick="scenario('CYBER')">CYBER</button>
-  <button onclick="scenario('INFRA')">INFRA</button>
-  <button onclick="scenario('STABILISE')">STABILISE</button>
-  <button onclick="resetSystem()">RESET</button>
-</div>
+  <button onclick="inject('FX')">FX</button>
+  <button onclick="inject('DC')">DC</button>
+  <button onclick="inject('CYB')">CYB</button>
+  <button onclick="inject('INF')">INF</button>
 
-<!-- RULE PANEL (RESTORED CORE MISSING MODULE) -->
-<div id="rulePanel">
-<b>RULE ENGINE</b><br><br>
-FX → Liquidity Stress<br>
-DC → Load Pressure<br>
-CYB → Intrusion Risk<br>
-INF → Structural Strain<br>
-ENG → Energy Buffer<br><br>
-STATUS: LINKED
+  <button onclick="energyShock()">ENERGY SHOCK</button>
+  <button onclick="stabilise()">STABILISE</button>
+  <button onclick="reset()">RESET</button>
 </div>
-
-<!-- LOG -->
-<div id="log">SYSTEM READY</div>
 
 <script>
 
-/* -----------------------
-   STATE ENGINE
------------------------ */
-const state = {
-  FX:{v:0}, DC:{v:0}, CYB:{v:0}, INF:{v:0}, ENG:{v:0}
+/* =========================
+   FULL STATE (UPGRADED ENG)
+========================= */
+
+const domains = {
+  FX:{risk:0},
+  DC:{risk:0},
+  CYB:{risk:0},
+  INF:{risk:0},
+
+  ENG:{
+    oilPrice:80,
+    cpoPrice:1100,
+    fiscalPressure:0.5,
+    reserveLevel:0.6,
+    importDependency:0.4,
+    biofuelCapacity:0.6,
+    energyStress:0
+  }
 };
 
 let log = [];
 
-/* -----------------------
-   ACTIONS
------------------------ */
-function inject(n){
-  state[n].v += 10;
-  log.push(n + " +10");
+/* =========================
+   BASIC INJECTION
+========================= */
+
+function inject(k){
+  domains[k].risk += 2;
+  log.push(k+" +2");
 }
 
-function scenario(type){
+/* =========================
+   ENG ENGINE (NEW CORE)
+========================= */
 
-  if(type==="FX_SHOCK"){ state.FX.v += 25; log.push("FX SHOCK"); }
-  if(type==="CYBER"){ state.CYB.v += 25; log.push("CYBER EVENT"); }
-  if(type==="INFRA"){ state.INF.v += 25; log.push("INFRA FAILURE"); }
+function computeEnergyRisk(e){
 
-  if(type==="STABILISE"){
-    for(let k in state) state[k].v *= 0.6;
-    log.push("STABILISATION DEPLOYED");
+  let stress = 0;
+
+  stress += (e.oilPrice - 70) * 0.05;
+  stress += (e.cpoPrice - 1000) * 0.002;
+  stress += e.fiscalPressure * 10;
+  stress += (1 - e.reserveLevel) * 12;
+  stress += e.importDependency * 8;
+  stress -= e.biofuelCapacity * 6;
+
+  if(stress < 0) stress = 0;
+
+  return stress;
+}
+
+function energyShock(){
+  const e = domains.ENG;
+
+  e.oilPrice += 15;
+  e.importDependency += 0.1;
+  e.fiscalPressure += 0.1;
+
+  log.push("ENERGY SHOCK TRIGGERED");
+}
+
+function stabilise(){
+  const e = domains.ENG;
+
+  e.reserveLevel += 0.1;
+  e.fiscalPressure -= 0.1;
+
+  log.push("ENERGY STABILISATION DEPLOYED");
+}
+
+/* =========================
+   COCKPIT DASHBOARD ENGINE
+========================= */
+
+const COCKPIT_DASHBOARD = {
+
+  render(d){
+
+    const engRisk = computeEnergyRisk(d.ENG);
+
+    const summary = {
+      FX:d.FX.risk,
+      DC:d.DC.risk,
+      CYB:d.CYB.risk,
+      INF:d.INF.risk,
+      ENG:engRisk
+    };
+
+    const globalRisk =
+      summary.FX + summary.DC + summary.CYB + summary.INF + summary.ENG;
+
+    return {
+      globalRisk,
+      status:
+        globalRisk>18?"CRITICAL":
+        globalRisk>10?"WARNING":"STABLE",
+      engRisk,
+      systemView:
+        globalRisk>18?"SYSTEM COLLAPSE RISK":
+        globalRisk>10?"SYSTEM UNDER STRESS":"SYSTEM STABLE"
+    };
   }
-}
+};
 
-/* -----------------------
-   SYSTEM DYNAMICS
------------------------ */
-function cascade(){
-  const links = [
-    ["FX","DC",0.9],
-    ["DC","CYB",0.7],
-    ["CYB","INF",0.8],
-    ["INF","FX",0.6],
-    ["ENG","FX",0.5],
-    ["ENG","DC",0.5],
-    ["ENG","CYB",0.5],
-    ["ENG","INF",0.5]
-  ];
+/* =========================
+   RESET
+========================= */
 
-  links.forEach(([a,b,w])=>{
-    const p = state[a].v * w;
-    if(Math.random() < p/150){
-      state[b].v += Math.random()*3;
-      log.push(a+"→"+b);
+function reset(){
+  for(const k in domains){
+    if(k==="ENG"){
+      Object.assign(domains.ENG,{
+        oilPrice:80,
+        cpoPrice:1100,
+        fiscalPressure:0.5,
+        reserveLevel:0.6,
+        importDependency:0.4,
+        biofuelCapacity:0.6,
+        energyStress:0
+      });
+    } else {
+      domains[k].risk = 0;
     }
-  });
+  }
+  log=[];
 }
 
-function decay(){
-  for(let k in state) state[k].v *= 0.98;
-}
+/* =========================
+   RENDER LOOP
+========================= */
 
-/* -----------------------
-   UI RENDER
------------------------ */
 function render(){
 
-  document.getElementById("FX").innerText = state.FX.v.toFixed(1);
-  document.getElementById("DC").innerText = state.DC.v.toFixed(1);
-  document.getElementById("CYB").innerText = state.CYB.v.toFixed(1);
-  document.getElementById("INF").innerText = state.INF.v.toFixed(1);
-  document.getElementById("ENG").innerText = state.ENG.v.toFixed(1);
+  const view = COCKPIT_DASHBOARD.render(domains);
 
-  document.getElementById("log").innerHTML = log.slice(-12).join("<br>");
+  FX.innerText = domains.FX.risk;
+  DC.innerText = domains.DC.risk;
+  CYB.innerText = domains.CYB.risk;
+  INF.innerText = domains.INF.risk;
 
-  updateStatus();
+  ENG.innerText = view.engRisk.toFixed(1);
+
+  statusBar.innerText = "STATUS: " + view.status;
+
+  systemView.innerHTML =
+    "<b>"+view.systemView+"</b><br><br>" +
+    "ENG RISK: " + view.engRisk.toFixed(2);
+
+  alerts.innerHTML =
+    "<b>EVENT LOG</b><br>" + log.slice(-12).join("<br>");
 }
 
-/* -----------------------
-   STATUS ENGINE
------------------------ */
-function updateStatus(){
-  let total = Object.values(state).reduce((s,x)=>s+x.v,0);
-  let bar = document.getElementById("statusBar");
+/* =========================
+   LOOP
+========================= */
 
-  if(total > 200){
-    bar.innerText = "STATUS: STRESSED";
-    bar.style.background = "#3a0f0f";
-  }
-  else if(total > 100){
-    bar.innerText = "STATUS: ELEVATED";
-    bar.style.background = "#3a2a0f";
-  }
-  else {
-    bar.innerText = "STATUS: NOMINAL";
-    bar.style.background = "#0a0f18";
-  }
-}
-
-/* -----------------------
-   RESET
------------------------ */
-function resetSystem(){
-  for(let k in state) state[k].v = 0;
-  log = [];
-}
-
-/* -----------------------
-   MAIN LOOP
------------------------ */
-function tick(){
-  cascade();
-  decay();
-  render();
-}
-
-setInterval(tick,900);
+setInterval(render, 800);
 render();
 
 </script>
