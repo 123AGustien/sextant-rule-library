@@ -1,4 +1,4 @@
-# 🛰 ENG Module Operator Manual  
+# 🛰 ENG Module Operator Manual
 ## Sextant Protocol v12 — Energy Resilience Cockpit
 
 ---
@@ -19,12 +19,11 @@ Modul **ENG (Ketahanan Energi)** mensimulasikan kondisi sistem energi nasional b
 ## 🧭 Cara Mengoperasikan Sistem
 
 ### 🟢 LANGKAH 1 — Buka Cockpit
-Buka:
-index.html
+Buka: `index.html`
 
 Pastikan:
 - SPD v12 dashboard aktif  
-- Tile ENG terlihat  
+- Tile ENG terlihat di layar  
 
 ---
 
