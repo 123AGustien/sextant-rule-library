@@ -1,0 +1,47 @@
+{
+  "ENG-002": {
+    "name": "FUEL SUBSIDY STRESS",
+    "domain": "ENERGY",
+    "impact": 5,
+
+    "indicators": {
+      "cpo_price": "high",
+      "oil_price": "low to moderate",
+      "subsidy_cost": "rapidly increasing",
+      "export_levy": "declining efficiency",
+      "fiscal_space": "tightening"
+    },
+
+    "trigger_logic": {
+      "subsidy_gap_widening": true,
+      "cpo_vs_diesel_spread": "above_threshold",
+      "budget_pressure": "high"
+    },
+
+    "risk_effect": {
+      "fiscal_deficit": "increase",
+      "policy_pressure": "increase",
+      "fuel_price_distortion": "increase",
+      "export_revenue": "decrease"
+    },
+
+    "recommended_actions": [
+      "Adjust biodiesel blend ratio",
+      "Recalibrate subsidy mechanism",
+      "Increase export levy efficiency",
+      "Optimize domestic allocation",
+      "Protect fiscal balance"
+    ],
+
+    "cascade_effects": [
+      "FX volatility increase",
+      "Inflationary pressure increase",
+      "Palm oil export reduction",
+      "Budget reallocation stress"
+    ],
+
+    "mode_shift": "CONTINGENCY",
+
+    "version": "1.0"
+  }
+}

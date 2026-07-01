@@ -1,0 +1,84 @@
+{
+  "Price Buffer": {
+    "objective": "Stabilize domestic fuel prices and absorb short-term market shocks.",
+    "actions": [
+      "Adjust biodiesel blending ratio (B40 ↔ B50)",
+      "Apply temporary fuel subsidy adjustments",
+      "Activate fuel price smoothing mechanism",
+      "Monitor domestic fuel inventory",
+      "Increase market surveillance"
+    ]
+  },
+
+  "Fiscal Protection": {
+    "objective": "Protect government fiscal capacity while maintaining energy affordability.",
+    "actions": [
+      "Recalibrate fuel subsidy allocation",
+      "Adjust CPO export levy mechanism",
+      "Monitor subsidy expenditure",
+      "Review fuel pricing policy",
+      "Control fiscal exposure"
+    ]
+  },
+
+  "Strategic Energy": {
+    "objective": "Strengthen long-term national energy resilience and supply security.",
+    "actions": [
+      "Activate strategic fuel reserves",
+      "Increase domestic biodiesel production",
+      "Diversify energy feedstock",
+      "Reduce dependence on imported crude oil",
+      "Coordinate national energy contingency response"
+    ]
+  },
+
+  "ENG-001": {
+    "scenario": "Global Oil Price Spike",
+    "recommendedLayer": "Price Buffer"
+  },
+
+  "ENG-002": {
+    "scenario": "Global Oil Price Collapse",
+    "recommendedLayer": "Fiscal Protection"
+  },
+
+  "ENG-003": {
+    "scenario": "Fuel Subsidy Stress",
+    "recommendedLayer": "Fiscal Protection"
+  },
+
+  "ENG-004": {
+    "scenario": "High CPO Price",
+    "recommendedLayer": "Fiscal Protection"
+  },
+
+  "ENG-005": {
+    "scenario": "Fuel Import Disruption",
+    "recommendedLayer": "Strategic Energy"
+  },
+
+  "ENG-006": {
+    "scenario": "Strategic Fuel Reserve Depletion",
+    "recommendedLayer": "Strategic Energy"
+  },
+
+  "ENG-007": {
+    "scenario": "Biodiesel Supply Disruption",
+    "recommendedLayer": "Strategic Energy"
+  },
+
+  "ENG-008": {
+    "scenario": "Domestic Fuel Demand Surge",
+    "recommendedLayer": "Price Buffer"
+  },
+
+  "ENG-009": {
+    "scenario": "Refinery Outage",
+    "recommendedLayer": "Strategic Energy"
+  },
+
+  "ENG-010": {
+    "scenario": "Energy Infrastructure Failure",
+    "recommendedLayer": "Strategic Energy"
+  }
+}

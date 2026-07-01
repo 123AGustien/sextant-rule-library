@@ -1,0 +1,67 @@
+{
+  "ENG-001": {
+    "name": "Global Oil Price Spike",
+    "category": "Market",
+    "impact": 5,
+    "solutionLayer": "Price Buffer",
+    "description": "Global crude oil prices rise sharply, increasing domestic fuel costs."
+  },
+
+  "ENG-002": {
+    "name": "Global Oil Price Collapse",
+    "category": "Market",
+    "impact": 2,
+    "solutionLayer": "Fiscal Protection",
+    "description": "Oil prices fall significantly, requiring subsidy and pricing policy review."
+  },
+
+  "ENG-003": {
+    "name": "Fuel Subsidy Stress",
+    "category": "Fiscal",
+    "impact": 4,
+    "solutionLayer": "Fiscal Protection",
+    "description": "Fuel subsidy requirements exceed planned fiscal capacity."
+  },
+
+  "ENG-004": {
+    "name": "High CPO Price",
+    "category": "Biofuel",
+    "impact": 3,
+    "solutionLayer": "Fiscal Protection",
+    "description": "Palm oil prices increase, reducing biodiesel cost competitiveness."
+  },
+
+  "ENG-005": {
+    "name": "Fuel Import Disruption",
+    "category": "Supply",
+    "impact": 5,
+    "solutionLayer": "Strategic Energy",
+    "description": "International fuel imports are delayed or disrupted."
+  },
+
+  "ENG-006": {
+    "name": "Strategic Fuel Reserve Depletion",
+    "category": "Reserve",
+    "impact": 5,
+    "solutionLayer": "Strategic Energy",
+    "description": "National strategic fuel reserves fall below operational thresholds."
+  },
+
+  "ENG-007": {
+    "name": "Biodiesel Supply Disruption",
+    "category": "Biofuel",
+    "impact": 4,
+    "solutionLayer": "Strategic Energy",
+    "description": "Domestic biodiesel production or distribution is disrupted."
+  },
+
+  "ENG-008": {
+    "name": "Domestic Fuel Demand Surge",
+    "category": "Demand",
+    "impact": 3,
+    "solutionLayer": "Price Buffer",
+    "description": "Fuel demand rises suddenly due to economic activity or emergencies."
+  },
+
+  "ENG-009": {
+    "name": "Refinery Out

@@ -1,0 +1,34 @@
+{
+  "ENG-001": {
+    "name": "OIL PRICE SHOCK",
+    "domain": "ENERGY",
+    "impact": 4,
+    "indicators": {
+      "oil_price": "high volatility",
+      "global_supply": "tight",
+      "fiscal_pressure": "increasing"
+    },
+    "trigger_logic": {
+      "oil_price_drop": true,
+      "supply_instability": true
+    },
+    "risk_effect": {
+      "energy_cost": "increase",
+      "subsidy_burden": "increase",
+      "import_dependency": "increase"
+    },
+    "recommended_actions": [
+      "Increase biodiesel blend",
+      "Activate strategic fuel reserves",
+      "Reduce fuel imports",
+      "Stabilize energy supply chain"
+    ],
+    "cascade_effects": [
+      "FX pressure increase",
+      "Inflation risk increase",
+      "Fiscal deficit widening"
+    ],
+    "mode_shift": "CONTINGENCY",
+    "version": "1.0"
+  }
+}
