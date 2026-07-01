@@ -1,3 +1,270 @@
+Berikut adalah file README versi Bahasa Indonesia (siap copy-paste ke GitHub):
+📘 Modul ENG — Panduan Operasi
+Sextant Protocol v12 Energy Cockpit
+🛰 Gambaran Umum
+Modul ENG (Ketahanan Energi) mensimulasikan stabilitas sistem energi nasional dalam kondisi:
+Fluktuasi harga minyak dunia
+Tekanan harga CPO (minyak sawit)
+Tekanan subsidi BBM
+Risiko ketergantungan impor energi
+Modul ini menghasilkan:
+Skor risiko
+Mode sistem
+Tingkat keparahan
+Rekomendasi tindakan
+Dampak rantai (cascade)
+Lapisan solusi ketahanan energi
+🧭 Cara Mengoperasikan Sistem (Langkah demi Langkah)
+🟢 LANGKAH 1 — Buka Sistem
+Buka file utama cockpit:
+index.html
+Pastikan:
+Dashboard SPD v12 sudah berjalan
+Tile ENG terlihat di layar
+🟡 LANGKAH 2 — Input Kondisi Sistem
+Masukkan parameter sistem energi:
+state = {
+  oilPrice: 80,
+  cpoPrice: 1100,
+  fiscalPressure: 0.5,
+  reserveLevel: 0.6,
+  importDependency: 0.4,
+  biofuelCapacity: 0.6
+}
+🔵 LANGKAH 3 — Tambahkan Event (Opsional)
+Memicu skenario tertentu:
+event = {
+  id: "B50_POLICY_SHIFT",
+  name: "Kenaikan Mandat Biodiesel",
+  impact: 2
+}
+🟣 LANGKAH 4 — Jalankan Engine ENG
+Eksekusi evaluasi:
+EnergyEngine.evaluate(state, event)
+🟠 LANGKAH 5 — Baca Hasil Output
+Sistem akan menghasilkan:
+📊 Metrik Utama
+Skor Risiko (0–10+)
+Mode Sistem:
+NORMAL
+TRANSISI
+KONTINJENSI
+Severity:
+RENDAH / SEDANG / TINGGI
+🧠 Lapisan Solusi
+Salah satu dari:
+Price Buffer Layer (peredam jangka pendek)
+Fiscal Protection Layer (kontrol anggaran)
+Strategic Energy Layer (ketahanan jangka panjang)
+⚙ Panel Aksi
+Contoh output:
+Meningkatkan blending biodiesel
+Mengaktifkan cadangan energi strategis
+Menstabilkan eksposur subsidi
+Menyesuaikan impor BBM
+Melindungi likuiditas fiskal
+🌊 Dampak Cascade
+Sistem mensimulasikan dampak lanjutan:
+Tekanan FX meningkat
+Risiko inflasi naik
+Defisit fiskal bertambah
+Gangguan impor energi
+Ketidakstabilan pasokan energi
+🔴 LANGKAH 6 — Cek Status Cockpit
+Di dashboard:
+Warna
+Arti
+🟢 Hijau
+Stabil
+🟡 Kuning
+Transisi
+🔴 Merah
+Krisis
+Jika risiko ≥ 7 → sistem akan memicu alert
+🧠 LANGKAH 7 — Interpretasi Mode Sistem
+Mode
+Arti
+NORMAL
+Operasi stabil
+TRANSISI
+Penyesuaian terkendali
+KONTINJENSI
+Kondisi krisis
+🛰 LANGKAH 8 — Signal Sistem
+ENG menghasilkan sinyal:
+ENG_STABLE
+ENG_WARNING
+ENG_CRITICAL
+Sinyal ini digunakan oleh Auto Suggest v2.
+🔗 Arsitektur Sistem
+ENG Engine
+   ↓
+Layer Integrasi Cockpit
+   ↓
+Auto Suggest v2
+   ↓
+Dashboard SPD Global
+(FX | DC | CYB | INF | ENG)
+⚠️ Catatan Operasional
+ENG bukan sistem berdiri sendiri
+Ini bagian dari sistem multi-domain SPD
+Nilai risiko adalah hasil simulasi, bukan prediksi real
+Selalu evaluasi bersama FX dan kondisi fiskal
+🧩 Ringkasan Cepat Operator
+Jika kondisi stabil: → Lanjutkan operasi normal
+Jika kondisi tekanan: → Sesuaikan campuran bahan bakar dan subsidi
+Jika kondisi krisis: → Aktifkan mode kontinjensi
+🚀 Penutup
+Modul ini sudah siap digunakan dalam sistem SPD v12 Energy Resilience.
+📄 File: modules/ENG/README.md
+# 📘 ENG Module — Operation Guide  
+## Sextant Protocol v12 Energy Cockpit
+
+---
+
+# 🛰 Overview
+
+The **ENG Module (Energy Resilience)** simulates national energy system stability under:
+
+- Oil price fluctuations  
+- Palm oil (CPO) price pressure  
+- Fuel subsidy stress  
+- Import dependency risk  
+
+It produces:
+- Risk score
+- System mode
+- Severity level
+- Recommended actions
+- Cascade impact analysis
+- Energy resilience solution layer
+
+---
+
+# 🧭 How to Operate the Screen (Step-by-Step)
+
+---
+
+## 🟢 STEP 1 — Open System
+
+Open the main cockpit:
+index.html
+
+Ensure:
+- SPD v12 dashboard is loaded
+- ENG tile is visible
+
+---
+
+## 🟡 STEP 2 — Define System State
+
+Set the energy system input values:
+
+```javascript
+state = {
+  oilPrice: 80,
+  cpoPrice: 1100,
+  fiscalPressure: 0.5,
+  reserveLevel: 0.6,
+  importDependency: 0.4,
+  biofuelCapacity: 0.6
+}
+🔵 STEP 3 — Inject Event (Optional)
+Trigger a scenario event:
+event = {
+  id: "B50_POLICY_SHIFT",
+  name: "Biodiesel Mandate Increase",
+  impact: 2
+}
+🟣 STEP 4 — Run ENG Engine
+Execute evaluation:
+EnergyEngine.evaluate(state, event)
+🟠 STEP 5 — Read Output
+The system returns:
+📊 Core Metrics
+Risk Score (0–10+)
+Mode:
+NORMAL
+TRANSITION
+CONTINGENCY
+Severity:
+LOW / MEDIUM / HIGH
+🧠 Solution Layer
+You will see one of:
+Price Buffer Layer (short-term stabilization)
+Fiscal Protection Layer (budget control)
+Strategic Energy Layer (long-term resilience)
+⚙ Action Panel
+Typical outputs:
+Increase biodiesel blending
+Activate strategic fuel reserves
+Stabilize subsidy exposure
+Adjust fuel imports
+Protect fiscal liquidity
+🌊 Cascade Effects
+The system simulates downstream impacts:
+FX pressure increase
+Inflation risk rise
+Fiscal deficit expansion
+Fuel import disruption
+Energy supply instability
+🔴 STEP 6 — Cockpit Status Check
+In the dashboard:
+Color
+Meaning
+🟢 Green
+Stable
+🟡 Yellow
+Transition
+🔴 Red
+Critical
+If risk ≥ 7 → system alert is triggered
+🧠 STEP 7 — System Mode Interpretation
+Mode
+Meaning
+NORMAL
+Stable operations
+TRANSITION
+Controlled adjustment required
+CONTINGENCY
+Crisis-level response required
+🛰 STEP 8 — System Signal Output
+ENG emits:
+ENG_STABLE
+ENG_WARNING
+ENG_CRITICAL
+These signals integrate into Auto Suggest v2.
+🔗 System Architecture
+ENG Engine
+   ↓
+Cockpit Integration Layer
+   ↓
+Auto Suggest v2
+   ↓
+Global SPD Dashboard
+(FX | DC | CYB | INF | ENG)
+⚠️ Operational Notes
+ENG is part of a multi-domain system (not standalone)
+Risk values are simulation-based indicators
+Cascade effects represent system behavior, not real-world prediction
+Always evaluate ENG alongside FX and fiscal conditions
+🧩 Quick Operator Guide
+If system is stable: → Maintain current operations
+If system is stressed: → Adjust fuel mix and subsidy exposure
+If system is critical: → Activate contingency response layer immediately
+🚀 End of Module
+This module is now fully integrated into SPD v12 Energy Resilience system.
+
+---
+
+If you want next upgrade later, I can help you:
+
+- [convert this into a \*\*GitHub Pages UI page\*\*](reference-followup:3476)
+- or [connect it into a \*\*live dashboard panel\*\*](reference-followup:3526)
+- or [merge all domains into one \*\*single cockpit README\*\*](reference-followup:3574)
+
+Just tell me 👍
+
 # 🛰 Modul Ketahanan Energi (ENG)
 
 ## Sextant Protocol – Ekstensi Rule Library
