@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SPD // ENERGY MODULE</title>
+</head>
+
+<body style="background:#05070b;color:#cfe8ff;font-family:Arial;text-align:center;">
+
+<h2>⚡ ENERGY STABILISER</h2>
+
+<div id="eng">0</div>
+
+<button onclick="boost()">BOOST ENERGY</button>
+<button onclick="back()">RETURN TO COCKPIT</button>
+
+<script>
+let energy = 0;
+
+function boost(){
+  energy += 20;
+  document.getElementById("eng").innerText = energy;
+}
+
+function back(){
+  location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
