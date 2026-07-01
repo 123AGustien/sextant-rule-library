@@ -2,99 +2,57 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // FINAL MASTER COCKPIT</title>
+<title>SPD // CORE COCKPIT</title>
 
 <style>
-body {
-  margin: 0;
-  background: #05070b;
-  color: #cfe8ff;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-}
+body { margin:0; background:#05070b; color:#cfe8ff; font-family:Arial; }
+.header { padding:10px; background:#0b1220; text-align:center; }
+#statusBar { text-align:center; padding:6px; background:#0a0f18; }
 
-.header {
-  padding: 10px;
-  background: #0b1220;
-  font-size: 14px;
-}
+.panel { display:flex; justify-content:space-around; padding:10px; }
+.card { background:#0e1a2b; width:18%; padding:12px; text-align:center; }
+.value { font-size:24px; }
 
-#statusBar {
-  text-align: center;
-  padding: 6px;
-  background: #0a0f18;
-  font-size: 13px;
-}
-
-.panel {
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
-}
-
-.card {
-  background: #0e1a2b;
-  width: 18%;
-  padding: 10px;
-  text-align: center;
-  border-radius: 6px;
-}
-
-.value {
-  font-size: 22px;
-}
-
-#layout {
-  display: flex;
-}
-
-#graph {
-  position: relative;
-  width: 65%;
-  height: 420px;
-}
+#graph { position:relative; height:260px; }
 
 .node {
-  position: absolute;
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  background: #1f3b5c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  transition: 0.2s;
-}
-
-#side {
-  width: 35%;
-  background: #0a0f18;
-  padding: 10px;
-  font-size: 12px;
-  overflow-y: auto;
-  height: 420px;
-  border-left: 2px solid #1f3b5c;
+  position:absolute;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:#1f3b5c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
 }
 
 button {
-  margin: 3px;
-  padding: 6px;
-  background: #1f3b5c;
-  color: white;
-  border: none;
-  cursor: pointer;
+  margin:3px;
+  padding:7px;
+  background:#1f3b5c;
+  color:white;
+  border:none;
+}
+
+#log {
+  position:absolute;
+  right:10px;
+  top:60px;
+  width:260px;
+  height:260px;
+  background:#0a0f18;
+  font-size:11px;
+  overflow:auto;
+  padding:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-🛰 SPD v12 // FINAL MASTER COCKPIT (CLOSED LOOP SYSTEM)
-</div>
-
-<div id="statusBar">STATUS: LIVE • STABLE ENGINE ACTIVE</div>
+<div class="header">🛰 SPD FULL ECOSYSTEM // SCENARIO CORE</div>
+<div id="statusBar">STATUS: NOMINAL</div>
 
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0</div></div>
@@ -104,233 +62,107 @@ button {
   <div class="card">ENG<div id="ENG" class="value">0</div></div>
 </div>
 
-<div id="layout">
-
 <div id="graph">
-  <div class="node" id="nFX" style="left:80px;top:80px;">FX</div>
-  <div class="node" id="nDC" style="left:220px;top:50px;">DC</div>
-  <div class="node" id="nCYB" style="left:360px;top:80px;">CYB</div>
-  <div class="node" id="nINF" style="left:220px;top:150px;">INF</div>
-  <div class="node" id="nENG" style="left:140px;top:150px;">ENG</div>
-</div>
-
-<div id="side">
-  <b>🧠 AUTO SUGGEST</b>
-  <div id="suggest"></div>
-  <hr>
-  <b>📡 AUDIT LOG</b>
-  <div id="log"></div>
-</div>
-
+  <div class="node" onclick="inject('FX')" style="left:80px;top:90px;">FX</div>
+  <div class="node" onclick="inject('DC')" style="left:220px;top:40px;">DC</div>
+  <div class="node" onclick="inject('CYB')" style="left:360px;top:90px;">CYB</div>
+  <div class="node" onclick="inject('INF')" style="left:220px;top:150px;">INF</div>
+  <div class="node" onclick="inject('ENG')" style="left:220px;top:220px;">ENG</div>
 </div>
 
 <div style="text-align:center;">
-<button onclick="inject('FX')">FX SHOCK</button>
-<button onclick="inject('DC')">DC LOAD</button>
-<button onclick="inject('CYB')">CYBER EVENT</button>
-<button onclick="inject('INF')">INFRA STRAIN</button>
-<button onclick="inject('ENG')">ENERGY SHOCK</button>
-<button onclick="reset()">RESET</button>
+  <button onclick="scenario('FX_SHOCK')">FX SHOCK</button>
+  <button onclick="scenario('CYBER')">CYBER</button>
+  <button onclick="scenario('INFRA')">INFRA</button>
+  <button onclick="scenario('STABILISE')">STABILISE</button>
+  <button onclick="location.href='energy.html'">ENERGY MODULE</button>
 </div>
 
-/* =========================
-   STATE CORE
+<div id="log">SYSTEM READY</div>
 
+<script>
 const state = {
-  FX:{v:0,s:0.7},
-  DC:{v:0,s:0.9},
-  CYB:{v:0,s:0.8},
-  INF:{v:0,s:0.85},
-  ENG:{v:0,s:0.75}
+  FX:{v:0}, DC:{v:0}, CYB:{v:0}, INF:{v:0}, ENG:{v:0}
 };
 
 const LINKS = [
-  ["FX","DC"],
-  ["DC","CYB"],
-  ["CYB","INF"],
-  ["INF","FX"]
+  ["FX","DC",0.9],
+  ["DC","CYB",0.7],
+  ["CYB","INF",0.8],
+  ["INF","FX",0.6],
+  ["ENG","FX",0.5],
+  ["ENG","DC",0.5],
+  ["ENG","CYB",0.5],
+  ["ENG","INF",0.5]
 ];
 
-/* =========================
-   MEMORY SYSTEMS
-
 let log = [];
-let explanationLog = [];
-
-/* =========================
-   ENGINE
-
-function inject(node){
-  state[node].v += 10;
-  logEvent("INJECT", node);
-}
-
-function energyEngine(){
-  const risk =
-    state.ENG.v * 0.4 +
-    state.INF.v * 0.25 +
-    state.DC.v * 0.2 +
-    state.CYB.v * 0.1;
-
-  const mode =
-    risk < 20 ? "NORMAL" :
-    risk < 50 ? "TRANSITION" :
-    "CRISIS";
-
-  return {risk, mode};
-}
 
 function inject(n){
   state[n].v += 10;
-  log.push(`${n} +10`);
+  log.push(n + " +10");
 }
 
-function tick(){
-  const eng = energyEngine();
+function scenario(type){
 
-  const links = [
-    ["FX","DC"],
-    ["DC","CYB"],
-    ["CYB","INF"],
-    ["INF","FX"],
-    ["ENG","INF"],
-    ["ENG","DC"]
-  ];
+  if(type==="FX_SHOCK"){ state.FX.v += 25; log.push("FX SHOCK"); }
+  if(type==="CYBER"){ state.CYB.v += 25; log.push("CYBER EVENT"); }
+  if(type==="INFRA"){ state.INF.v += 25; log.push("INFRA FAILURE"); }
 
-  links.forEach(([a,b])=>{
-    const p = (state[a].v * state[a].s * state[b].s) / 220;
-    if(Math.random() < p){
-      state[b].v += 1 + Math.random()*3;
-      log.push(`${a} → ${b}`);
-    }
-  });
-
-/* =========================
-   DECAY ENGINE
-
-function decay(){
-  for(let k in state){
-    state[k].v *= 0.96;
+  if(type==="STABILISE"){
+    for(let k in state) state[k].v *= 0.6;
+    log.push("STABILISATION DEPLOYED");
   }
 }
 
-/* =========================
-   TIME ENGINE
+function cascade(){
+  LINKS.forEach(([a,b,w])=>{
+    const p = state[a].v * w;
+    if(Math.random() < p/150){
+      state[b].v += Math.random()*3;
+      log.push(a+"→"+b);
+    }
+  });
+}
+
+function decay(){
+  for(let k in state) state[k].v *= 0.98;
+}
+
+function status(){
+  let total = Object.values(state).reduce((s,x)=>s+x.v,0);
+  let bar = document.getElementById("statusBar");
+
+  if(total>200){ bar.innerText="STATUS: STRESSED"; bar.style.background="#3a0f0f"; }
+  else if(total>100){ bar.innerText="STATUS: ELEVATED"; bar.style.background="#3a2a0f"; }
+  else { bar.innerText="STATUS: NOMINAL"; bar.style.background="#0a0f18"; }
+}
+
+function render(){
+  document.getElementById("FX").innerText = state.FX.v.toFixed(1);
+  document.getElementById("DC").innerText = state.DC.v.toFixed(1);
+  document.getElementById("CYB").innerText = state.CYB.v.toFixed(1);
+  document.getElementById("INF").innerText = state.INF.v.toFixed(1);
+  document.getElementById("ENG").innerText = state.ENG.v.toFixed(1);
+
+  document.querySelectorAll(".node").forEach(n=>{
+    let k = n.innerText;
+    n.style.transform = `scale(${1+state[k].v/70})`;
+  });
+
+  document.getElementById("log").innerHTML = log.slice(-12).join("<br>");
+}
 
 function tick(){
   cascade();
   decay();
+  status();
   render();
 }
 
-setInterval(tick, 1000);
-
-/* =========================
-   TRACE ENGINE
-
-function trace(node){
-
-  const events = log.filter(e =>
-    (e.data?.from === node || e.data?.to === node || e.data === node)
-  ).slice(-10);
-
-  explain(`🔍 TRACE NODE: ${node}`);
-
-  events.forEach(e => {
-    explain(
-      `${e.type} | ${JSON.stringify(e.data)}`
-    );
-  });
-}
-
-/* =========================
-   LOG ENGINE
-
-function logEvent(type, data){
-  log.push({
-    time: new Date(),
-    type,
-    data
-  });
-}
-
-/* =========================
-   EXPLAIN ENGINE (FIXED)
-
-function explain(msg){
-
-  explanationLog.push({
-    time: new Date(),
-    msg
-  });
-
-  const box = document.getElementById("explain");
-
-  box.innerHTML =
-    "🧠 EXPLANATION LAYER<br><br>" +
-    explanationLog.slice(-12).map(e =>
-      `[${e.time.toLocaleTimeString()}] ${e.msg}`
-    ).join("<br>");
-}
-
-/* =========================
-   RESET
-
-function reset(){
-  for(let k in state){
-    const el = document.getElementById(k);
-    if(el) el.innerText = state[k].v.toFixed(1);
-  }
-  logEvent("RESET", {});
-  explain("SYSTEM RESET → baseline restored");
-}
-
-/* =========================
-   RENDER ENGINE
-
-function render(){
-
-  FX.innerText = state.FX.v.toFixed(1);
-  DC.innerText = state.DC.v.toFixed(1);
-  CYB.innerText = state.CYB.v.toFixed(1);
-  INF.innerText = state.INF.v.toFixed(1);
-
-  document.getElementById("nFX").style.left = state.FX.x + "px";
-  document.getElementById("nFX").style.top  = state.FX.y + "px";
-
-  document.getElementById("log").innerHTML =
-    log.slice(-10).join("<br>");
-
-  document.getElementById("suggest").innerHTML = `
-    <b>ENG MODE:</b> ${eng.mode}<br>
-    <b>RISK:</b> ${eng.risk.toFixed(2)}<br><br>
-    FX → Liquidity Stabilisation<br>
-    DC → Load Balancing<br>
-    CYB → Threat Isolation<br>
-    INF → Recovery Routing<br>
-  `;
-
-  for(let k in state){
-    const el = document.getElementById("n"+k);
-    el.style.transform = `scale(${1 + state[k].v/70})`;
-    el.style.background =
-      state[k].v > 40 ? "#ff3b3b" :
-      state[k].v > 20 ? "#ffb020" :
-      "#1f3b5c";
-  }
-}
-
-function reset(){
-  for(let k in state){
-    state[k].v = 0;
-  }
-  log = [];
-}
-
-setInterval(tick, 900);
-
+setInterval(tick,900);
+render();
 </script>
 
 </body>
 </html>
-
