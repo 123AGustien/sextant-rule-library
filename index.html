@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPD v12 // CONNECTED COCKPIT (FIXED)</title>
+
+<style>
+body {
+  margin: 0;
+  background: #05070b;
+  color: #cfe8ff;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+.header {
+  padding: 10px;
+  background: #0b1220;
+  font-size: 14px;
+}
+
+#statusBar {
+  text-align: center;
+  padding: 6px;
+  background: #0a0f18;
+  font-size: 13px;
+}
+
+.panel {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+
+.card {
+  background: #0e1a2b;
+  width: 18%;
+  padding: 10px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.value {
+  font-size: 22px;
+}
+
+#layout {
+  display: flex;
+}
+
+#graph {
+  position: relative;
+  width: 65%;
+  height: 420px;
+}
+
+.node {
+  position: absolute;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #1f3b5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+#side {
+  width: 35%;
+  background: #0a0f18;
+  padding: 10px;
+  font-size: 12px;
+  overflow-y: auto;
+  height: 420px;
+  border-left: 2px solid #1f3b5c;
+}
+
+button {
+  margin: 3px;
+  padding: 6px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+🛰 SPD v12 // FIXED CONNECTED RULE COCKPIT
+</div>
+
+<div id="statusBar">SYSTEM: LIVE • CLOSED LOOP ACTIVE</div>
+
+<div class="panel">
+  <div class="card">FX<div id="FX" class="value">0</div></div>
+  <div class="card">DC<div id="DC" class="value">0</div></div>
+  <div class="card">CYB<div id="CYB" class="value">0</div></div>
+  <div class="card">INF<div id="INF" class="value">0</div></div>
+  <div class="card">ENG<div id="ENG" class="value">0</div></div>
+</div>
+
+<div id="layout">
+
+<div id="graph">
+  <div class="node" id="nFX" style="left:80px;top:80px;">FX</div>
+  <div class="node" id="nDC" style="left:220px;top:50px;">DC</div>
+  <div class="node" id="nCYB" style="left:360px;top:80px;">CYB</div>
+  <div class="node" id="nINF" style="left:220px;top:150px;">INF</div>
+  <div class="node" id="nENG" style="left:140px;top:150px;">ENG</div>
+</div>
+
+<div id="side">
+  <b>🧠 AUTO SUGGEST v2</b>
+  <div id="suggest"></div>
+  <hr>
+  <b>📡 AUDIT LOG</b>
+  <div id="log"></div>
+</div>
+
+</div>
+
+<div style="text-align:center;">
+<button onclick="inject('FX')">FX SHOCK</button>
+<button onclick="inject('DC')">DC LOAD</button>
+<button onclick="inject('CYB')">CYBER EVENT</button>
+<button onclick="inject('INF')">INFRA STRAIN</button>
+<button onclick="inject('ENG')">ENERGY SHOCK</button>
+<button onclick="reset()">RESET</button>
+</div>
+
+<script>
+
+const state = {
+  FX:{v:0,s:0.7},
+  DC:{v:0,s:0.9},
+  CYB:{v:0,s:0.8},
+  INF:{v:0,s:0.85},
+  ENG:{v:0,s:0.75}
+};
+
+let log = [];
+
+/* =====================
+   SAFE ENG ENGINE (FIXED)
+===================== */
+
+function ENG_ENGINE(){
+
+  const raw =
+    state.ENG.v * 0.35 +
+    state.INF.v * 0.25 +
+    state.DC.v * 0.20 +
+    state.CYB.v * 0.10;
+
+  const risk = Math.min(100, raw);
+
+  let mode =
+    risk < 20 ? "NORMAL" :
+    risk < 50 ? "TRANSITION" :
+    "CRISIS";
+
+  return {risk, mode};
+}
+
+/* =====================
+   INJECT
+===================== */
+
+function inject(n){
+  state[n].v += 10;
+  log.push(`${n} +10`);
+}
+
+/* =====================
+   CLOSED LOOP
+===================== */
+
+function tick(){
+
+  const eng = ENG_ENGINE();
+
+  const links = [
+    ["FX","DC"],
+    ["DC","CYB"],
+    ["CYB","INF"],
+    ["INF","FX"],
+    ["ENG","INF"],
+    ["ENG","DC"]
+  ];
+
+  links.forEach(([a,b])=>{
+
+    const p = (state[a].v * state[a].s * state[b].s) / 200;
+
+    if(Math.random() < p){
+      state[b].v += 1 + Math.random()*3;
+      log.push(`${a} → ${b}`);
+    }
+  });
+
+  decay();
+  render(eng);
+}
+
+/* =====================
+   DECAY
+===================== */
+
+function decay(){
+  for(let k in state){
+    state[k].v *= 0.96;
+  }
+}
+
+/* =====================
+   RENDER SAFE
+===================== */
+
+function render(eng){
+
+  for(let k in state){
+    const el = document.getElementById(k);
+    if(el) el.innerText = state[k].v.toFixed(1);
+  }
+
+  document.getElementById("log").innerHTML =
+    log.slice(-10).join("<br>");
+
+  document.getElementById("suggest").innerHTML = `
+    <b>ENG MODE:</b> ${eng.mode}<br>
+    <b>RISK:</b> ${eng.risk.toFixed(2)}<br><br>
+
+    FX → Stabilise Liquidity<br>
+    DC → Balance Load<br>
+    CYB → Isolate Threats<br>
+    INF → Recovery Grid<br>
+  `;
+
+  for(let k in state){
+    const el = document.getElementById("n"+k);
+    el.style.transform = `scale(${1 + state[k].v/70})`;
+    el.style.background =
+      state[k].v > 40 ? "#ff3b3b" :
+      state[k].v > 20 ? "#ffb020" :
+      "#1f3b5c";
+  }
+}
+
+/* =====================
+   RESET
+===================== */
+
+function reset(){
+  for(let k in state){
+    state[k].v = 0;
+  }
+  log = [];
+}
+
+setInterval(tick, 900);
+
+</script>
+
+</body>
+</html>
