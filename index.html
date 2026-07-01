@@ -2,18 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD // CORE COCKPIT</title>
+<title>SPD // CORE COCKPIT v12</title>
 
 <style>
-body { margin:0; background:#05070b; color:#cfe8ff; font-family:Arial; }
-.header { padding:10px; background:#0b1220; text-align:center; }
-#statusBar { text-align:center; padding:6px; background:#0a0f18; }
+body {
+  margin:0;
+  background:#05070b;
+  color:#cfe8ff;
+  font-family:Arial;
+}
 
-.panel { display:flex; justify-content:space-around; padding:10px; }
-.card { background:#0e1a2b; width:18%; padding:12px; text-align:center; }
-.value { font-size:24px; }
+/* HEADER */
+.header {
+  padding:10px;
+  background:#0b1220;
+  text-align:center;
+}
 
-#graph { position:relative; height:260px; }
+/* STATUS */
+#statusBar {
+  text-align:center;
+  padding:6px;
+  background:#0a0f18;
+}
+
+/* PANELS */
+.panel {
+  display:flex;
+  justify-content:space-around;
+  padding:10px;
+}
+
+.card {
+  background:#0e1a2b;
+  width:18%;
+  padding:12px;
+  text-align:center;
+}
+
+.value {
+  font-size:24px;
+}
+
+/* GRAPH */
+#graph {
+  position:relative;
+  height:260px;
+}
 
 .node {
   position:absolute;
@@ -27,6 +62,7 @@ body { margin:0; background:#05070b; color:#cfe8ff; font-family:Arial; }
   cursor:pointer;
 }
 
+/* BUTTONS */
 button {
   margin:3px;
   padding:7px;
@@ -35,6 +71,7 @@ button {
   border:none;
 }
 
+/* LOG */
 #log {
   position:absolute;
   right:10px;
@@ -46,14 +83,29 @@ button {
   overflow:auto;
   padding:10px;
 }
+
+/* RULE PANEL (FIXED MISSING PIECE) */
+#rulePanel {
+  position:absolute;
+  left:10px;
+  top:60px;
+  width:260px;
+  height:260px;
+  background:#0a0f18;
+  font-size:11px;
+  overflow:auto;
+  padding:10px;
+  border:1px solid #1f3b5c;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">🛰 SPD FULL ECOSYSTEM // SCENARIO CORE</div>
+<div class="header">🛰 SPD FULL ECOSYSTEM // CORE COCKPIT v12</div>
 <div id="statusBar">STATUS: NOMINAL</div>
 
+<!-- MAIN PANEL -->
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0</div></div>
   <div class="card">DC<div id="DC" class="value">0</div></div>
@@ -62,6 +114,7 @@ button {
   <div class="card">ENG<div id="ENG" class="value">0</div></div>
 </div>
 
+<!-- GRAPH -->
 <div id="graph">
   <div class="node" onclick="inject('FX')" style="left:80px;top:90px;">FX</div>
   <div class="node" onclick="inject('DC')" style="left:220px;top:40px;">DC</div>
@@ -70,34 +123,43 @@ button {
   <div class="node" onclick="inject('ENG')" style="left:220px;top:220px;">ENG</div>
 </div>
 
+<!-- CONTROL -->
 <div style="text-align:center;">
   <button onclick="scenario('FX_SHOCK')">FX SHOCK</button>
   <button onclick="scenario('CYBER')">CYBER</button>
   <button onclick="scenario('INFRA')">INFRA</button>
   <button onclick="scenario('STABILISE')">STABILISE</button>
-  <button onclick="location.href='energy.html'">ENERGY MODULE</button>
+  <button onclick="resetSystem()">RESET</button>
 </div>
 
+<!-- RULE PANEL (RESTORED CORE MISSING MODULE) -->
+<div id="rulePanel">
+<b>RULE ENGINE</b><br><br>
+FX → Liquidity Stress<br>
+DC → Load Pressure<br>
+CYB → Intrusion Risk<br>
+INF → Structural Strain<br>
+ENG → Energy Buffer<br><br>
+STATUS: LINKED
+</div>
+
+<!-- LOG -->
 <div id="log">SYSTEM READY</div>
 
 <script>
+
+/* -----------------------
+   STATE ENGINE
+----------------------- */
 const state = {
   FX:{v:0}, DC:{v:0}, CYB:{v:0}, INF:{v:0}, ENG:{v:0}
 };
 
-const LINKS = [
-  ["FX","DC",0.9],
-  ["DC","CYB",0.7],
-  ["CYB","INF",0.8],
-  ["INF","FX",0.6],
-  ["ENG","FX",0.5],
-  ["ENG","DC",0.5],
-  ["ENG","CYB",0.5],
-  ["ENG","INF",0.5]
-];
-
 let log = [];
 
+/* -----------------------
+   ACTIONS
+----------------------- */
 function inject(n){
   state[n].v += 10;
   log.push(n + " +10");
@@ -115,8 +177,22 @@ function scenario(type){
   }
 }
 
+/* -----------------------
+   SYSTEM DYNAMICS
+----------------------- */
 function cascade(){
-  LINKS.forEach(([a,b,w])=>{
+  const links = [
+    ["FX","DC",0.9],
+    ["DC","CYB",0.7],
+    ["CYB","INF",0.8],
+    ["INF","FX",0.6],
+    ["ENG","FX",0.5],
+    ["ENG","DC",0.5],
+    ["ENG","CYB",0.5],
+    ["ENG","INF",0.5]
+  ];
+
+  links.forEach(([a,b,w])=>{
     const p = state[a].v * w;
     if(Math.random() < p/150){
       state[b].v += Math.random()*3;
@@ -129,39 +205,63 @@ function decay(){
   for(let k in state) state[k].v *= 0.98;
 }
 
-function status(){
-  let total = Object.values(state).reduce((s,x)=>s+x.v,0);
-  let bar = document.getElementById("statusBar");
-
-  if(total>200){ bar.innerText="STATUS: STRESSED"; bar.style.background="#3a0f0f"; }
-  else if(total>100){ bar.innerText="STATUS: ELEVATED"; bar.style.background="#3a2a0f"; }
-  else { bar.innerText="STATUS: NOMINAL"; bar.style.background="#0a0f18"; }
-}
-
+/* -----------------------
+   UI RENDER
+----------------------- */
 function render(){
+
   document.getElementById("FX").innerText = state.FX.v.toFixed(1);
   document.getElementById("DC").innerText = state.DC.v.toFixed(1);
   document.getElementById("CYB").innerText = state.CYB.v.toFixed(1);
   document.getElementById("INF").innerText = state.INF.v.toFixed(1);
   document.getElementById("ENG").innerText = state.ENG.v.toFixed(1);
 
-  document.querySelectorAll(".node").forEach(n=>{
-    let k = n.innerText;
-    n.style.transform = `scale(${1+state[k].v/70})`;
-  });
-
   document.getElementById("log").innerHTML = log.slice(-12).join("<br>");
+
+  updateStatus();
 }
 
+/* -----------------------
+   STATUS ENGINE
+----------------------- */
+function updateStatus(){
+  let total = Object.values(state).reduce((s,x)=>s+x.v,0);
+  let bar = document.getElementById("statusBar");
+
+  if(total > 200){
+    bar.innerText = "STATUS: STRESSED";
+    bar.style.background = "#3a0f0f";
+  }
+  else if(total > 100){
+    bar.innerText = "STATUS: ELEVATED";
+    bar.style.background = "#3a2a0f";
+  }
+  else {
+    bar.innerText = "STATUS: NOMINAL";
+    bar.style.background = "#0a0f18";
+  }
+}
+
+/* -----------------------
+   RESET
+----------------------- */
+function resetSystem(){
+  for(let k in state) state[k].v = 0;
+  log = [];
+}
+
+/* -----------------------
+   MAIN LOOP
+----------------------- */
 function tick(){
   cascade();
   decay();
-  status();
   render();
 }
 
 setInterval(tick,900);
 render();
+
 </script>
 
 </body>
