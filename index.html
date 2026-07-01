@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // CONNECTED COCKPIT (FIXED)</title>
+<title>SPD v12 // FINAL MASTER COCKPIT</title>
 
 <style>
 body {
@@ -83,6 +83,7 @@ button {
   background: #1f3b5c;
   color: white;
   border: none;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -90,10 +91,10 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v12 // FIXED CONNECTED RULE COCKPIT
+🛰 SPD v12 // FINAL MASTER COCKPIT (CLOSED LOOP SYSTEM)
 </div>
 
-<div id="statusBar">SYSTEM: LIVE • CLOSED LOOP ACTIVE</div>
+<div id="statusBar">STATUS: LIVE • STABLE ENGINE ACTIVE</div>
 
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0</div></div>
@@ -114,7 +115,7 @@ button {
 </div>
 
 <div id="side">
-  <b>🧠 AUTO SUGGEST v2</b>
+  <b>🧠 AUTO SUGGEST</b>
   <div id="suggest"></div>
   <hr>
   <b>📡 AUDIT LOG</b>
@@ -134,6 +135,10 @@ button {
 
 <script>
 
+/* =====================
+   STATE
+===================== */
+
 const state = {
   FX:{v:0,s:0.7},
   DC:{v:0,s:0.9},
@@ -145,20 +150,18 @@ const state = {
 let log = [];
 
 /* =====================
-   SAFE ENG ENGINE (FIXED)
+   ENERGY ENGINE (STABLE)
 ===================== */
 
-function ENG_ENGINE(){
+function energyEngine(){
 
-  const raw =
-    state.ENG.v * 0.35 +
+  const risk =
+    state.ENG.v * 0.4 +
     state.INF.v * 0.25 +
-    state.DC.v * 0.20 +
-    state.CYB.v * 0.10;
+    state.DC.v * 0.2 +
+    state.CYB.v * 0.1;
 
-  const risk = Math.min(100, raw);
-
-  let mode =
+  const mode =
     risk < 20 ? "NORMAL" :
     risk < 50 ? "TRANSITION" :
     "CRISIS";
@@ -181,7 +184,7 @@ function inject(n){
 
 function tick(){
 
-  const eng = ENG_ENGINE();
+  const eng = energyEngine();
 
   const links = [
     ["FX","DC"],
@@ -194,7 +197,7 @@ function tick(){
 
   links.forEach(([a,b])=>{
 
-    const p = (state[a].v * state[a].s * state[b].s) / 200;
+    const p = (state[a].v * state[a].s * state[b].s) / 220;
 
     if(Math.random() < p){
       state[b].v += 1 + Math.random()*3;
@@ -234,10 +237,10 @@ function render(eng){
     <b>ENG MODE:</b> ${eng.mode}<br>
     <b>RISK:</b> ${eng.risk.toFixed(2)}<br><br>
 
-    FX → Stabilise Liquidity<br>
-    DC → Balance Load<br>
-    CYB → Isolate Threats<br>
-    INF → Recovery Grid<br>
+    FX → Liquidity Stabilisation<br>
+    DC → Load Balancing<br>
+    CYB → Threat Isolation<br>
+    INF → Recovery Routing<br>
   `;
 
   for(let k in state){
