@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // FULL CLOSED LOOP DIGITAL TWIN</title>
+<title>SPD v12 // SEXTANT CLOSED LOOP DIGITAL TWIN</title>
 
 <style>
 body {
@@ -61,6 +61,14 @@ body {
   justify-content: center;
   font-size: 12px;
   transition: 0.25s;
+}
+
+button {
+  padding: 7px 10px;
+  margin: 3px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
   cursor: pointer;
 }
 
@@ -76,25 +84,16 @@ body {
   overflow-y: auto;
   border-left: 2px solid #1f3b5c;
 }
-
-button {
-  padding: 7px 10px;
-  margin: 3px;
-  background: #1f3b5c;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-🛰 SPD v12 // FULL CLOSED LOOP DIGITAL TWIN (ENERGY + FIN + CYB + INF + DC)
+🛰 SPD v12 // SEXTANT CLOSED LOOP DIGITAL TWIN
 </div>
 
-<div id="statusBar">STATUS: READY</div>
+<div id="statusBar">STATUS: ACTIVE</div>
 
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0.0</div></div>
@@ -126,7 +125,7 @@ button {
 <script>
 
 /* =========================
-   CORE STATE (VISUAL)
+   INITIAL STATE
 ========================= */
 
 const state = {
@@ -141,14 +140,29 @@ let log = [];
 let explanationLog = [];
 
 /* =========================
-   ENERGY ENGINE (FULL)
+   SEXTANT DOMAIN CORE
+========================= */
+
+window.SEXTANT = {
+  domains: {
+    FIN: { v: 0 },
+    DC:  { v: 0 },
+    CYB: { v: 0 },
+    INF: { v: 0 },
+    ENG: { v: 0 }
+  }
+};
+
+/* =========================
+   ENERGY RISK CORE
 ========================= */
 
 function energyRisk(){
   return (
     state.ENG.v * 0.4 +
     state.INF.v * 0.2 +
-    state.DC.v * 0.15
+    state.DC.v * 0.15 +
+    2
   );
 }
 
@@ -162,7 +176,7 @@ function inject(node){
 }
 
 /* =========================
-   CLOSED LOOP CASCADE
+   CLOSED LOOP CASCADE ENGINE
 ========================= */
 
 function cascade(){
@@ -175,7 +189,8 @@ function cascade(){
     ["CYB","INF"],
     ["INF","FX"],
     ["ENG","INF"],
-    ["ENG","DC"]
+    ["ENG","DC"],
+    ["CYB","ENG"]
   ];
 
   links.forEach(([a,b]) => {
@@ -196,7 +211,7 @@ function cascade(){
 }
 
 /* =========================
-   DECAY
+   DECAY ENGINE
 ========================= */
 
 function decay(){
@@ -206,19 +221,32 @@ function decay(){
 }
 
 /* =========================
-   ENGINE LOOP
+   TICK ENGINE (CLOSED LOOP)
 ========================= */
 
 function tick(){
   cascade();
   decay();
+  syncDomains();
   render();
 }
 
 setInterval(tick, 900);
 
 /* =========================
-   LOG
+   DOMAIN SYNC (SEXTANT LAYER)
+========================= */
+
+function syncDomains(){
+  window.SEXTANT.domains.FIN.v = state.FX.v;
+  window.SEXTANT.domains.DC.v  = state.DC.v;
+  window.SEXTANT.domains.CYB.v = state.CYB.v;
+  window.SEXTANT.domains.INF.v = state.INF.v;
+  window.SEXTANT.domains.ENG.v = state.ENG.v;
+}
+
+/* =========================
+   LOGGING
 ========================= */
 
 function logEvent(type,data){
@@ -226,14 +254,14 @@ function logEvent(type,data){
 }
 
 /* =========================
-   EXPLAIN
+   EXPLAIN ENGINE
 ========================= */
 
 function explain(msg){
   explanationLog.push({time:new Date(),msg});
 
   document.getElementById("explain").innerHTML =
-    "🧠 CLOSED LOOP SYSTEM<br><br>" +
+    "🧠 SEXTANT CLOSED LOOP<br><br>" +
     explanationLog.slice(-12).map(e =>
       `[${e.time.toLocaleTimeString()}] ${e.msg}`
     ).join("<br>");
@@ -251,7 +279,7 @@ function reset(){
 }
 
 /* =========================
-   RENDER
+   RENDER ENGINE
 ========================= */
 
 function render(){
