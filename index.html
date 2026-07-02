@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v11.7 // OJK PRODUCTION DIGITAL TWIN</title>
+<title>SPD v12 // AUTONOMOUS DIGITAL TWIN</title>
 
 <style>
 body {
@@ -18,6 +17,7 @@ body {
   padding: 10px;
   background: #0b1220;
   font-size: 14px;
+  text-align: center;
 }
 
 #statusBar {
@@ -83,7 +83,7 @@ button {
   position: absolute;
   right: 10px;
   top: 60px;
-  width: 280px;
+  width: 300px;
   height: 260px;
   background: #0a0f18;
   padding: 10px;
@@ -97,10 +97,10 @@ button {
 <body>
 
 <div class="header">
-🛰 SPD v11.7 // OJK PRODUCTION DIGITAL TWIN SIMULATOR
+🛰 SPD v12 // AUTONOMOUS DIGITAL TWIN CONTROL SYSTEM
 </div>
 
-<div id="statusBar">STATUS: READY</div>
+<div id="statusBar">STATUS: STABLE INITIALIZATION</div>
 
 <div class="panel">
   <div class="card">FX<div id="FX" class="value">0.0</div></div>
@@ -124,7 +124,7 @@ button {
   <button onclick="reset()">RESET</button>
 </div>
 
-<div id="explain">Explain: idle</div>
+<div id="explain">Explain: system idle</div>
 
 <script>
 
@@ -133,10 +133,17 @@ button {
 ========================= */
 
 const state = {
-  FX: { v: 0, s: 0.7, x: 80, y: 80 },
-  DC: { v: 0, s: 0.9, x: 220, y: 40 },
-  CYB:{ v: 0, s: 0.8, x: 360, y: 80 },
-  INF:{ v: 0, s: 0.85, x: 220, y: 140 }
+  FX: 0,
+  DC: 0,
+  CYB: 0,
+  INF: 0
+};
+
+const meta = {
+  FX: { s: 0.8, x: 80, y: 80, label: "Financial Stress" },
+  DC: { s: 0.7, x: 220, y: 40, label: "Data Center Load" },
+  CYB:{ s: 1.0, x: 360, y: 80, label: "Cyber Event" },
+  INF:{ s: 0.9, x: 220, y: 140, label: "Infrastructure Strain" }
 };
 
 const LINKS = [
@@ -146,21 +153,31 @@ const LINKS = [
   ["INF","FX"]
 ];
 
-/* =========================
-   MEMORY SYSTEMS
-========================= */
-
 let log = [];
 let explanationLog = [];
 
 /* =========================
-   ENGINE
+   PANEL RULE ENGINE
 ========================= */
 
+const RULES = {
+  FX: { impact: 1.0 },
+  DC: { impact: 0.9 },
+  CYB:{ impact: 1.2 },
+  INF:{ impact: 1.1 }
+};
+
 function inject(node){
-  state[node].v += 10;
-  logEvent("INJECT", node);
+  state[node] += 10;
+
+  explain(`⚡ INJECT: ${node} → ${meta[node].label}`);
+
+  evaluateSystem();
 }
+
+/* =========================
+   CASCADE ENGINE
+========================= */
 
 function cascade(){
 
@@ -169,21 +186,15 @@ function cascade(){
     const A = state[a];
     const B = state[b];
 
-    const p = (A.v * A.s * B.s) / 120;
+    const p = (A * meta[a].s * meta[b].s) / 120;
 
     if(Math.random() < p){
 
-      const impact = 3 + Math.random() * 4;
-      B.v += impact;
+      const impact = 2 + Math.random() * 5;
 
-      logEvent("CASCADE", {
-        from: a,
-        to: b,
-        p: p.toFixed(3),
-        impact: impact.toFixed(2)
-      });
+      state[b] += impact;
 
-      explain(`CASCADE: ${a} → ${b} | p=${p.toFixed(3)} | +${impact.toFixed(1)}`);
+      explain(`🔁 CASCADE ${a} → ${b} | +${impact.toFixed(1)}`);
     }
   });
 }
@@ -194,22 +205,78 @@ function cascade(){
 
 function decay(){
   for(let k in state){
-    state[k].v *= 0.97;
-    state[k].v = Math.max(0, state[k].v);
+    state[k] *= 0.97;
   }
 }
 
 /* =========================
-   TIME ENGINE
+   SYSTEM EVALUATION
 ========================= */
 
-function tick(){
-  cascade();
-  decay();
-  render();
+function evaluateSystem(){
+
+  const total =
+    state.FX * 1.0 +
+    state.DC * 0.9 +
+    state.CYB * 1.2 +
+    state.INF * 1.1;
+
+  const avg = total / 4;
+
+  if(avg > 60){
+    statusBar.innerText = "STATUS: CRITICAL";
+    runSolution("CRITICAL");
+  }
+  else if(avg > 30){
+    statusBar.innerText = "STATUS: DEGRADED";
+  }
+  else{
+    statusBar.innerText = "STATUS: STABLE";
+  }
 }
 
-setInterval(tick, 1000);
+/* =========================
+   SOLUTION ENGINE
+========================= */
+
+const SOLUTIONS = {
+
+  CRITICAL: [
+    {
+      name: "Emergency Stabilization",
+      run: () => {
+        for(let k in state){
+          state[k] *= 0.7;
+        }
+      }
+    },
+    {
+      name: "Risk Dampening",
+      run: () => {
+        state.CYB *= 0.6;
+        state.INF *= 0.8;
+      }
+    }
+  ]
+};
+
+function runSolution(level){
+
+  const seq = SOLUTIONS[level];
+
+  if(!seq) return;
+
+  explain(`🧩 SOLUTION ENGINE → ${level}`);
+
+  seq.forEach(step => {
+    explain(`▶ EXECUTE: ${step.name}`);
+    step.run();
+    decay();
+    render();
+  });
+
+  explain("✅ SOLUTION COMPLETE");
+}
 
 /* =========================
    TRACE ENGINE
@@ -217,33 +284,24 @@ setInterval(tick, 1000);
 
 function trace(node){
 
-  const events = log.filter(e =>
-    (e.data?.from === node || e.data?.to === node || e.data === node)
-  ).slice(-10);
-
   explain(`🔍 TRACE NODE: ${node}`);
 
-  events.forEach(e => {
-    explain(
-      `${e.type} | ${JSON.stringify(e.data)}`
-    );
-  });
+  explain(`VALUE: ${state[node].toFixed(2)} | IMPACT: ${meta[node].label}`);
 }
 
 /* =========================
-   LOG ENGINE
+   RESET
 ========================= */
 
-function logEvent(type, data){
-  log.push({
-    time: new Date(),
-    type,
-    data
-  });
+function reset(){
+  for(let k in state){
+    state[k] = 0;
+  }
+  explain("🔄 SYSTEM RESET");
 }
 
 /* =========================
-   EXPLAIN ENGINE (FIXED)
+   EXPLAIN ENGINE
 ========================= */
 
 function explain(msg){
@@ -253,25 +311,11 @@ function explain(msg){
     msg
   });
 
-  const box = document.getElementById("explain");
-
-  box.innerHTML =
+  explainBox.innerHTML =
     "🧠 EXPLANATION LAYER<br><br>" +
     explanationLog.slice(-12).map(e =>
       `[${e.time.toLocaleTimeString()}] ${e.msg}`
     ).join("<br>");
-}
-
-/* =========================
-   RESET
-========================= */
-
-function reset(){
-  for(let k in state){
-    state[k].v = 0;
-  }
-  logEvent("RESET", {});
-  explain("SYSTEM RESET → baseline restored");
 }
 
 /* =========================
@@ -280,34 +324,47 @@ function reset(){
 
 function render(){
 
-  FX.innerText = state.FX.v.toFixed(1);
-  DC.innerText = state.DC.v.toFixed(1);
-  CYB.innerText = state.CYB.v.toFixed(1);
-  INF.innerText = state.INF.v.toFixed(1);
+  FX.innerText = state.FX.toFixed(1);
+  DC.innerText = state.DC.toFixed(1);
+  CYB.innerText = state.CYB.toFixed(1);
+  INF.innerText = state.INF.toFixed(1);
 
-  document.getElementById("nFX").style.left = state.FX.x + "px";
-  document.getElementById("nFX").style.top  = state.FX.y + "px";
+  document.getElementById("nFX").style.left = meta.FX.x + "px";
+  document.getElementById("nFX").style.top  = meta.FX.y + "px";
 
-  document.getElementById("nDC").style.left = state.DC.x + "px";
-  document.getElementById("nDC").style.top  = state.DC.y + "px";
+  document.getElementById("nDC").style.left = meta.DC.x + "px";
+  document.getElementById("nDC").style.top  = meta.DC.y + "px";
 
-  document.getElementById("nCYB").style.left = state.CYB.x + "px";
-  document.getElementById("nCYB").style.top  = state.CYB.y + "px";
+  document.getElementById("nCYB").style.left = meta.CYB.x + "px";
+  document.getElementById("nCYB").style.top  = meta.CYB.y + "px";
 
-  document.getElementById("nINF").style.left = state.INF.x + "px";
-  document.getElementById("nINF").style.top  = state.INF.y + "px";
+  document.getElementById("nINF").style.left = meta.INF.x + "px";
+  document.getElementById("nINF").style.top  = meta.INF.y + "px";
 
   for(let k in state){
     const el = document.getElementById("n"+k);
 
-    el.style.transform = `scale(${1 + state[k].v/50})`;
+    el.style.transform = `scale(${1 + state[k]/80})`;
 
     el.style.background =
-      state[k].v > 40 ? "#ff3b3b" :
-      state[k].v > 20 ? "#ffb020" :
+      state[k] > 50 ? "#ff3b3b" :
+      state[k] > 25 ? "#ffb020" :
       "#1f3b5c";
   }
 }
+
+/* =========================
+   MAIN LOOP
+========================= */
+
+function tick(){
+  cascade();
+  decay();
+  evaluateSystem();
+  render();
+}
+
+setInterval(tick, 1000);
 
 /* INIT */
 render();
