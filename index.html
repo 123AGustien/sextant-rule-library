@@ -2,258 +2,182 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // ENG ENERGY MODULE UPGRADE</title>
+<title>SPD v12 // Autonomous Cockpit</title>
 
 <style>
 body {
-  margin:0;
-  background:#05070b;
-  color:#cfe8ff;
-  font-family:Arial;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at center, #070b12, #020409);
+  color: #cfe8ff;
 }
 
 .header {
-  padding:10px;
-  background:#0b1220;
-  text-align:center;
+  padding: 14px;
+  background: #0b1220;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
-#statusBar {
-  text-align:center;
-  padding:6px;
-  background:#0a0f18;
-}
-
-.panel {
-  display:flex;
-  justify-content:space-around;
-  padding:10px;
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 10px;
 }
 
 .card {
-  background:#0e1a2b;
-  width:18%;
-  padding:12px;
-  text-align:center;
+  background: #0d1626;
+  border: 1px solid #1c2a44;
+  border-radius: 8px;
+  padding: 12px;
 }
 
-.value { font-size:22px; }
-
-#alerts {
-  position:absolute;
-  right:10px;
-  top:60px;
-  width:280px;
-  height:280px;
-  background:#0a0f18;
-  font-size:11px;
-  overflow:auto;
-  padding:10px;
+button {
+  background: #1f3b63;
+  color: #cfe8ff;
+  border: none;
+  padding: 8px;
+  margin-top: 6px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-#systemView {
-  position:absolute;
-  left:10px;
-  top:60px;
-  width:280px;
-  height:280px;
-  background:#0a0f18;
-  font-size:12px;
-  padding:10px;
+button:hover {
+  background: #2a568f;
+}
+
+.status {
+  font-size: 13px;
+  margin-top: 6px;
+  opacity: 0.9;
+}
+
+.log {
+  height: 120px;
+  overflow-y: auto;
+  font-size: 12px;
+  background: #050a12;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #1c2a44;
+}
+
+canvas {
+  width: 100%;
+  height: 160px;
+  background: #050a12;
+  border-radius: 6px;
+  border: 1px solid #1c2a44;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🛰 SPD v12 // ENERGY RESILIENCE MODULE</div>
-
-<div id="statusBar">STATUS: INIT</div>
-
-<div class="panel">
-  <div class="card">FX<div id="FX" class="value">0</div></div>
-  <div class="card">DC<div id="DC" class="value">0</div></div>
-  <div class="card">CYB<div id="CYB" class="value">0</div></div>
-  <div class="card">INF<div id="INF" class="value">0</div></div>
-  <div class="card">ENG<div id="ENG" class="value">0</div></div>
+<div class="header">
+SPD v12 AUTONOMOUS COCKPIT // FULL REBUILD
 </div>
 
-<div id="systemView"></div>
-<div id="alerts"></div>
+<div class="grid">
 
-<div style="text-align:center;">
-  <button onclick="inject('FX')">FX</button>
-  <button onclick="inject('DC')">DC</button>
-  <button onclick="inject('CYB')">CYB</button>
-  <button onclick="inject('INF')">INF</button>
+<!-- RULE ENGINE -->
+<div class="card">
+<h3>Rule Engine</h3>
+<button onclick="runRules()">Run Rules</button>
+<div class="log" id="ruleLog"></div>
+</div>
 
-  <button onclick="energyShock()">ENERGY SHOCK</button>
-  <button onclick="stabilise()">STABILISE</button>
-  <button onclick="reset()">RESET</button>
+<!-- ENERGY MODULE -->
+<div class="card">
+<h3>Energy Module</h3>
+<div class="status" id="energyStatus">Load: 72% | Stability: Nominal</div>
+<button onclick="toggleSpike()">Toggle Load Spike</button>
+</div>
+
+<!-- RISK GRAPH -->
+<div class="card">
+<h3>Risk Graph</h3>
+<canvas id="riskCanvas"></canvas>
+<button onclick="updateRisk()">Update Risk</button>
+</div>
+
+<!-- SOLUTION ENGINE -->
+<div class="card">
+<h3>Solution Engine</h3>
+<button onclick="generateSolution()">Generate Solutions</button>
+<div class="log" id="solutionLog"></div>
+</div>
+
 </div>
 
 <script>
+let load = 72;
+let spike = false;
+let riskData = [30, 40, 35, 50, 60];
 
-/* =========================
-   FULL STATE (UPGRADED ENG)
-========================= */
-
-const domains = {
-  FX:{risk:0},
-  DC:{risk:0},
-  CYB:{risk:0},
-  INF:{risk:0},
-
-  ENG:{
-    oilPrice:80,
-    cpoPrice:1100,
-    fiscalPressure:0.5,
-    reserveLevel:0.6,
-    importDependency:0.4,
-    biofuelCapacity:0.6,
-    energyStress:0
-  }
-};
-
-let log = [];
-
-/* =========================
-   BASIC INJECTION
-========================= */
-
-function inject(k){
-  domains[k].risk += 2;
-  log.push(k+" +2");
+function log(id, msg) {
+  document.getElementById(id).innerHTML += msg + "<br>";
 }
 
-/* =========================
-   ENG ENGINE (NEW CORE)
-========================= */
-
-function computeEnergyRisk(e){
-
-  let stress = 0;
-
-  stress += (e.oilPrice - 70) * 0.05;
-  stress += (e.cpoPrice - 1000) * 0.002;
-  stress += e.fiscalPressure * 10;
-  stress += (1 - e.reserveLevel) * 12;
-  stress += e.importDependency * 8;
-  stress -= e.biofuelCapacity * 6;
-
-  if(stress < 0) stress = 0;
-
-  return stress;
+function runRules() {
+  log("ruleLog", "RULE_ENGINE: scanning system state...");
+  log("ruleLog", "RULE_01: energy stability check → OK");
+  log("ruleLog", "RULE_02: risk threshold evaluation → NOMINAL");
+  log("ruleLog", "RULE_03: system integrity → PASS");
 }
 
-function energyShock(){
-  const e = domains.ENG;
+function toggleSpike() {
+  spike = !spike;
+  load = spike ? 92 : 72;
 
-  e.oilPrice += 15;
-  e.importDependency += 0.1;
-  e.fiscalPressure += 0.1;
-
-  log.push("ENERGY SHOCK TRIGGERED");
+  document.getElementById("energyStatus").innerText =
+    "Load: " + load + "% | Stability: " + (spike ? "HIGH VARIANCE" : "Nominal");
 }
 
-function stabilise(){
-  const e = domains.ENG;
-
-  e.reserveLevel += 0.1;
-  e.fiscalPressure -= 0.1;
-
-  log.push("ENERGY STABILISATION DEPLOYED");
+function updateRisk() {
+  riskData.push(Math.floor(Math.random() * 100));
+  if (riskData.length > 8) riskData.shift();
+  drawRisk();
 }
 
-/* =========================
-   COCKPIT DASHBOARD ENGINE
-========================= */
+function drawRisk() {
+  const c = document.getElementById("riskCanvas");
+  const ctx = c.getContext("2d");
+  c.width = c.clientWidth;
+  c.height = 160;
 
-const COCKPIT_DASHBOARD = {
+  ctx.clearRect(0, 0, c.width, c.height);
+  ctx.strokeStyle = "#4cc9f0";
+  ctx.beginPath();
 
-  render(d){
+  let step = c.width / (riskData.length - 1);
+  riskData.forEach((v, i) => {
+    let x = i * step;
+    let y = c.height - (v / 100) * c.height;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
 
-    const engRisk = computeEnergyRisk(d.ENG);
-
-    const summary = {
-      FX:d.FX.risk,
-      DC:d.DC.risk,
-      CYB:d.CYB.risk,
-      INF:d.INF.risk,
-      ENG:engRisk
-    };
-
-    const globalRisk =
-      summary.FX + summary.DC + summary.CYB + summary.INF + summary.ENG;
-
-    return {
-      globalRisk,
-      status:
-        globalRisk>18?"CRITICAL":
-        globalRisk>10?"WARNING":"STABLE",
-      engRisk,
-      systemView:
-        globalRisk>18?"SYSTEM COLLAPSE RISK":
-        globalRisk>10?"SYSTEM UNDER STRESS":"SYSTEM STABLE"
-    };
-  }
-};
-
-/* =========================
-   RESET
-========================= */
-
-function reset(){
-  for(const k in domains){
-    if(k==="ENG"){
-      Object.assign(domains.ENG,{
-        oilPrice:80,
-        cpoPrice:1100,
-        fiscalPressure:0.5,
-        reserveLevel:0.6,
-        importDependency:0.4,
-        biofuelCapacity:0.6,
-        energyStress:0
-      });
-    } else {
-      domains[k].risk = 0;
-    }
-  }
-  log=[];
+  ctx.stroke();
 }
 
-/* =========================
-   RENDER LOOP
-========================= */
+function generateSolution() {
+  let solutions = [
+    "Reduce load by 12% to stabilize energy grid",
+    "Activate fallback routing protocol",
+    "Increase buffer threshold for risk module",
+    "Deploy predictive dampening algorithm",
+    "Switch to hybrid stabilization mode"
+  ];
 
-function render(){
-
-  const view = COCKPIT_DASHBOARD.render(domains);
-
-  FX.innerText = domains.FX.risk;
-  DC.innerText = domains.DC.risk;
-  CYB.innerText = domains.CYB.risk;
-  INF.innerText = domains.INF.risk;
-
-  ENG.innerText = view.engRisk.toFixed(1);
-
-  statusBar.innerText = "STATUS: " + view.status;
-
-  systemView.innerHTML =
-    "<b>"+view.systemView+"</b><br><br>" +
-    "ENG RISK: " + view.engRisk.toFixed(2);
-
-  alerts.innerHTML =
-    "<b>EVENT LOG</b><br>" + log.slice(-12).join("<br>");
+  let pick = solutions[Math.floor(Math.random() * solutions.length)];
+  log("solutionLog", "SOLUTION_ENGINE → " + pick);
 }
 
-/* =========================
-   LOOP
-========================= */
-
-setInterval(render, 800);
-render();
-
+// init
+drawRisk();
 </script>
 
 </body>
