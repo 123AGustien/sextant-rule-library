@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12.1 // FULL AUTONOMOUS SCENARIO COCKPIT</title>
+<title>SPD v12 // CLEAN AUTONOMOUS COCKPIT</title>
 
 <style>
 body{
@@ -43,7 +43,7 @@ text-align:center;
 
 button{
 margin:3px;
-padding:6px;
+padding:8px;
 background:#1f3b5c;
 color:white;
 border:none;
@@ -52,19 +52,17 @@ cursor:pointer;
 
 #scenarioPanel{
 padding:10px;
-text-align:center;
-font-size:12px;
-background:#0a0f18;
 margin:10px;
-border:1px solid #1f3b5c;
+background:#0a0f18;
+font-size:12px;
 }
 
 #log{
 position:absolute;
 right:10px;
 top:180px;
-width:360px;
-height:360px;
+width:340px;
+height:340px;
 overflow:auto;
 background:#0a0f18;
 padding:10px;
@@ -76,11 +74,10 @@ border-left:2px solid #1f3b5c;
 
 <body>
 
-<div class="header">🛰 SPD v12.1 // FULL AUTONOMOUS SCENARIO COCKPIT</div>
+<div class="header">🛰 SPD v12 // CLEAN AUTONOMOUS COCKPIT</div>
 
-<div id="statusBar">STATUS: INITIALIZING</div>
+<div id="statusBar">STATUS: STABLE</div>
 
-<!-- CONTROL PANEL -->
 <div class="panel">
 <div class="card">FX <div id="FX" class="value">0</div></div>
 <div class="card">DC <div id="DC" class="value">0</div></div>
@@ -88,7 +85,7 @@ border-left:2px solid #1f3b5c;
 <div class="card">INF <div id="INF" class="value">0</div></div>
 </div>
 
-<!-- ACTION MAP -->
+<!-- ACTION PANEL -->
 <div style="text-align:center">
 <button onclick="inject('FX')">FX STRESS</button>
 <button onclick="inject('DC')">DC LOAD</button>
@@ -99,17 +96,15 @@ border-left:2px solid #1f3b5c;
 
 <!-- SCENARIO PANEL -->
 <div id="scenarioPanel">
-<b>SCENARIO PANEL</b><br>
-<span id="scenarioText">No active scenario</span>
+SCENARIO PANEL: READY<br>
+<div id="scenarioText">No active scenario</div>
 </div>
 
 <div id="log"></div>
 
 <script>
 
-/* =========================
-STATE STORE
-========================= */
+/* STATE */
 const state = {
 FX:0,
 DC:0,
@@ -117,49 +112,43 @@ CYB:0,
 INF:0
 };
 
-/* =========================
-RULE ENGINE (EXPLICIT)
-========================= */
+/* RULES */
 const rules = {
-FX: {weight:1.0, label:"Financial volatility"},
-DC: {weight:0.9, label:"Compute pressure"},
-CYB:{weight:1.2, label:"Security instability"},
-INF:{weight:1.1, label:"Infrastructure strain"}
+FX:1.0,
+DC:0.9,
+CYB:1.2,
+INF:1.1
 };
 
-/* =========================
-SCENARIO MAP (MEANING LAYER)
-========================= */
+/* SCENARIOS (MEANING LAYER FIXED) */
 const scenarioMap = {
 FX:{
 name:"Financial Stress Injection",
-desc:"Market volatility propagates into infrastructure demand",
+desc:"Market volatility + liquidity disruption simulated",
 risk:"MEDIUM",
-effect:"FX → DC pressure increase"
+effect:"Drives DC instability and increases cyber sensitivity"
 },
 DC:{
 name:"Data Center Load Spike",
-desc:"Compute saturation event increases system latency",
+desc:"Compute saturation and thermal pressure event",
 risk:"MEDIUM-HIGH",
-effect:"DC → INF cascade risk"
+effect:"Triggers INF degradation cascade"
 },
 CYB:{
 name:"Cyber Event Triggered",
-desc:"Security breach simulation injected",
+desc:"Security anomaly injected into system layer",
 risk:"HIGH",
-effect:"CYB → INF + DC instability"
+effect:"Weakens INF + DC integrity"
 },
 INF:{
 name:"Infrastructure Strain Event",
-desc:"Physical network degradation stress",
+desc:"Physical + network strain escalation",
 risk:"HIGH",
-effect:"INF → FX feedback loop"
+effect:"Feeds back into FX instability loop"
 }
 };
 
-/* =========================
-CASCADE LINKS
-========================= */
+/* LINKS */
 const links = [
 ["FX","DC"],
 ["DC","CYB"],
@@ -169,78 +158,46 @@ const links = [
 
 let log = [];
 
-/* =========================
-LOG ENGINE
-========================= */
+/* LOG */
 function addLog(msg){
 log.push(msg);
 document.getElementById("log").innerHTML =
-log.slice(-20).map(x=>"> "+x).join("<br>");
+log.slice(-18).map(x=>"> "+x).join("<br>");
 }
 
-/* =========================
-SCENARIO EXECUTION PIPELINE
-========================= */
+/* SCENARIO INJECT (FIXED PANEL BEHAVIOR) */
 function inject(n){
 
-/* 1. CONTROL PANEL */
-addLog(`CONTROL → ${n} button pressed`);
+state[n] += 10;
 
-/* 2. ACTION MAP */
-let s = scenarioMap[n];
-addLog(`ACTION MAP → ${s.name}`);
+const s = scenarioMap[n];
 
-/* 3. RULE ENGINE */
-let rule = rules[n];
-let impact = 10 * rule.weight;
-
-state[n] += impact;
-addLog(`RULE ENGINE → +${impact} (${rule.label})`);
-
-/* 4. SCENARIO DISPLAY */
+/* THIS is the FIX: always overwrite panel cleanly */
 document.getElementById("scenarioText").innerHTML =
-`▶ ${s.name}<br>
-• ${s.desc}<br>
-• Risk: ${s.risk}<br>
-• Effect: ${s.effect}`;
+"<b>▶ " + s.name + "</b><br>" +
+"• " + s.desc + "<br>" +
+"• Risk: " + s.risk + "<br>" +
+"• Effect: " + s.effect;
 
-/* 5. RISK CHECK */
+addLog("INJECT → " + s.name);
+
 evaluate();
 }
 
-/* =========================
-RISK MODEL
-========================= */
-function riskScore(){
-return (
-state.FX*rules.FX.weight +
-state.DC*rules.DC.weight +
-state.CYB*rules.CYB.weight +
-state.INF*rules.INF.weight
-)/4;
-}
-
-/* =========================
-CASCADE ENGINE
-========================= */
+/* CASCADE ENGINE */
 function cascade(){
 links.forEach(([a,b])=>{
+let p = (state[a]*rules[a]*rules[b])/140;
 
-let p = (state[a] * rules[a].weight * rules[b].weight) / 150;
-
-if(Math.random() < p && state[a] > 5){
-
+if(Math.random() < p){
 let imp = 2 + Math.random()*4;
 state[b] += imp;
-
 addLog(`CASCADE → ${a} → ${b} (+${imp.toFixed(1)})`);
 }
 });
 }
 
-/* =========================
-DECAY ENGINE
-========================= */
+/* DECAY */
 function decay(){
 for(let k in state){
 state[k] *= 0.97;
@@ -248,28 +205,32 @@ if(state[k] < 0) state[k] = 0;
 }
 }
 
-/* =========================
-SOLUTION ENGINE
-========================= */
+/* RISK MODEL */
+function riskScore(){
+return (
+state.FX*rules.FX +
+state.DC*rules.DC +
+state.CYB*rules.CYB +
+state.INF*rules.INF
+)/4;
+}
+
+/* SOLUTION ENGINE */
 function solution(){
 addLog("🧩 SOLUTION ENGINE ACTIVATED");
 
 for(let k in state){
-state[k] *= 0.72;
+state[k] *= 0.7;
 }
 
-addLog("SYSTEM STABILIZED → load reduced");
+addLog("SYSTEM STABILIZED");
 }
 
-/* =========================
-EVALUATION ENGINE
-========================= */
+/* EVALUATION ENGINE */
 function evaluate(){
 
-let r = riskScore();
+const r = riskScore();
 let status = "STABLE";
-
-addLog(`RISK SCORE → ${r.toFixed(2)}`);
 
 if(r > 60){
 status = "CRITICAL";
@@ -283,9 +244,7 @@ document.getElementById("statusBar").innerText =
 "STATUS: " + status;
 }
 
-/* =========================
-RENDER ENGINE
-========================= */
+/* RENDER */
 function render(){
 FX.innerText = state.FX.toFixed(1);
 DC.innerText = state.DC.toFixed(1);
@@ -293,17 +252,7 @@ CYB.innerText = state.CYB.toFixed(1);
 INF.innerText = state.INF.toFixed(1);
 }
 
-/* =========================
-RESET ENGINE
-========================= */
-function resetAll(){
-for(let k in state) state[k]=0;
-addLog("SYSTEM RESET → baseline restored");
-}
-
-/* =========================
-MAIN LOOP
-========================= */
+/* LOOP */
 function tick(){
 cascade();
 decay();
@@ -312,6 +261,14 @@ render();
 }
 
 setInterval(tick,1000);
+
+/* RESET */
+function resetAll(){
+for(let k in state) state[k]=0;
+addLog("SYSTEM RESET");
+}
+
+/* INIT */
 render();
 
 </script>
