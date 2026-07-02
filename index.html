@@ -2,39 +2,73 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // GRID AUTONOMOUS COCKPIT</title>
+<title>SPD v12 // PIPELINE DIGITAL TWIN</title>
 
 <style>
 body {
   margin: 0;
   background: #05070b;
   color: #cfe8ff;
-  font-family: Arial;
-  overflow: hidden;
+  font-family: Arial, sans-serif;
 }
 
 .header {
   padding: 10px;
   background: #0b1220;
   text-align: center;
-  font-weight: bold;
+  font-size: 14px;
 }
 
-#canvas {
-  display: block;
-  margin: 0 auto;
-  background: radial-gradient(circle at center, #0b1a2e, #020409);
+#statusBar {
+  text-align: center;
+  padding: 8px;
+  background: #0a0f18;
+  font-size: 13px;
 }
 
 .panel {
-  position: absolute;
-  top: 60px;
-  left: 10px;
-  width: 260px;
-  background: rgba(10,18,30,0.85);
+  display: flex;
+  justify-content: space-around;
   padding: 10px;
-  font-size: 12px;
-  border: 1px solid #1f3550;
+}
+
+.card {
+  background: #0e1a2b;
+  width: 22%;
+  padding: 12px;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.value {
+  font-size: 26px;
+}
+
+.buttons {
+  text-align: center;
+  margin: 10px;
+}
+
+button {
+  padding: 7px 10px;
+  margin: 3px;
+  background: #1f3b5c;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+#log {
+  position: absolute;
+  right: 10px;
+  top: 60px;
+  width: 300px;
+  height: 260px;
+  background: #0a0f18;
+  padding: 10px;
+  font-size: 11px;
+  overflow-y: auto;
+  border-left: 2px solid #1f3b5c;
 }
 </style>
 </head>
@@ -42,209 +76,188 @@ body {
 <body>
 
 <div class="header">
-SPD v12 GRID COCKPIT // MULTI-ZONE ENERGY + RISK FLOW
+🛰 SPD v12 // PIPELINE CONTROLLED DIGITAL TWIN
 </div>
 
-<canvas id="canvas" width="1000" height="600"></canvas>
+<div id="statusBar">STATUS: INITIALIZED</div>
 
-<div class="panel" id="panel">
-LOADING SYSTEM...
+<div class="panel">
+  <div class="card">FX<div id="FX" class="value">0.0</div></div>
+  <div class="card">DC<div id="DC" class="value">0.0</div></div>
+  <div class="card">CYB<div id="CYB" class="value">0.0</div></div>
+  <div class="card">INF<div id="INF" class="value">0.0</div></div>
 </div>
+
+<div class="buttons">
+  <button onclick="control('FX')">FX STRESS</button>
+  <button onclick="control('DC')">DC LOAD</button>
+  <button onclick="control('CYB')">CYBER EVENT</button>
+  <button onclick="control('INF')">INFRA STRAIN</button>
+  <button onclick="control('RESET')">RESET</button>
+</div>
+
+<div id="log">PIPELINE LOG ACTIVE</div>
 
 <script>
-/* =========================
-   GRID SYSTEM (5 ZONES)
-========================= */
-
-const nodes = [
-  { id:"A", energy:0.8, stability:0.7, risk:0.2, x:200, y:150 },
-  { id:"B", energy:0.6, stability:0.8, risk:0.25, x:400, y:100 },
-  { id:"C", energy:0.9, stability:0.6, risk:0.35, x:600, y:200 },
-  { id:"D", energy:0.4, stability:0.9, risk:0.15, x:300, y:350 },
-  { id:"E", energy:0.7, stability:0.75, risk:0.3, x:650, y:400 }
-];
-
-/* connections (energy flow graph) */
-const links = [
-  ["A","B"],
-  ["B","C"],
-  ["C","E"],
-  ["A","D"],
-  ["D","E"],
-  ["B","D"]
-];
-
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
 
 /* =========================
-   CORE MATH ENGINE
+   STATE STORE
 ========================= */
 
-function clamp(v,min,max){ return Math.max(min, Math.min(max,v)); }
+const STATE = {
+  FX: 0,
+  DC: 0,
+  CYB: 0,
+  INF: 0,
 
-/* energy diffusion between nodes */
-function transferEnergy(a,b){
-  let diff = a.energy - b.energy;
-  let flow = diff * 0.02;
-
-  a.energy -= flow;
-  b.energy += flow;
-}
-
-/* risk propagation */
-function propagateRisk(a,b){
-  let pressure = (a.energy * (1 - a.stability));
-  b.risk += pressure * 0.01;
-}
-
-/* stability decay */
-function updateStability(n){
-  let volatility = Math.abs(n.energy - (n.prevEnergy || n.energy));
-  n.stability -= volatility * 0.5;
-  n.stability += 0.01; // recovery bias
-
-  n.stability = clamp(n.stability, 0, 1);
-}
-
-/* risk engine */
-function updateRisk(n){
-  n.risk = (n.energy * n.energy) / (n.stability + 0.1);
-  n.risk = clamp(n.risk, 0, 1);
-}
-
-/* rule engine */
-function rules(n){
-  if(n.energy > 0.9){
-    n.stability -= 0.02;
+  reset(){
+    this.FX = this.DC = this.CYB = this.INF = 0;
+    log("STATE RESET");
   }
+};
 
-  if(n.risk > 0.7){
-    n.energy *= 0.98;
-    n.stability -= 0.03;
+/* =========================
+   PIPELINE 1: ACTION MAP
+========================= */
+
+const ACTION_MAP = {
+  FX: () => RULE_ENGINE.inject("FX"),
+  DC: () => RULE_ENGINE.inject("DC"),
+  CYB: () => RULE_ENGINE.inject("CYB"),
+  INF: () => RULE_ENGINE.inject("INF"),
+  RESET: () => STATE.reset()
+};
+
+function control(action){
+  log("CONTROL → " + action);
+  ACTION_MAP[action]();
+}
+
+/* =========================
+   PIPELINE 2: RULE ENGINE
+========================= */
+
+const RULE_ENGINE = {
+
+  inject(type){
+
+    STATE[type] += 10;
+    log("RULE ENGINE → inject " + type);
+
+    RISK_MODEL.update();
+    SOLUTION_ENGINE.evaluate();
+    UI_UPDATE.render();
   }
+};
 
-  if(n.stability < 0.3){
-    n.energy *= 0.97;
+/* =========================
+   PIPELINE 3: RISK MODEL
+========================= */
+
+const RISK_MODEL = {
+
+  score: 0,
+
+  update(){
+
+    const total =
+      STATE.FX +
+      STATE.DC +
+      STATE.CYB +
+      STATE.INF;
+
+    this.score = total / 4;
+
+    log("RISK → " + this.score.toFixed(1));
   }
-
-  n.energy = clamp(n.energy,0,1);
-}
+};
 
 /* =========================
-   SIMULATION LOOP
+   PIPELINE 4: SOLUTION ENGINE
 ========================= */
 
-function step(){
+const SOLUTION_ENGINE = {
 
-  // store previous state
-  nodes.forEach(n => n.prevEnergy = n.energy);
+  evaluate(){
 
-  // energy transfer
-  links.forEach(([aId,bId])=>{
-    let a = nodes.find(n=>n.id===aId);
-    let b = nodes.find(n=>n.id===bId);
-    transferEnergy(a,b);
-  });
-
-  // update physics per node
-  nodes.forEach(n=>{
-    updateStability(n);
-    updateRisk(n);
-    rules(n);
-  });
-
-  // risk propagation across graph
-  links.forEach(([aId,bId])=>{
-    let a = nodes.find(n=>n.id===aId);
-    let b = nodes.find(n=>n.id===bId);
-    propagateRisk(a,b);
-  });
-
-  render();
-  updatePanel();
-}
+    if(RISK_MODEL.score > 60){
+      SEQUENCE_EXECUTOR.run("CRITICAL");
+      log("SOLUTION → CRITICAL");
+    }
+    else if(RISK_MODEL.score > 30){
+      SEQUENCE_EXECUTOR.run("DEGRADED");
+      log("SOLUTION → DEGRADED");
+    }
+  }
+};
 
 /* =========================
-   RENDER GRID
+   PIPELINE 5: SEQUENCE EXECUTOR
 ========================= */
 
-function render(){
+const SEQUENCE_EXECUTOR = {
 
-  ctx.clearRect(0,0,1000,600);
+  run(level){
 
-  // links
-  ctx.strokeStyle = "#1f3b5c";
-  ctx.lineWidth = 2;
+    if(level === "CRITICAL"){
 
-  links.forEach(([aId,bId])=>{
-    let a = nodes.find(n=>n.id===aId);
-    let b = nodes.find(n=>n.id===bId);
+      STATE.FX *= 0.7;
+      STATE.DC *= 0.7;
+      STATE.CYB *= 0.6;
+      STATE.INF *= 0.8;
+    }
 
-    ctx.beginPath();
-    ctx.moveTo(a.x,a.y);
-    ctx.lineTo(b.x,b.y);
-    ctx.stroke();
-  });
+    if(level === "DEGRADED"){
 
-  // nodes
-  nodes.forEach(n=>{
+      STATE.FX *= 0.85;
+      STATE.DC *= 0.85;
+      STATE.CYB *= 0.9;
+      STATE.INF *= 0.9;
+    }
 
-    let heat = n.energy;
-    let riskGlow = n.risk * 255;
+    log("SEQUENCE EXECUTED → " + level);
 
-    ctx.beginPath();
-    ctx.arc(n.x,n.y,18,0,Math.PI*2);
-
-    ctx.fillStyle = `rgba(${Math.floor(heat*255)},120,255,0.9)`;
-    ctx.fill();
-
-    ctx.strokeStyle = `rgba(255,${255-riskGlow},100,0.8)`;
-    ctx.stroke();
-
-    ctx.fillStyle = "#cfe8ff";
-    ctx.font = "12px Arial";
-    ctx.fillText(
-      `${n.id} E:${n.energy.toFixed(2)} R:${n.risk.toFixed(2)}`,
-      n.x - 40,
-      n.y - 25
-    );
-  });
-}
+    UI_UPDATE.render();
+  }
+};
 
 /* =========================
-   CONTROL PANEL
+   PIPELINE 6: UI UPDATE
 ========================= */
 
-function updatePanel(){
+const UI_UPDATE = {
 
-  let avgEnergy = nodes.reduce((a,b)=>a+b.energy,0)/nodes.length;
-  let avgRisk = nodes.reduce((a,b)=>a+b.risk,0)/nodes.length;
+  render(){
 
-  document.getElementById("panel").innerHTML = `
-  <b>GRID STATUS</b><br><br>
+    FX.innerText = STATE.FX.toFixed(1);
+    DC.innerText = STATE.DC.toFixed(1);
+    CYB.innerText = STATE.CYB.toFixed(1);
+    INF.innerText = STATE.INF.toFixed(1);
 
-  Avg Energy: ${avgEnergy.toFixed(2)}<br>
-  Avg Risk: ${avgRisk.toFixed(2)}<br><br>
-
-  NODE STATES:<br>
-  ${nodes.map(n=>
-    `${n.id}: E ${n.energy.toFixed(2)} | S ${n.stability.toFixed(2)} | R ${n.risk.toFixed(2)}`
-  ).join("<br>")}
-
-  <br><br>
-  SYSTEM MODE: AUTONOMOUS GRID FLOW
-  `;
-}
+    statusBar.innerText =
+      "STATUS | RISK: " + RISK_MODEL.score.toFixed(1);
+  }
+};
 
 /* =========================
-   START ENGINE
+   LOG SYSTEM
 ========================= */
 
-setInterval(step, 200);
+function log(msg){
 
-render();
+  const el = document.getElementById("log");
+
+  const time = new Date().toLocaleTimeString();
+
+  el.innerHTML =
+    `[${time}] ${msg}<br>` +
+    el.innerHTML;
+}
+
+/* INIT */
+UI_UPDATE.render();
 
 </script>
+
 </body>
 </html>
