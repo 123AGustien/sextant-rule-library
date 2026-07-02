@@ -2,80 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // CLEAN AUTONOMOUS COCKPIT</title>
+<title>SPD v12 // COCKPIT PRO</title>
 
 <style>
-body{
-margin:0;
-background:#05070b;
-color:#cfe8ff;
-font-family:Arial;
-}
-
-.header{
-padding:10px;
-background:#0b1220;
-text-align:center;
-font-weight:bold;
-}
-
-#statusBar{
-text-align:center;
-padding:6px;
-background:#0a0f18;
-}
-
-.panel{
-display:flex;
-justify-content:space-around;
-padding:10px;
-}
-
-.card{
-background:#0e1a2b;
-width:22%;
-padding:10px;
-border-radius:6px;
-text-align:center;
-}
-
-.value{font-size:24px;}
+body{margin:0;background:#05070b;color:#cfe8ff;font-family:Arial}
+.header{padding:10px;background:#0b1220;text-align:center;font-weight:bold}
+#statusBar{text-align:center;padding:6px;background:#0a0f18}
+.panel{display:flex;justify-content:space-around;padding:10px}
+.card{background:#0e1a2b;width:22%;padding:10px;border-radius:6px;text-align:center}
+.value{font-size:24px}
 
 button{
-margin:3px;
-padding:8px;
-background:#1f3b5c;
-color:white;
-border:none;
-cursor:pointer;
+margin:3px;padding:8px;background:#1f3b5c;color:white;
+border:none;cursor:pointer
 }
 
-#scenarioPanel{
-padding:10px;
-margin:10px;
-background:#0a0f18;
-font-size:12px;
+.box{
+margin:10px;padding:10px;background:#0a0f18;font-size:12px
 }
 
 #log{
-position:absolute;
-right:10px;
-top:180px;
-width:340px;
-height:340px;
-overflow:auto;
-background:#0a0f18;
-padding:10px;
-font-size:11px;
-border-left:2px solid #1f3b5c;
+position:absolute;right:10px;top:220px;width:340px;height:340px;
+overflow:auto;background:#0a0f18;padding:10px;font-size:11px;
+border-left:2px solid #1f3b5c
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🛰 SPD v12 // CLEAN AUTONOMOUS COCKPIT</div>
-
+<div class="header">🛰 SPD v12 // COCKPIT PRO</div>
 <div id="statusBar">STATUS: STABLE</div>
 
 <div class="panel">
@@ -85,7 +41,6 @@ border-left:2px solid #1f3b5c;
 <div class="card">INF <div id="INF" class="value">0</div></div>
 </div>
 
-<!-- ACTION PANEL -->
 <div style="text-align:center">
 <button onclick="inject('FX')">FX STRESS</button>
 <button onclick="inject('DC')">DC LOAD</button>
@@ -94,165 +49,175 @@ border-left:2px solid #1f3b5c;
 <button onclick="resetAll()">RESET</button>
 </div>
 
-<!-- SCENARIO PANEL -->
-<div id="scenarioPanel">
-SCENARIO PANEL: READY<br>
-<div id="scenarioText">No active scenario</div>
+<div class="box">
+<b>SCENARIO PANEL</b><br>
+<div id="scenario">Idle</div>
+</div>
+
+<div class="box">
+<b>RISK PANEL</b><br>
+<div id="risk">Risk: LOW</div>
+</div>
+
+<div class="box">
+<b>SOLUTION OPTIONS</b><br>
+<div id="solutions">-</div>
+</div>
+
+<div class="box">
+<b>ACTION SEQUENCE PROMPT</b><br>
+<div id="sequence">-</div>
 </div>
 
 <div id="log"></div>
 
 <script>
 
-/* STATE */
-const state = {
-FX:0,
-DC:0,
-CYB:0,
-INF:0
-};
+const state={FX:0,DC:0,CYB:0,INF:0};
 
-/* RULES */
-const rules = {
-FX:1.0,
-DC:0.9,
-CYB:1.2,
-INF:1.1
-};
+const rules={FX:1.0,DC:0.9,CYB:1.2,INF:1.1};
 
-/* SCENARIOS (MEANING LAYER FIXED) */
-const scenarioMap = {
+const scenarioMap={
 FX:{
 name:"Financial Stress Injection",
-desc:"Market volatility + liquidity disruption simulated",
+desc:"Market volatility event",
 risk:"MEDIUM",
-effect:"Drives DC instability and increases cyber sensitivity"
+effect:"Impacts DC + CYB stability",
+solutions:[
+"Inject liquidity buffer",
+"Stabilize financial layer",
+"Reduce volatility exposure"
+],
+sequence:[
+"Detect FX anomaly",
+"Apply risk model",
+"Stabilize liquidity",
+"Rebalance system"
+]
 },
 DC:{
 name:"Data Center Load Spike",
-desc:"Compute saturation and thermal pressure event",
+desc:"Compute saturation event",
 risk:"MEDIUM-HIGH",
-effect:"Triggers INF degradation cascade"
+effect:"Triggers INF strain",
+solutions:[
+"Throttle compute load",
+"Activate backup nodes",
+"Redistribute traffic"
+],
+sequence:[
+"Detect CPU spike",
+"Balance load",
+"Shift workloads",
+"Normalize heat"
+]
 },
 CYB:{
 name:"Cyber Event Triggered",
-desc:"Security anomaly injected into system layer",
+desc:"Security anomaly detected",
 risk:"HIGH",
-effect:"Weakens INF + DC integrity"
+effect:"System integrity risk",
+solutions:[
+"Isolate nodes",
+"Run firewall escalation",
+"Integrity scan"
+],
+sequence:[
+"Detect intrusion",
+"Quarantine segment",
+"Deploy patch",
+"Verify integrity"
+]
 },
 INF:{
 name:"Infrastructure Strain Event",
-desc:"Physical + network strain escalation",
+desc:"Physical system stress",
 risk:"HIGH",
-effect:"Feeds back into FX instability loop"
+effect:"Feeds FX instability loop",
+solutions:[
+"Reduce load",
+"Activate redundancy",
+"Stabilize backbone"
+],
+sequence:[
+"Detect strain",
+"Activate redundancy",
+"Balance power",
+"Restore baseline"
+]
 }
 };
 
-/* LINKS */
-const links = [
-["FX","DC"],
-["DC","CYB"],
-["CYB","INF"],
-["INF","FX"]
-];
+let log=[];
 
-let log = [];
-
-/* LOG */
-function addLog(msg){
-log.push(msg);
-document.getElementById("log").innerHTML =
+function addLog(m){
+log.push(m);
+document.getElementById("log").innerHTML=
 log.slice(-18).map(x=>"> "+x).join("<br>");
 }
 
-/* SCENARIO INJECT (FIXED PANEL BEHAVIOR) */
 function inject(n){
 
-state[n] += 10;
+const s=scenarioMap[n];
+state[n]+=10;
 
-const s = scenarioMap[n];
+document.getElementById("scenario").innerHTML=
+"<b>"+s.name+"</b><br>"+s.desc+"<br>"+s.effect;
 
-/* THIS is the FIX: always overwrite panel cleanly */
-document.getElementById("scenarioText").innerHTML =
-"<b>▶ " + s.name + "</b><br>" +
-"• " + s.desc + "<br>" +
-"• Risk: " + s.risk + "<br>" +
-"• Effect: " + s.effect;
+document.getElementById("risk").innerText="Risk: "+s.risk;
 
-addLog("INJECT → " + s.name);
+document.getElementById("solutions").innerHTML=
+s.solutions.map(x=>"• "+x).join("<br>");
 
+document.getElementById("sequence").innerHTML=
+s.sequence.map((x,i)=> (i+1)+". "+x).join("<br>");
+
+addLog("INJECT → "+s.name);
 evaluate();
 }
 
-/* CASCADE ENGINE */
-function cascade(){
-links.forEach(([a,b])=>{
-let p = (state[a]*rules[a]*rules[b])/140;
-
-if(Math.random() < p){
-let imp = 2 + Math.random()*4;
-state[b] += imp;
-addLog(`CASCADE → ${a} → ${b} (+${imp.toFixed(1)})`);
+function riskScore(){
+return (state.FX*1.0+state.DC*0.9+state.CYB*1.2+state.INF*1.1)/4;
 }
+
+function cascade(){
+Object.keys(state).forEach(a=>{
+Object.keys(state).forEach(b=>{
+if(a!==b){
+let p=(state[a]*rules[a]*rules[b])/160;
+if(Math.random()<p){
+state[b]+=2;
+addLog("CASCADE "+a+"→"+b);
+}
+}
+});
 });
 }
 
-/* DECAY */
 function decay(){
-for(let k in state){
-state[k] *= 0.97;
-if(state[k] < 0) state[k] = 0;
-}
+for(let k in state) state[k]*=0.97;
 }
 
-/* RISK MODEL */
-function riskScore(){
-return (
-state.FX*rules.FX +
-state.DC*rules.DC +
-state.CYB*rules.CYB +
-state.INF*rules.INF
-)/4;
-}
-
-/* SOLUTION ENGINE */
 function solution(){
-addLog("🧩 SOLUTION ENGINE ACTIVATED");
-
-for(let k in state){
-state[k] *= 0.7;
+for(let k in state) state[k]*=0.75;
+addLog("AUTO STABILIZATION TRIGGERED");
 }
 
-addLog("SYSTEM STABILIZED");
-}
-
-/* EVALUATION ENGINE */
 function evaluate(){
-
-const r = riskScore();
-let status = "STABLE";
-
-if(r > 60){
-status = "CRITICAL";
-solution();
-}
-else if(r > 30){
-status = "DEGRADED";
+let r=riskScore();
+let status="STABLE";
+if(r>60){status="CRITICAL";solution();}
+else if(r>30) status="DEGRADED";
+document.getElementById("statusBar").innerText="STATUS: "+status;
 }
 
-document.getElementById("statusBar").innerText =
-"STATUS: " + status;
-}
-
-/* RENDER */
 function render(){
-FX.innerText = state.FX.toFixed(1);
-DC.innerText = state.DC.toFixed(1);
-CYB.innerText = state.CYB.toFixed(1);
-INF.innerText = state.INF.toFixed(1);
+FX.innerText=state.FX.toFixed(1);
+DC.innerText=state.DC.toFixed(1);
+CYB.innerText=state.CYB.toFixed(1);
+INF.innerText=state.INF.toFixed(1);
 }
 
-/* LOOP */
 function tick(){
 cascade();
 decay();
@@ -262,13 +227,11 @@ render();
 
 setInterval(tick,1000);
 
-/* RESET */
 function resetAll(){
 for(let k in state) state[k]=0;
-addLog("SYSTEM RESET");
+addLog("RESET SYSTEM");
 }
 
-/* INIT */
 render();
 
 </script>
