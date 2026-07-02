@@ -2,369 +2,257 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SPD v12 // AUTONOMOUS DIGITAL TWIN</title>
+<title>SPD v12 // CLEAN AUTONOMOUS COCKPIT</title>
 
 <style>
-body {
-  margin: 0;
-  background: #05070b;
-  color: #cfe8ff;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
+body{
+margin:0;
+background:#05070b;
+color:#cfe8ff;
+font-family:Arial;
 }
 
-.header {
-  padding: 10px;
-  background: #0b1220;
-  font-size: 14px;
-  text-align: center;
+.header{
+padding:10px;
+background:#0b1220;
+text-align:center;
+font-weight:bold;
 }
 
-#statusBar {
-  text-align: center;
-  padding: 6px;
-  background: #0a0f18;
-  font-size: 13px;
+#statusBar{
+text-align:center;
+padding:6px;
+background:#0a0f18;
 }
 
-.panel {
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
+.panel{
+display:flex;
+justify-content:space-around;
+padding:10px;
 }
 
-.card {
-  background: #0e1a2b;
-  width: 22%;
-  padding: 12px;
-  text-align: center;
-  border-radius: 6px;
+.card{
+background:#0e1a2b;
+width:22%;
+padding:10px;
+border-radius:6px;
+text-align:center;
 }
 
-.value {
-  font-size: 26px;
+.value{font-size:24px;}
+
+button{
+margin:3px;
+padding:6px;
+background:#1f3b5c;
+color:white;
+border:none;
+cursor:pointer;
 }
 
-#graph {
-  position: relative;
-  height: 240px;
-  margin: 10px;
-}
-
-.node {
-  position: absolute;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #1f3b5c;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  transition: 0.25s;
-  cursor: pointer;
-}
-
-.buttons {
-  text-align: center;
-  margin: 8px;
-}
-
-button {
-  padding: 7px 10px;
-  margin: 3px;
-  background: #1f3b5c;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-#explain {
-  position: absolute;
-  right: 10px;
-  top: 60px;
-  width: 300px;
-  height: 260px;
-  background: #0a0f18;
-  padding: 10px;
-  font-size: 11px;
-  overflow-y: auto;
-  border-left: 2px solid #1f3b5c;
+#log{
+position:absolute;
+right:10px;
+top:120px;
+width:320px;
+height:320px;
+overflow:auto;
+background:#0a0f18;
+padding:10px;
+font-size:11px;
+border-left:2px solid #1f3b5c;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-🛰 SPD v12 // AUTONOMOUS DIGITAL TWIN CONTROL SYSTEM
-</div>
+<div class="header">🛰 SPD v12 // CLEAN AUTONOMOUS COCKPIT</div>
+<div id="statusBar">STATUS: INITIALIZING</div>
 
-<div id="statusBar">STATUS: STABLE INITIALIZATION</div>
-
+<!-- CONTROL PANEL -->
 <div class="panel">
-  <div class="card">FX<div id="FX" class="value">0.0</div></div>
-  <div class="card">DC<div id="DC" class="value">0.0</div></div>
-  <div class="card">CYB<div id="CYB" class="value">0.0</div></div>
-  <div class="card">INF<div id="INF" class="value">0.0</div></div>
+<div class="card">FX <div id="FX" class="value">0</div></div>
+<div class="card">DC <div id="DC" class="value">0</div></div>
+<div class="card">CYB <div id="CYB" class="value">0</div></div>
+<div class="card">INF <div id="INF" class="value">0</div></div>
 </div>
 
-<div id="graph">
-  <div class="node" id="nFX" onclick="trace('FX')">FX</div>
-  <div class="node" id="nDC" onclick="trace('DC')">DC</div>
-  <div class="node" id="nCYB" onclick="trace('CYB')">CYB</div>
-  <div class="node" id="nINF" onclick="trace('INF')">INF</div>
+<!-- ACTION MAP -->
+<div style="text-align:center">
+<button onclick="inject('FX')">FX STRESS</button>
+<button onclick="inject('DC')">DC LOAD</button>
+<button onclick="inject('CYB')">CYBER EVENT</button>
+<button onclick="inject('INF')">INFRA STRAIN</button>
+<button onclick="resetAll()">RESET</button>
 </div>
 
-<div class="buttons">
-  <button onclick="inject('FX')">FX STRESS</button>
-  <button onclick="inject('DC')">DC LOAD</button>
-  <button onclick="inject('CYB')">CYBER EVENT</button>
-  <button onclick="inject('INF')">INFRA STRAIN</button>
-  <button onclick="reset()">RESET</button>
-</div>
-
-<div id="explain">Explain: system idle</div>
+<div id="log"></div>
 
 <script>
 
 /* =========================
-   STATE CORE
+STATE STORE
 ========================= */
 
 const state = {
-  FX: 0,
-  DC: 0,
-  CYB: 0,
-  INF: 0
+FX:0,
+DC:0,
+CYB:0,
+INF:0
 };
-
-const meta = {
-  FX: { s: 0.8, x: 80, y: 80, label: "Financial Stress" },
-  DC: { s: 0.7, x: 220, y: 40, label: "Data Center Load" },
-  CYB:{ s: 1.0, x: 360, y: 80, label: "Cyber Event" },
-  INF:{ s: 0.9, x: 220, y: 140, label: "Infrastructure Strain" }
-};
-
-const LINKS = [
-  ["FX","DC"],
-  ["DC","CYB"],
-  ["CYB","INF"],
-  ["INF","FX"]
-];
-
-let log = [];
-let explanationLog = [];
 
 /* =========================
-   PANEL RULE ENGINE
+RULE ENGINE (weights)
 ========================= */
 
-const RULES = {
-  FX: { impact: 1.0 },
-  DC: { impact: 0.9 },
-  CYB:{ impact: 1.2 },
-  INF:{ impact: 1.1 }
+const rules = {
+FX:1.0,
+DC:0.9,
+CYB:1.2,
+INF:1.1
 };
 
-function inject(node){
-  state[node] += 10;
+/* =========================
+SYSTEM LINKS
+========================= */
 
-  explain(`⚡ INJECT: ${node} → ${meta[node].label}`);
+const links = [
+["FX","DC"],
+["DC","CYB"],
+["CYB","INF"],
+["INF","FX"]
+];
 
-  evaluateSystem();
+/* =========================
+LOG
+========================= */
+
+let log = [];
+
+function addLog(msg){
+log.push(msg);
+document.getElementById("log").innerHTML =
+log.slice(-15).map(x=>"> "+x).join("<br>");
 }
 
 /* =========================
-   CASCADE ENGINE
+CONTROL PANEL ACTIONS
+========================= */
+
+function inject(n){
+state[n] += 10;
+addLog("INJECT → " + n);
+evaluate();
+}
+
+/* =========================
+RISK MODEL
+========================= */
+
+function riskScore(){
+return (
+state.FX * rules.FX +
+state.DC * rules.DC +
+state.CYB * rules.CYB +
+state.INF * rules.INF
+) / 4;
+}
+
+/* =========================
+CASCADE ENGINE
 ========================= */
 
 function cascade(){
+links.forEach(([a,b])=>{
+let p = (state[a] * rules[a] * rules[b]) / 120;
 
-  LINKS.forEach(([a,b]) => {
-
-    const A = state[a];
-    const B = state[b];
-
-    const p = (A * meta[a].s * meta[b].s) / 120;
-
-    if(Math.random() < p){
-
-      const impact = 2 + Math.random() * 5;
-
-      state[b] += impact;
-
-      explain(`🔁 CASCADE ${a} → ${b} | +${impact.toFixed(1)}`);
-    }
-  });
+if(Math.random() < p){
+let impact = 2 + Math.random() * 4;
+state[b] += impact;
+addLog(`CASCADE → ${a} → ${b} (+${impact.toFixed(1)})`);
+}
+});
 }
 
 /* =========================
-   DECAY ENGINE
+DECAY ENGINE
 ========================= */
 
 function decay(){
-  for(let k in state){
-    state[k] *= 0.97;
-  }
+for(let k in state){
+state[k] *= 0.97;
+if(state[k] < 0) state[k] = 0;
+}
 }
 
 /* =========================
-   SYSTEM EVALUATION
+SOLUTION ENGINE
 ========================= */
 
-function evaluateSystem(){
+function solution(){
+addLog("🧩 SOLUTION ENGINE ACTIVATED");
 
-  const total =
-    state.FX * 1.0 +
-    state.DC * 0.9 +
-    state.CYB * 1.2 +
-    state.INF * 1.1;
+for(let k in state){
+state[k] *= 0.7;
+}
 
-  const avg = total / 4;
-
-  if(avg > 60){
-    statusBar.innerText = "STATUS: CRITICAL";
-    runSolution("CRITICAL");
-  }
-  else if(avg > 30){
-    statusBar.innerText = "STATUS: DEGRADED";
-  }
-  else{
-    statusBar.innerText = "STATUS: STABLE";
-  }
+addLog("✔ SYSTEM STABILIZED");
 }
 
 /* =========================
-   SOLUTION ENGINE
+EVALUATION + SEQUENCE EXECUTOR
 ========================= */
 
-const SOLUTIONS = {
+function evaluate(){
 
-  CRITICAL: [
-    {
-      name: "Emergency Stabilization",
-      run: () => {
-        for(let k in state){
-          state[k] *= 0.7;
-        }
-      }
-    },
-    {
-      name: "Risk Dampening",
-      run: () => {
-        state.CYB *= 0.6;
-        state.INF *= 0.8;
-      }
-    }
-  ]
-};
+let r = riskScore();
+let status = "STABLE";
 
-function runSolution(level){
+if(r > 60){
+status = "CRITICAL";
+solution();
+}
+else if(r > 30){
+status = "DEGRADED";
+}
 
-  const seq = SOLUTIONS[level];
-
-  if(!seq) return;
-
-  explain(`🧩 SOLUTION ENGINE → ${level}`);
-
-  seq.forEach(step => {
-    explain(`▶ EXECUTE: ${step.name}`);
-    step.run();
-    decay();
-    render();
-  });
-
-  explain("✅ SOLUTION COMPLETE");
+document.getElementById("statusBar").innerText =
+"STATUS: " + status;
 }
 
 /* =========================
-   TRACE ENGINE
-========================= */
-
-function trace(node){
-
-  explain(`🔍 TRACE NODE: ${node}`);
-
-  explain(`VALUE: ${state[node].toFixed(2)} | IMPACT: ${meta[node].label}`);
-}
-
-/* =========================
-   RESET
-========================= */
-
-function reset(){
-  for(let k in state){
-    state[k] = 0;
-  }
-  explain("🔄 SYSTEM RESET");
-}
-
-/* =========================
-   EXPLAIN ENGINE
-========================= */
-
-function explain(msg){
-
-  explanationLog.push({
-    time: new Date(),
-    msg
-  });
-
-  explainBox.innerHTML =
-    "🧠 EXPLANATION LAYER<br><br>" +
-    explanationLog.slice(-12).map(e =>
-      `[${e.time.toLocaleTimeString()}] ${e.msg}`
-    ).join("<br>");
-}
-
-/* =========================
-   RENDER ENGINE
+UI UPDATE LOOP
 ========================= */
 
 function render(){
-
-  FX.innerText = state.FX.toFixed(1);
-  DC.innerText = state.DC.toFixed(1);
-  CYB.innerText = state.CYB.toFixed(1);
-  INF.innerText = state.INF.toFixed(1);
-
-  document.getElementById("nFX").style.left = meta.FX.x + "px";
-  document.getElementById("nFX").style.top  = meta.FX.y + "px";
-
-  document.getElementById("nDC").style.left = meta.DC.x + "px";
-  document.getElementById("nDC").style.top  = meta.DC.y + "px";
-
-  document.getElementById("nCYB").style.left = meta.CYB.x + "px";
-  document.getElementById("nCYB").style.top  = meta.CYB.y + "px";
-
-  document.getElementById("nINF").style.left = meta.INF.x + "px";
-  document.getElementById("nINF").style.top  = meta.INF.y + "px";
-
-  for(let k in state){
-    const el = document.getElementById("n"+k);
-
-    el.style.transform = `scale(${1 + state[k]/80})`;
-
-    el.style.background =
-      state[k] > 50 ? "#ff3b3b" :
-      state[k] > 25 ? "#ffb020" :
-      "#1f3b5c";
-  }
+FX.innerText = state.FX.toFixed(1);
+DC.innerText = state.DC.toFixed(1);
+CYB.innerText = state.CYB.toFixed(1);
+INF.innerText = state.INF.toFixed(1);
 }
 
 /* =========================
-   MAIN LOOP
+MAIN LOOP
 ========================= */
 
 function tick(){
-  cascade();
-  decay();
-  evaluateSystem();
-  render();
+cascade();
+decay();
+evaluate();
+render();
 }
 
 setInterval(tick, 1000);
+
+/* =========================
+RESET
+========================= */
+
+function resetAll(){
+for(let k in state) state[k] = 0;
+addLog("SYSTEM RESET");
+}
 
 /* INIT */
 render();
