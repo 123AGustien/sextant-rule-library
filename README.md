@@ -1,3 +1,7 @@
+Rules = structured knowledge inside Data
+Algorithms = selection + matching engine
+Compute = execution engine
+
 Data = Source + Purpose + Client Request + Rules + Current System State + Available Inputs
 Algorithms = Match, correlate, and apply decision logic to the information
 Compute = Execute the logic to produce solutions and suggested actions
