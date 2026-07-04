@@ -1,4 +1,6 @@
-
+Data = Source + Purpose + Client Request + Rules + Current System State + Available Inputs
+Algorithms = Match, correlate, and apply decision logic to the information
+Compute = Execute the logic to produce solutions and suggested actions
 # 📘 Sextant Rule Library
 
 It is a deterministic, manually-driven simulation engine with structural self-check, not a fully autonomous self-verifying system.
