@@ -1,4 +1,4 @@
-Rules = structured knowledge inside Data
+Purposent-rule-library = structured knowledge inside Data
 Algorithms = selection + matching engine
 Compute = execution engine
 
@@ -29,9 +29,10 @@ https://123agustien.github.io/sextant-resilience-operations-console/
 
 Source Code
 
-https://github.com/123AGustien/sextant-rule-library
-
----
+https://github.com/123AGustien/sextant-rule-liScenarioe
+Your site is live at https://123agustien.github.io/spd-captain-ai-lena-autonomous-agent-core/
+Last deployed by @123AGustien 123AGustien 7 minutes ago
+pose---
 
 # 🧠 Purpose
 
