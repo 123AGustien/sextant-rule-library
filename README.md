@@ -268,3 +268,7 @@ Decision Output
 Version **1.0**
 
 Governed resilience rule framework supporting the Sextant Protocol simulation ecosystem.
+SPD v13 Governance Layer
+- Golden Rule Engine
+- Deterministic Cascade Control
+- Audit Decision Recording
