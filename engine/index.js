@@ -2,31 +2,76 @@
 =====================================================
 SEXTANT PROTOCOL
 ENGINE REGISTRY
-Version: 1.1
+Version: 1.2
 
 Purpose:
 Central module loader for Sextant simulation engines.
 
 Connected Modules:
+- Financial Resilience Engine
+- Data Centre Resilience Engine
+- Cyber Resilience Engine
+- Infrastructure Resilience Engine
 - Energy Resilience Engine
-- BIO-001 Biodiesel Supply Stress
-- BIO-002 Biodiesel Shortage Scenario
-- Golden Rule Governance
+
+Governance:
+Sextant Golden Rule
 =====================================================
 */
 
 
-const ENERGY_ENGINE = require("../energy-engine");
+/* ENERGY MODULE */
+
+const ENERGY_ENGINE = require("./energy-engine");
+
+
+
+/* FUTURE MODULE CONNECTIONS */
+
+/*
+
+const FIN_ENGINE =
+require("./fin-engine");
+
+
+const DC_ENGINE =
+require("./dc-engine");
+
+
+const CYB_ENGINE =
+require("./cyb-engine");
+
+
+const INF_ENGINE =
+require("./inf-engine");
+
+*/
 
 
 
 const ENGINE_REGISTRY = {
 
 
-    ENERGY_ENGINE: ENERGY_ENGINE,
+    engines:{
+
+
+        ENERGY:
+
+        ENERGY_ENGINE
+
+
+        // FIN: FIN_ENGINE,
+        // DC: DC_ENGINE,
+        // CYB: CYB_ENGINE,
+        // INF: INF_ENGINE
+
+
+    },
+
 
 
     modules:[
+
 
         {
 
@@ -34,7 +79,7 @@ const ENGINE_REGISTRY = {
 
             name:"Energy Resilience",
 
-            engine:"ENERGY_ENGINE",
+            engine:"ENERGY",
 
             rules:[
 
@@ -48,7 +93,21 @@ const ENGINE_REGISTRY = {
 
         }
 
-    ]
+
+
+    ],
+
+
+
+
+    getEngine(id){
+
+
+        return this.engines[id];
+
+
+    }
+
 
 
 
