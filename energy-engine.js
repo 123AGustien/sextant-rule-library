@@ -134,13 +134,19 @@ inject(event){
     switch(event){
 
 
-        case "OIL_HIGH":
+        case "OIL_LOW":
 
-            this.state.oilPrice="HIGH";
+    this.state.oilPrice="LOW";
 
-            this.state.riskScore +=25;
+    this.state.riskScore -=10;
 
-            break;
+    if(this.state.riskScore < 0){
+
+        this.state.riskScore = 0;
+
+    }
+
+    break;
 
 
 
