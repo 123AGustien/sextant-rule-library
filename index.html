@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SPD v13 // SEXTANT RESILIENCE COCKPIT</title>
+
+
+<style>
+
+body{
+
+margin:0;
+
+background:#05070b;
+
+color:#cfe8ff;
+
+font-family:Arial,Helvetica,sans-serif;
+
+}
+
+
+
+.header{
+
+background:#0b1220;
+
+padding:15px;
+
+text-align:center;
+
+font-weight:bold;
+
+font-size:16px;
+
+border-bottom:1px solid #1f3b5c;
+
+}
+
+
+
+#statusBar{
+
+text-align:center;
+
+padding:10px;
+
+background:#0a0f18;
+
+color:#7fb3ff;
+
+}
+
+
+
+.panel{
+
+display:flex;
+
+justify-content:space-around;
+
+flex-wrap:wrap;
+
+padding:12px;
+
+}
+
+
+
+.card{
+
+background:#0e1a2b;
+
+width:20%;
+
+min-width:120px;
+
+margin:5px;
+
+padding:12px;
+
+text-align:center;
+
+border-radius:8px;
+
+border:1px solid #1f3b5c;
+
+}
+
+
+
+.value{
+
+font-size:28px;
+
+font-weight:bold;
+
+}
+
+
+
+.buttons{
+
+text-align:center;
+
+padding:10px;
+
+}
+
+
+
+button{
+
+background:#1f3b5c;
+
+color:white;
+
+border:none;
+
+padding:10px;
+
+margin:4px;
+
+border-radius:5px;
+
+cursor:pointer;
+
+}
+
+
+
+button:hover{
+
+background:#28557f;
+
+}
+
+
+
+.box{
+
+margin:10px;
+
+padding:12px;
+
+background:#0a0f18;
+
+border-left:3px solid #1f3b5c;
+
+font-size:13px;
+
+}
+
+
+
+.title{
+
+font-weight:bold;
+
+color:#79b7ff;
+
+margin-bottom:8px;
+
+}
+
+
+
+#log{
+
+margin:10px;
+
+height:220px;
+
+overflow:auto;
+
+background:#05070b;
+
+padding:10px;
+
+font-size:11px;
+
+border:1px solid #1f3b5c;
+
+}
+
+
+
+.audit{
+
+color:#9fc8ff;
+
+}
+
+
+
+@media(max-width:700px){
+
+.card{
+
+width:40%;
+
+}
+
+}
+
+
+</style>
+
+
+</head>
+
+
+
+<body>
+
+
+
+<div class="header">
+
+🛰 SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
+
+</div>
+
+
+
+<div id="statusBar">
+
+SYSTEM STATUS: INITIALIZED
+
+</div>
+
+
+
+
+<div class="panel">
+
+
+<div class="card">
+
+FX
+
+<div id="FX" class="value">0</div>
+
+</div>
+
+
+<div class="card">
+
+DC
+
+<div id="DC" class="value">0</div>
+
+</div>
+
+
+<div class="card">
+
+CYB
+
+<div id="CYB" class="value">0</div>
+
+</div>
+
+
+<div class="card">
+
+INF
+
+<div id="INF" class="value">0</div>
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="buttons">
+
+
+<button onclick="inject('FX')">
+
+FX STRESS
+
+</button>
+
+
+<button onclick="inject('DC')">
+
+DC LOAD
+
+</button>
+
+
+<button onclick="inject('CYB')">
+
+CYBER EVENT
+
+</button>
+
+
+<button onclick="inject('INF')">
+
+INFRA STRAIN
+
+</button>
+
+
+<button onclick="resetSystem()">
+
+RESET
+
+</button>
+
+
+</div>
+
+
+
+
+<div class="box">
+
+<div class="title">
+
+SCENARIO PANEL
+
+</div>
+
+
+<div id="scenario">
+
+Idle
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="box">
+
+<div class="title">
+
+RISK PANEL
+
+</div>
+
+
+<div id="risk">
+
+Risk: LOW
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="box">
+
+<div class="title">
+
+SOLUTION OPTIONS
+
+</div>
+
+
+<div id="solutions">
+
+-
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="box">
+
+<div class="title">
+
+ACTION SEQUENCE PROMPT
+
+</div>
+
+
+<div id="sequence">
+
+-
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="box audit">
+
+<div class="title">
+
+SPD v13 AUDIT RECORD
+
+</div>
+
+
+<div id="audit">
+
+Waiting...
+
+</div>
+
+
+</div>
+
+
+
+
+<div id="log">
+
+PIPELINE LOG ACTIVE
+
+</div>
+<script>
+
+/* =====================================
+   SPD v13 CORE STATE ENGINE
+===================================== */
+
+
+const STATE = {
+
+FX:0,
+
+DC:0,
+
+CYB:0,
+
+INF:0,
+
+confidence:100
+
+};
+
+
+
+const AUDIT=[];
+
+
+
+
+/* =====================================
+   SCENARIO LIBRARY
+===================================== */
+
+
+const SCENARIOS = {
+
+
+FX:{
+
+name:"Financial Stress Injection",
+
+desc:"Market volatility event",
+
+cascade:[
+
+"FX VOLATILITY",
+
+"LIQUIDITY PRESSURE",
+
+"BANKING EXPOSURE",
+
+"DC OPERATIONAL LOAD",
+
+"CONFIDENCE IMPACT"
+
+],
+
+solutions:[
+
+"Inject liquidity buffer",
+
+"Stabilize financial layer",
+
+"Reduce volatility exposure"
+
+],
+
+sequence:[
+
+"Detect FX anomaly",
+
+"Apply risk model",
+
+"Stabilize liquidity",
+
+"Rebalance system"
+
+]
+
+},
+
+
+
+DC:{
+
+name:"Data Centre Load Spike",
+
+desc:"Compute saturation event",
+
+cascade:[
+
+"COMPUTE OVERLOAD",
+
+"POWER DEMAND INCREASE",
+
+"INFRASTRUCTURE STRAIN",
+
+"SERVICE DEGRADATION"
+
+],
+
+solutions:[
+
+"Throttle workload",
+
+"Activate backup nodes",
+
+"Redistribute traffic"
+
+],
+
+sequence:[
+
+"Detect CPU spike",
+
+"Balance load",
+
+"Shift workloads",
+
+"Normalize heat"
+
+]
+
+},
+
+
+
+
+CYB:{
+
+name:"Cyber Security Event",
+
+desc:"System integrity anomaly",
+
+cascade:[
+
+"CYBER EVENT",
+
+"SYSTEM ISOLATION",
+
+"SERVICE PROTECTION",
+
+"RECOVERY MODE"
+
+],
+
+solutions:[
+
+"Isolate affected nodes",
+
+"Run integrity checks",
+
+"Protect critical services"
+
+],
+
+sequence:[
+
+"Detect intrusion",
+
+"Quarantine segment",
+
+"Deploy response",
+
+"Verify integrity"
+
+]
+
+},
+
+
+
+
+INF:{
+
+name:"Infrastructure Strain Event",
+
+desc:"Physical resilience stress",
+
+cascade:[
+
+"INFRA FAILURE",
+
+"POWER INSTABILITY",
+
+"OPERATIONAL IMPACT",
+
+"RECOVERY PROCESS"
+
+],
+
+solutions:[
+
+"Activate redundancy",
+
+"Reduce system load",
+
+"Restore baseline"
+
+],
+
+sequence:[
+
+"Detect strain",
+
+"Activate backup",
+
+"Balance power",
+
+"Recover system"
+
+]
+
+}
+
+
+};
+
+
+
+
+
+/* =====================================
+   RULE ENGINE
+===================================== */
+
+
+function inject(type){
+
+
+let s=SCENARIOS[type];
+
+
+STATE[type]+=10;
+
+
+document.getElementById("scenario").innerHTML=
+
+"<b>"+s.name+"</b><br>"+s.desc;
+
+
+
+document.getElementById("solutions").innerHTML=
+
+s.solutions.map(x=>"• "+x).join("<br>");
+
+
+
+document.getElementById("sequence").innerHTML=
+
+s.sequence.map((x,i)=>(i+1)+". "+x).join("<br>");
+
+
+
+runCascade(type);
+
+
+evaluateRisk();
+
+
+addAudit(
+
+"INJECT → "+s.name
+
+);
+
+
+render();
+
+
+}
+
+
+
+
+/* =====================================
+   DETERMINISTIC CASCADE ENGINE
+===================================== */
+
+
+function runCascade(type){
+
+
+if(type==="FX"){
+
+STATE.DC+=3;
+
+STATE.CYB+=1;
+
+
+logEvent("CASCADE FX → DC");
+
+}
+
+
+
+if(type==="DC"){
+
+STATE.INF+=3;
+
+
+logEvent("CASCADE DC → INF");
+
+}
+
+
+
+if(type==="CYB"){
+
+STATE.INF+=2;
+
+
+logEvent("CASCADE CYB → INF");
+
+}
+
+
+
+if(type==="INF"){
+
+STATE.FX+=2;
+
+
+logEvent("CASCADE INF → FX");
+
+}
+
+
+}
+
+
+
+
+
+/* =====================================
+   RISK MODEL
+===================================== */
+
+
+function riskScore(){
+
+
+return (
+
+STATE.FX+
+
+STATE.DC+
+
+STATE.CYB+
+
+STATE.INF
+
+)/4;
+
+
+}
+
+
+
+
+function evaluateRisk(){
+
+
+let risk=riskScore();
+
+
+let level="LOW";
+
+
+
+if(risk>60){
+
+level="CRITICAL";
+
+decisionEngine("CRITICAL");
+
+}
+
+
+else if(risk>30){
+
+level="MEDIUM";
+
+decisionEngine("MEDIUM");
+
+}
+
+
+
+document.getElementById("risk").innerText=
+
+"Risk: "+level;
+
+
+
+document.getElementById("statusBar").innerText=
+
+"SYSTEM STATUS: "+level;
+
+
+
+}
+
+
+
+
+
+/* =====================================
+   END PART 2
+===================================== */
+/* =====================================
+   SPD v13 DECISION ENGINE
+===================================== */
+
+
+function decisionEngine(level){
+
+
+if(level==="MEDIUM"){
+
+
+STATE.FX*=0.90;
+
+STATE.DC*=0.90;
+
+
+logEvent("MITIGATION → LIQUIDITY BUFFER");
+
+addAudit("MEDIUM RISK RESPONSE");
+
+
+}
+
+
+
+if(level==="CRITICAL"){
+
+
+STATE.FX*=0.75;
+
+STATE.DC*=0.75;
+
+STATE.CYB*=0.70;
+
+STATE.INF*=0.80;
+
+
+logEvent("MITIGATION → FULL RESILIENCE MODE");
+
+addAudit("CRITICAL RESPONSE ACTIVATED");
+
+
+}
+
+
+}
+
+
+
+
+/* =====================================
+   AUDIT SYSTEM
+===================================== */
+
+
+function addAudit(event){
+
+
+AUDIT.push({
+
+time:new Date().toLocaleTimeString(),
+
+event:event,
+
+FX:STATE.FX.toFixed(1),
+
+DC:STATE.DC.toFixed(1),
+
+CYB:STATE.CYB.toFixed(1),
+
+INF:STATE.INF.toFixed(1)
+
+});
+
+
+renderAudit();
+
+
+}
+
+
+
+
+function renderAudit(){
+
+
+let output="";
+
+
+AUDIT.slice(-8).forEach(a=>{
+
+
+output+=
+
+`[${a.time}] ${a.event}
+FX:${a.FX}
+DC:${a.DC}
+CYB:${a.CYB}
+INF:${a.INF}
+
+`;
+
+
+});
+
+
+document.getElementById("audit").innerText=
+
+output || "Waiting...";
+
+
+}
+
+
+
+
+
+/* =====================================
+   EVENT LOG
+===================================== */
+
+
+function logEvent(message){
+
+
+let box=document.getElementById("log");
+
+
+let time=new Date().toLocaleTimeString();
+
+
+box.innerHTML=
+
+`[${time}] ${message}<br>`+
+
+box.innerHTML;
+
+
+}
+
+
+
+
+/* =====================================
+   UI RENDER
+===================================== */
+
+
+function render(){
+
+
+FX.innerText=
+
+STATE.FX.toFixed(1);
+
+
+DC.innerText=
+
+STATE.DC.toFixed(1);
+
+
+CYB.innerText=
+
+STATE.CYB.toFixed(1);
+
+
+INF.innerText=
+
+STATE.INF.toFixed(1);
+
+
+}
+
+
+
+
+
+/* =====================================
+   SYSTEM RESET
+===================================== */
+
+
+function resetSystem(){
+
+
+STATE.FX=0;
+
+STATE.DC=0;
+
+STATE.CYB=0;
+
+STATE.INF=0;
+
+STATE.confidence=100;
+
+
+document.getElementById("scenario").innerHTML=
+
+"Idle";
+
+
+document.getElementById("solutions").innerHTML=
+
+"-";
+
+
+document.getElementById("sequence").innerHTML=
+
+"-";
+
+
+document.getElementById("risk").innerText=
+
+"Risk: LOW";
+
+
+document.getElementById("statusBar").innerText=
+
+"SYSTEM STATUS: STABLE";
+
+
+logEvent("SYSTEM RESET");
+
+
+addAudit("RESET");
+
+
+render();
+
+
+}
+
+
+
+
+/* INITIAL START */
+
+
+render();
+
+
+</script>
+
+
+</body>
+
+</html>
