@@ -2,7 +2,8 @@
 =====================================================
  SEXTANT PROTOCOL
  RESILIENCE RISK MODEL
- Version: 1.0
+ Version: 1.1
+
  Purpose:
  Multi-domain risk classification engine
 
@@ -38,10 +39,18 @@ const RISK_MODEL = {
 
 
 
+/*
+=====================================================
+ CALCULATE TOTAL RESILIENCE RISK
+=====================================================
+*/
+
+
     calculate(state){
 
 
         let score = 0;
+
 
 
         for(let domain in this.weights){
@@ -59,11 +68,19 @@ const RISK_MODEL = {
         }
 
 
+
         return {
+
 
             score:Number(score.toFixed(2)),
 
-            level:this.classify(score)
+
+            level:this.classify(score),
+
+
+            goldenRule:
+            this.goldenRule(score)
+
 
         };
 
@@ -74,24 +91,31 @@ const RISK_MODEL = {
 
 
 
+/*
+=====================================================
+ RISK CLASSIFICATION
+=====================================================
+*/
+
+
     classify(score){
 
 
-        if(score >= 75){
+        if(score >=75){
 
             return "CRITICAL";
 
         }
 
 
-        if(score >= 50){
+        if(score >=50){
 
             return "HIGH";
 
         }
 
 
-        if(score >= 30){
+        if(score >=30){
 
             return "MEDIUM";
 
@@ -107,19 +131,33 @@ const RISK_MODEL = {
 
 
 
+/*
+=====================================================
+ GOLDEN RULE GOVERNANCE
+=====================================================
+*/
+
+
     goldenRule(score){
 
 
-        if(score >= 50){
+
+        if(score >=50){
 
 
             return {
 
+
+                status:"ACTIVE",
+
+
                 action:
                 "CONTAINMENT PRIORITY",
 
+
                 principle:
                 "Protect system stability before optimization."
+
 
             };
 
@@ -127,7 +165,11 @@ const RISK_MODEL = {
         }
 
 
+
         return {
+
+
+            status:"PASS",
 
 
             action:
@@ -141,12 +183,74 @@ const RISK_MODEL = {
         };
 
 
+    },
+
+
+
+
+
+/*
+=====================================================
+ AUDIT OUTPUT
+=====================================================
+*/
+
+
+    audit(state){
+
+
+        let result=this.calculate(state);
+
+
+
+        return {
+
+
+            module:
+            "RESILIENCE RISK MODEL",
+
+
+            version:
+            "1.1",
+
+
+            input:
+            state,
+
+
+            riskScore:
+            result.score,
+
+
+            classification:
+            result.level,
+
+
+            goldenRule:
+            result.goldenRule.status,
+
+
+            timestamp:
+            new Date().toISOString()
+
+
+        };
+
+
     }
+
 
 };
 
 
 
+
+
+/*
+=====================================================
+ EXPORT
+=====================================================
+*/
 
 
 if(typeof module !== "undefined"){
