@@ -1170,18 +1170,34 @@ action:action
 
 
 
-/* Integrate with evaluation */
+
+
+
+/* =====================================
+   GOLDEN RULE INTEGRATION
+===================================== */
+
 
 const originalEvaluateRisk = evaluateRisk;
 
 
 evaluateRisk=function(){
 
-
 originalEvaluateRisk();
 
 
-goldenRuleCheck();
+let golden = goldenRuleCheck();
+
+
+document.getElementById("solutions").innerHTML +=
+
+"<br><br><b>GOLDEN RULE:</b><br>" +
+
+golden.status +
+
+"<br>" +
+
+golden.action;
 
 
 };
