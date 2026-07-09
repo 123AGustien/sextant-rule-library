@@ -7,8 +7,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SPD v13 // SEXTANT RESILIENCE COCKPIT</title>
-
+<title>SPD v13 // SEXTANT RESILIENCE COCKPIT PRO</title>
 
 
 <style>
@@ -24,7 +23,6 @@ color:#cfe8ff;
 font-family:Arial,Helvetica,sans-serif;
 
 }
-
 
 
 .header{
@@ -44,7 +42,6 @@ border-bottom:1px solid #1f3b5c;
 }
 
 
-
 #statusBar{
 
 text-align:center;
@@ -56,7 +53,6 @@ background:#0a0f18;
 color:#7fb3ff;
 
 }
-
 
 
 .panel{
@@ -72,12 +68,11 @@ padding:12px;
 }
 
 
-
 .card{
 
 background:#0e1a2b;
 
-width:20%;
+width:18%;
 
 min-width:120px;
 
@@ -94,7 +89,6 @@ border:1px solid #1f3b5c;
 }
 
 
-
 .value{
 
 font-size:28px;
@@ -104,7 +98,6 @@ font-weight:bold;
 }
 
 
-
 .buttons{
 
 text-align:center;
@@ -112,7 +105,6 @@ text-align:center;
 padding:10px;
 
 }
-
 
 
 button{
@@ -134,13 +126,11 @@ cursor:pointer;
 }
 
 
-
 button:hover{
 
 background:#28557f;
 
 }
-
 
 
 .box{
@@ -158,7 +148,6 @@ font-size:13px;
 }
 
 
-
 .title{
 
 font-weight:bold;
@@ -168,7 +157,6 @@ color:#79b7ff;
 margin-bottom:8px;
 
 }
-
 
 
 #log{
@@ -190,13 +178,11 @@ border:1px solid #1f3b5c;
 }
 
 
-
 .audit{
 
 color:#9fc8ff;
 
 }
-
 
 
 @media(max-width:700px){
@@ -216,9 +202,7 @@ width:40%;
 </head>
 
 
-
 <body>
-
 
 
 <div class="header">
@@ -234,7 +218,6 @@ width:40%;
 SYSTEM STATUS: INITIALIZED
 
 </div>
-
 
 
 
@@ -267,6 +250,7 @@ CYB
 
 </div>
 
+
 <div class="card">
 
 INF
@@ -274,6 +258,7 @@ INF
 <div id="INF" class="value">0</div>
 
 </div>
+
 
 <div class="card">
 
@@ -284,11 +269,7 @@ EN
 </div>
 
 
-
-
-
 </div>
-
 
 
 
@@ -319,21 +300,34 @@ CYBER EVENT
 <button onclick="inject('INF')">
 
 INFRA STRAIN
-<button onclick="injectEnergy('BIO_SHORTAGE')">
-BIODIESEL SHORTAGE
+
 </button>
+
+
+<button onclick="injectEnergy('BIO_SHORTAGE')">
+
+BIODIESEL SHORTAGE
+
+</button>
+
 
 <button onclick="injectEnergy('IMPORT_PRESSURE')">
+
 IMPORT PRESSURE
+
 </button>
+
 
 <button onclick="injectEnergy('OIL_HIGH')">
+
 OIL PRICE HIGH
+
 </button>
 
-<button onclick="resetSystem()">
-RESET
 
+<button onclick="resetSystem()">
+
+RESET
 
 </button>
 
@@ -358,7 +352,6 @@ Idle
 
 </div>
 
-
 </div>
 
 
@@ -378,7 +371,6 @@ RISK PANEL
 Risk: LOW
 
 </div>
-
 
 </div>
 
@@ -400,7 +392,6 @@ SOLUTION OPTIONS
 
 </div>
 
-
 </div>
 
 
@@ -420,7 +411,6 @@ ACTION SEQUENCE PROMPT
 -
 
 </div>
-
 
 </div>
 
@@ -442,7 +432,6 @@ Waiting...
 
 </div>
 
-
 </div>
 
 
@@ -452,7 +441,14 @@ Waiting...
 
 PIPELINE LOG ACTIVE
 
-== */
+</div>
+
+
+
+<script>
+/* =====================================
+   SPD v13 CORE STATE ENGINE
+===================================== */
 
 
 const STATE = {
@@ -479,6 +475,177 @@ const AUDIT=[];
 
 
 /* =====================================
+   ENERGY RESILIENCE ENGINE
+   EN / BIO MODULE
+===================================== */
+
+
+const ENERGY = {
+
+
+blendRatio:35,
+
+cpoStock:100,
+
+importDependency:60,
+
+oilPrice:"NORMAL",
+
+riskScore:0,
+
+status:"NORMAL"
+
+
+
+};
+
+
+
+
+function injectEnergy(event){
+
+
+document.getElementById("scenario").innerHTML =
+
+"<b>ENERGY RESILIENCE</b><br>"+event;
+
+
+
+switch(event){
+
+
+case "BIO_SHORTAGE":
+
+ENERGY.cpoStock -=40;
+
+ENERGY.riskScore +=40;
+
+break;
+
+
+
+case "IMPORT_PRESSURE":
+
+ENERGY.importDependency +=20;
+
+ENERGY.riskScore +=20;
+
+break;
+
+
+
+case "OIL_HIGH":
+
+ENERGY.oilPrice="HIGH";
+
+ENERGY.riskScore +=25;
+
+break;
+
+
+}
+
+
+
+evaluateEnergy();
+
+
+}
+
+
+
+
+function evaluateEnergy(){
+
+
+if(ENERGY.cpoStock <50){
+
+ENERGY.riskScore +=15;
+
+}
+
+
+
+if(ENERGY.importDependency >70){
+
+ENERGY.riskScore +=15;
+
+}
+
+
+
+
+if(ENERGY.riskScore >=60){
+
+ENERGY.status="CRITICAL";
+
+}
+
+
+else if(ENERGY.riskScore >=30){
+
+ENERGY.status="DEGRADED";
+
+}
+
+
+else{
+
+
+ENERGY.status="NORMAL";
+
+
+}
+
+
+
+STATE.EN = ENERGY.riskScore;
+
+
+document.getElementById("EN").innerText =
+
+STATE.EN.toFixed(1);
+
+
+
+document.getElementById("solutions").innerHTML =
+
+
+"<b>ENERGY ACTION:</b><br>"+
+
+"Protect fuel security<br>"+
+
+"Maintain strategic reserve<br>"+
+
+"Reduce dependency exposure";
+
+
+
+logEvent(
+
+"ENERGY "+event+" → "+ENERGY.status
+
+);
+
+
+
+addAudit(
+
+"ENERGY EVENT "+event
+
+);
+
+
+
+evaluateRisk();
+
+
+}
+
+
+
+
+/* =====================================
    SCENARIO LIBRARY
 ===================================== */
 
@@ -490,177 +657,34 @@ FX:{
 
 name:"Financial Stress Injection",
 
-desc:"Market volatility event",
-
-cascade:[
-
-"FX VOLATILITY",
-
-"LIQUIDITY PRESSURE",
-
-"BANKING EXPOSURE",
-
-"DC OPERATIONAL LOAD",
-
-"CONFIDENCE IMPACT"
-
-],
-
-solutions:[
-
-"Inject liquidity buffer",
-
-"Stabilize financial layer",
-
-"Reduce volatility exposure"
-
-],
-
-sequence:[
-
-"Detect FX anomaly",
-
-"Apply risk model",
-
-"Stabilize liquidity",
-
-"Rebalance system"
-
-]
+desc:"Market volatility event"
 
 },
-
 
 
 DC:{
 
 name:"Data Centre Load Spike",
 
-desc:"Compute saturation event",
-
-cascade:[
-
-"COMPUTE OVERLOAD",
-
-"POWER DEMAND INCREASE",
-
-"INFRASTRUCTURE STRAIN",
-
-"SERVICE DEGRADATION"
-
-],
-
-solutions:[
-
-"Throttle workload",
-
-"Activate backup nodes",
-
-"Redistribute traffic"
-
-],
-
-sequence:[
-
-"Detect CPU spike",
-
-"Balance load",
-
-"Shift workloads",
-
-"Normalize heat"
-
-]
+desc:"Compute saturation event"
 
 },
-
-
 
 
 CYB:{
 
 name:"Cyber Security Event",
 
-desc:"System integrity anomaly",
-
-cascade:[
-
-"CYBER EVENT",
-
-"SYSTEM ISOLATION",
-
-"SERVICE PROTECTION",
-
-"RECOVERY MODE"
-
-],
-
-solutions:[
-
-"Isolate affected nodes",
-
-"Run integrity checks",
-
-"Protect critical services"
-
-],
-
-sequence:[
-
-"Detect intrusion",
-
-"Quarantine segment",
-
-"Deploy response",
-
-"Verify integrity"
-
-]
+desc:"System integrity anomaly"
 
 },
-
-
 
 
 INF:{
 
 name:"Infrastructure Strain Event",
 
-desc:"Physical resilience stress",
-
-cascade:[
-
-"INFRA FAILURE",
-
-"POWER INSTABILITY",
-
-"OPERATIONAL IMPACT",
-
-"RECOVERY PROCESS"
-
-],
-
-solutions:[
-
-"Activate redundancy",
-
-"Reduce system load",
-
-"Restore baseline"
-
-],
-
-sequence:[
-
-"Detect strain",
-
-"Activate backup",
-
-"Balance power",
-
-"Recover system"
-
-]
+desc:"Physical resilience stress"
 
 }
 
@@ -672,34 +696,23 @@ sequence:[
 
 
 /* =====================================
-   RULE ENGINE
+   MAIN INJECTION ENGINE
 ===================================== */
 
 
 function inject(type){
 
 
-let s=SCENARIOS[type];
+let scenario = SCENARIOS[type];
 
 
 STATE[type]+=10;
 
 
-document.getElementById("scenario").innerHTML=
 
-"<b>"+s.name+"</b><br>"+s.desc;
+document.getElementById("scenario").innerHTML =
 
-
-
-document.getElementById("solutions").innerHTML=
-
-s.solutions.map(x=>"• "+x).join("<br>");
-
-
-
-document.getElementById("sequence").innerHTML=
-
-s.sequence.map((x,i)=>(i+1)+". "+x).join("<br>");
+"<b>"+scenario.name+"</b><br>"+scenario.desc;
 
 
 
@@ -711,7 +724,7 @@ evaluateRisk();
 
 addAudit(
 
-"INJECT → "+s.name
+"INJECT → "+type
 
 );
 
@@ -724,509 +737,6 @@ render();
 
 
 
-/* =====================================
-   DETERMINISTIC CASCADE ENGINE
-===================================== */
-
-
-function runCascade(type){
-
-
-if(type==="FX"){
-
-STATE.DC+=3;
-
-STATE.CYB+=1;
-
-
-logEvent("CASCADE FX → DC");
-
-}
-
-
-
-if(type==="DC"){
-
-STATE.INF+=3;
-
-
-logEvent("CASCADE DC → INF");
-
-}
-
-
-
-if(type==="CYB"){
-
-STATE.INF+=2;
-
-
-logEvent("CASCADE CYB → INF");
-
-}
-
-
-
-if(type==="INF"){
-
-STATE.FX+=2;
-
-
-logEvent("CASCADE INF → FX");
-
-}
-
-
-}
-
-
-
-
 
 /* =====================================
-   RISK MODEL
-===================================== */
-
-
-function riskScore(){
-
-
-return (
-
-STATE.FX+
-
-STATE.DC+
-
-STATE.CYB+
-
-STATE.INF
-
-)/4;
-
-
-}
-
-
-
-
-function evaluateRisk(){
-
-
-let risk=riskScore();
-
-
-let level="LOW";
-
-
-
-if(risk>60){
-
-level="CRITICAL";
-
-decisionEngine("CRITICAL");
-
-}
-
-
-else if(risk>30){
-
-level="MEDIUM";
-
-decisionEngine("MEDIUM");
-
-}
-
-
-
-document.getElementById("risk").innerText=
-
-"Risk: "+level;
-
-
-
-document.getElementById("statusBar").innerText=
-
-"SYSTEM STATUS: "+level;
-
-
-
-}
-
-
-
-
-
-/* =====================================
-   END PART 2
-===================================== */
-/* =====================================
-   SPD v13 DECISION ENGINE
-===================================== */
-
-
-function decisionEngine(level){
-
-
-if(level==="MEDIUM"){
-
-
-STATE.FX*=0.90;
-
-STATE.DC*=0.90;
-
-
-logEvent("MITIGATION → LIQUIDITY BUFFER");
-
-addAudit("MEDIUM RISK RESPONSE");
-
-
-}
-
-
-
-if(level==="CRITICAL"){
-
-
-STATE.FX*=0.75;
-
-STATE.DC*=0.75;
-
-STATE.CYB*=0.70;
-
-STATE.INF*=0.80;
-
-
-logEvent("MITIGATION → FULL RESILIENCE MODE");
-
-addAudit("CRITICAL RESPONSE ACTIVATED");
-
-
-}
-
-
-}
-
-
-
-
-/* =====================================
-   AUDIT SYSTEM
-===================================== */
-
-
-function addAudit(event){
-
-
-AUDIT.push({
-
-time:new Date().toLocaleTimeString(),
-
-event:event,
-
-FX:STATE.FX.toFixed(1),
-
-DC:STATE.DC.toFixed(1),
-
-CYB:STATE.CYB.toFixed(1),
-
-INF:STATE.INF.toFixed(1)
-
-});
-
-
-renderAudit();
-
-
-}
-
-
-
-
-function renderAudit(){
-
-
-let output="";
-
-
-AUDIT.slice(-8).forEach(a=>{
-
-
-output+=
-
-`[${a.time}] ${a.event}
-FX:${a.FX}
-DC:${a.DC}
-CYB:${a.CYB}
-INF:${a.INF}
-
-`;
-
-
-});
-
-
-document.getElementById("audit").innerText=
-
-output || "Waiting...";
-
-
-}
-
-
-
-
-
-/* =====================================
-   EVENT LOG
-===================================== */
-
-
-function logEvent(message){
-
-
-let box=document.getElementById("log");
-
-
-let time=new Date().toLocaleTimeString();
-
-
-box.innerHTML=
-
-`[${time}] ${message}<br>`+
-
-box.innerHTML;
-
-
-}
-
-
-
-
-/* =====================================
-   UI RENDER
-===================================== */
-
-
-function render(){
-
-
-FX.innerText=
-
-STATE.FX.toFixed(1);
-
-
-DC.innerText=
-
-STATE.DC.toFixed(1);
-
-
-CYB.innerText=
-
-STATE.CYB.toFixed(1);
-
-
-INF.innerText=
-
-STATE.INF.toFixed(1);
-
-
-}
-
-
-
-
-
-/* =====================================
-   SYSTEM RESET
-===================================== */
-
-
-function resetSystem(){
-
-
-STATE.FX=0;
-
-STATE.DC=0;
-
-STATE.CYB=0;
-
-STATE.INF=0;
-
-STATE.confidence=100;
-
-
-document.getElementById("scenario").innerHTML=
-
-"Idle";
-
-
-document.getElementById("solutions").innerHTML=
-
-"-";
-
-
-document.getElementById("sequence").innerHTML=
-
-"-";
-
-
-document.getElementById("risk").innerText=
-
-"Risk: LOW";
-
-
-document.getElementById("statusBar").innerText=
-
-"SYSTEM STATUS: STABLE";
-
-
-logEvent("SYSTEM RESET");
-
-
-addAudit("RESET");
-
-
-render();
-
-
-}
-
-/* =====================================
-   SPD v13 GOLDEN RULE GOVERNANCE LAYER
-===================================== */
-
-
-const GOLDEN_RULE = {
-
-name:"SEXTANT GOLDEN RULE",
-
-principle:
-"Protect system stability before optimizing performance.",
-
-
-checks:[
-
-"Do not allow uncontrolled risk propagation",
-
-"Preserve critical system availability",
-
-"Maintain human oversight",
-
-"Prioritize containment before recovery",
-
-"Record every decision path"
-
-]
-
-
-};
-
-
-
-function goldenRuleCheck(){
-
-
-let risk = riskScore();
-
-
-let status="PASS";
-
-
-let action="System operating within resilience boundary";
-
-
-
-if(risk > 60){
-
-status="WARNING";
-
-action=
-"Golden Rule activated: containment priority required";
-
-
-decisionEngine("CRITICAL");
-
-
-}
-
-
-
-if(risk > 30 && risk <=60){
-
-status="MONITOR";
-
-action=
-"Golden Rule activated: stabilization measures recommended";
-
-}
-
-
-
-addAudit(
-
-"GOLDEN RULE "+status+" | "+action
-
-);
-
-
-
-return {
-
-status:status,
-
-action:action
-
-};
-
-
-}
-
-
-
-
-
-
-
-
-/* =====================================
-   GOLDEN RULE INTEGRATION
-===================================== */
-
-
-const originalEvaluateRisk = evaluateRisk;
-
-
-evaluateRisk=function(){
-
-originalEvaluateRisk();
-
-
-let golden = goldenRuleCheck();
-
-
-document.getElementById("solutions").innerHTML +=
-
-"<br><br><b>GOLDEN RULE:</b><br>" +
-
-golden.status +
-
-"<br>" +
-
-golden.action;
-
-
-};
-
-
-/* INITIAL START */
-
-
-render();
-
-
-</script>
-
-
-</body>
-
-</html>
+   CAS
