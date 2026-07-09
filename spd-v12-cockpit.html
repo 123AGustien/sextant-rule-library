@@ -862,3 +862,265 @@ updateDashboard();
 
 </script>
 
+<!-- ==============================
+ SEXTANT CASCADE ENGINE
+ PART 4 - SCENARIO INTELLIGENCE LAYER
+================================ -->
+
+
+<script>
+
+
+const scenarioLibrary = {
+
+
+FX_SHOCK: {
+
+name:"Currency Market Shock",
+
+trigger:"Rapid FX volatility",
+
+effects:{
+
+FX:70,
+
+Liquidity:30,
+
+Confidence:-20
+
+},
+
+cascade:
+
+"FX pressure → liquidity tightening → confidence reduction"
+
+},
+
+
+
+BANK_STRESS: {
+
+name:"Banking System Stress",
+
+trigger:"Liquidity disruption",
+
+effects:{
+
+Liquidity:80,
+
+FX:20,
+
+Confidence:-30
+
+},
+
+cascade:
+
+"Liquidity shortage → lending constraint → market stress"
+
+},
+
+
+
+INFRA_FAILURE: {
+
+name:"Critical Infrastructure Failure",
+
+trigger:"Power or infrastructure outage",
+
+effects:{
+
+Infrastructure:90,
+
+Cyber:20,
+
+Confidence:-40
+
+},
+
+cascade:
+
+"Power loss → service interruption → operational degradation"
+
+},
+
+
+
+CYBER_EVENT: {
+
+name:"Cyber Security Incident",
+
+trigger:"Digital system compromise",
+
+effects:{
+
+Cyber:85,
+
+Infrastructure:30,
+
+Confidence:-25
+
+},
+
+cascade:
+
+"Cyber event → system isolation → service impact"
+
+}
+
+
+};
+
+
+
+
+function runCascadeAnalysis(type){
+
+
+let scenario = scenarioLibrary[type];
+
+
+if(!scenario){
+
+return;
+
+}
+
+
+
+let output = `
+
+<b>ACTIVE SCENARIO</b><br>
+
+${scenario.name}
+
+<br><br>
+
+
+<b>TRIGGER</b><br>
+
+${scenario.trigger}
+
+<br><br>
+
+
+<b>CASCADE PATH</b><br>
+
+${scenario.cascade}
+
+<br><br>
+
+
+<b>MITIGATION STATUS</b><br>
+
+Simulation evaluating response capacity...
+
+`;
+
+
+
+document.getElementById("riskPanel").innerHTML += output;
+
+
+}
+
+
+
+
+// Enhanced scenario wrapper
+
+const originalRunScenario = runScenario;
+
+
+runScenario=function(type){
+
+
+originalRunScenario(type);
+
+
+runCascadeAnalysis(type);
+
+
+
+generateDecisionSupport(type);
+
+
+}
+
+
+
+
+function generateDecisionSupport(type){
+
+
+let advice="";
+
+
+switch(type){
+
+
+case "FX_SHOCK":
+
+advice=
+
+"Activate currency monitoring, liquidity buffers and confidence protection measures.";
+
+break;
+
+
+
+case "BANK_STRESS":
+
+advice=
+
+"Prioritize liquidity continuity, settlement stability and banking communication.";
+
+break;
+
+
+
+case "INFRA_FAILURE":
+
+advice=
+
+"Deploy infrastructure redundancy, backup power and operational recovery plans.";
+
+break;
+
+
+
+case "CYBER_EVENT":
+
+advice=
+
+"Isolate affected systems, verify integrity and maintain critical services.";
+
+break;
+
+
+
+}
+
+
+
+document.getElementById("riskPanel").innerHTML +=
+
+`
+
+<br>
+
+<b>DECISION SUPPORT</b><br>
+
+${advice}
+
+`;
+
+
+
+}
+
+
+
+
+
+</script>
