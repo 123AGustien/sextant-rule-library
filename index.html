@@ -740,3 +740,176 @@ render();
 
 /* =====================================
    CAS
+
+/* =====================================
+   SPD v13 GOLDEN RULE GOVERNANCE LAYER
+   Version: 1.1
+
+   Principle:
+   Protect system stability before optimization.
+
+   Domains:
+   FX
+   DC
+   CYB
+   INF
+   EN
+===================================== */
+
+
+const GOLDEN_RULE = {
+
+
+    name:
+    "SEXTANT GOLDEN RULE",
+
+
+    principle:
+    "Protect system stability before optimization.",
+
+
+    checks:[
+
+        "Prevent uncontrolled risk propagation",
+
+        "Maintain critical system availability",
+
+        "Require human oversight",
+
+        "Prioritize containment before recovery",
+
+        "Record every decision path"
+
+    ]
+
+};
+
+
+
+
+
+function goldenRuleCheck(){
+
+
+    let risk = riskScore();
+
+
+    let status =
+    "PASS";
+
+
+    let action =
+    "System operating within resilience boundary";
+
+
+
+
+    if(risk >= 60){
+
+
+        status =
+        "WARNING";
+
+
+        action =
+        "Containment priority required";
+
+
+        logEvent(
+        "GOLDEN RULE → CONTAINMENT MODE"
+        );
+
+
+    }
+
+
+
+    else if(risk >=30){
+
+
+        status =
+        "MONITOR";
+
+
+        action =
+        "Stabilization measures recommended";
+
+
+        logEvent(
+        "GOLDEN RULE → STABILIZATION MODE"
+        );
+
+
+    }
+
+
+
+
+    addAudit(
+
+    "GOLDEN RULE "+
+    status+
+    " | "+
+    action
+
+    );
+
+
+
+    return {
+
+
+        status:status,
+
+
+        action:action
+
+
+    };
+
+
+}
+
+
+
+
+
+/* =====================================
+   GOLDEN RULE INTEGRATION
+===================================== */
+
+
+const originalEvaluateRisk =
+evaluateRisk;
+
+
+
+evaluateRisk = function(){
+
+
+    originalEvaluateRisk();
+
+
+
+    let golden =
+    goldenRuleCheck();
+
+
+
+    document.getElementById("solutions").innerHTML +=
+
+
+    "<br><br><b>🛰 GOLDEN RULE</b><br>" +
+
+
+    golden.status +
+
+
+    "<br>" +
+
+
+    golden.action;
+
+
+
+};
