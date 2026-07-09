@@ -1,170 +1,198 @@
 /*
-=====================================================
- SEXTANT PROTOCOL
- ENERGY RESILIENCE ENGINE
- Module: EN / BIO
- Version: 1.0
-=====================================================
+=====================================
+SEXTANT PROTOCOL
+ENERGY RESILIENCE ENGINE
+Version: v1.0
+Module: Biodiesel / Fuel Security
+=====================================
 */
+
 
 const ENERGY_ENGINE = {
 
-    module: "ENERGY RESILIENCE",
-    rule: "BIO-001",
 
     state: {
+
         blendRatio: 35,
         cpoStock: 100,
         importDependency: 60,
+
         oilPrice: "NORMAL",
-        risk: 0,
-        status: "NORMAL"
+
+        stability: "NORMAL"
+
     },
 
 
-    inject(event){
-
-        switch(event){
-
-            case "OIL_HIGH":
-                this.state.oilPrice = "HIGH";
-                this.state.risk += 25;
-                break;
+    scenarios: {
 
 
-            case "OIL_LOW":
-                this.state.oilPrice = "LOW";
-                this.state.risk -= 10;
-                break;
+        BIO001: {
+
+            id: "BIO-001",
+
+            name: "Biodiesel Supply Stress",
+
+            trigger:
+
+            "Reduction in biodiesel supply availability",
+
+            impact: [
+
+                "Fuel security pressure",
+
+                "Import dependency increase",
+
+                "Operational resilience risk"
+
+            ],
+
+            actions: [
+
+                "Increase domestic biodiesel allocation",
+
+                "Activate fuel reserve monitoring",
+
+                "Reduce unnecessary consumption"
+
+            ]
+
+        },
 
 
-            case "BIO_SHORTAGE":
-                this.state.cpoStock -= 40;
-                this.state.risk += 40;
-                break;
+        BIO002: {
+
+            id: "BIO-002",
+
+            name: "Biodiesel Shortage Scenario",
+
+            trigger:
+
+            "Critical biodiesel supply disruption",
+
+            impact: [
+
+                "Energy availability reduction",
+
+                "Infrastructure operational risk",
+
+                "Economic pressure"
+
+            ],
+
+            actions: [
+
+                "Activate emergency fuel planning",
+
+                "Prioritize critical infrastructure",
+
+                "Deploy alternative energy sources"
+
+            ]
+
+        }
+
+    },
 
 
-            case "IMPORT_PRESSURE":
-                this.state.importDependency += 20;
-                this.state.risk += 20;
-                break;
+
+    runScenario(type){
+
+
+        let scenario=this.scenarios[type];
+
+
+        if(!scenario){
+
+            return {
+
+                status:"ERROR",
+
+                message:"Scenario not found"
+
+            };
 
         }
 
 
-        return this.evaluate();
+
+        this.state.stability="MONITOR";
+
+
+        return {
+
+
+            rule:scenario.id,
+
+            scenario:scenario.name,
+
+            trigger:scenario.trigger,
+
+            impact:scenario.impact,
+
+            actions:scenario.actions,
+
+            status:this.state.stability
+
+
+        };
 
     },
+
 
 
     evaluate(){
 
-        let s = this.state;
+
+        let risk="LOW";
 
 
-        if(s.cpoStock < 50){
-            s.risk += 15;
-        }
+        if(this.state.importDependency > 70){
 
-
-        if(s.importDependency > 70){
-            s.risk += 15;
-        }
-
-
-
-        if(s.risk >= 60){
-
-            s.status = "CRITICAL";
-            this.goldenRule("CONTAINMENT REQUIRED");
-
-        }
-
-        else if(s.risk >= 30){
-
-            s.status = "DEGRADED";
-            this.goldenRule("STABILIZATION REQUIRED");
-
-        }
-
-        else{
-
-            s.status = "NORMAL";
-            this.goldenRule("PASS");
+            risk="MEDIUM";
 
         }
 
 
-        return s;
+        if(this.state.cpoStock < 30){
 
-    },
+            risk="HIGH";
 
-
-
-    goldenRule(action){
-
-        console.log(
-            "SEXTANT GOLDEN RULE | ENERGY | " + action
-        );
-
-    },
+        }
 
 
+        if(
+            this.state.oilPrice==="HIGH" &&
+            this.state.cpoStock < 20
+        ){
 
-    contingency(){
+            risk="CRITICAL";
 
-        return [
-
-            "Maintain strategic biodiesel reserve",
-
-            "Reduce imported fuel dependency",
-
-            "Increase domestic feedstock security",
-
-            "Activate alternative energy sources",
-
-            "Protect critical infrastructure supply"
-
-        ];
-
-    },
+        }
 
 
-
-    audit(){
 
         return {
 
-            module:this.module,
+            energyRisk:risk,
 
-            rule:this.rule,
-
-            blend:this.state.blendRatio+"%",
-
-            cpoStock:this.state.cpoStock,
-
-            importDependency:this.state.importDependency+"%",
-
-            risk:this.state.risk,
-
-            status:this.state.status,
-
-            timestamp:new Date().toISOString()
+            stability:this.state.stability
 
         };
 
     }
 
+
+
 };
 
 
-
 /*
- Export
+EXPORT MODULE
 */
 
 if(typeof module !== "undefined"){
 
-    module.exports = ENERGY_ENGINE;
+module.exports = ENERGY_ENGINE;
 
 }
