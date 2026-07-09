@@ -10,6 +10,7 @@
 <title>SPD v13 // SEXTANT RESILIENCE COCKPIT</title>
 
 
+
 <style>
 
 body{
@@ -1075,7 +1076,115 @@ render();
 
 }
 
+/* =====================================
+   SPD v13 GOLDEN RULE GOVERNANCE LAYER
+===================================== */
 
+
+const GOLDEN_RULE = {
+
+name:"SEXTANT GOLDEN RULE",
+
+principle:
+"Protect system stability before optimizing performance.",
+
+
+checks:[
+
+"Do not allow uncontrolled risk propagation",
+
+"Preserve critical system availability",
+
+"Maintain human oversight",
+
+"Prioritize containment before recovery",
+
+"Record every decision path"
+
+]
+
+
+};
+
+
+
+function goldenRuleCheck(){
+
+
+let risk = riskScore();
+
+
+let status="PASS";
+
+
+let action="System operating within resilience boundary";
+
+
+
+if(risk > 60){
+
+status="WARNING";
+
+action=
+"Golden Rule activated: containment priority required";
+
+
+decisionEngine("CRITICAL");
+
+
+}
+
+
+
+if(risk > 30 && risk <=60){
+
+status="MONITOR";
+
+action=
+"Golden Rule activated: stabilization measures recommended";
+
+}
+
+
+
+addAudit(
+
+"GOLDEN RULE "+status+" | "+action
+
+);
+
+
+
+return {
+
+status:status,
+
+action:action
+
+};
+
+
+}
+
+
+
+
+
+/* Integrate with evaluation */
+
+const originalEvaluateRisk = evaluateRisk;
+
+
+evaluateRisk=function(){
+
+
+originalEvaluateRisk();
+
+
+goldenRuleCheck();
+
+
+};
 
 
 /* INITIAL START */
