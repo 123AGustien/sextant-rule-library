@@ -10,6 +10,345 @@
 <style>
 
 *{
+<script>
+
+const sextant = {
+
+fx:0,
+dc:0,
+cyb:0,
+inf:0,
+
+health:100,
+
+risk:"LOW"
+
+};
+
+
+
+function updateScreen(){
+
+
+document.getElementById("fx").innerHTML =
+sextant.fx;
+
+
+document.getElementById("dc").innerHTML =
+sextant.dc;
+
+
+document.getElementById("cyb").innerHTML =
+sextant.cyb;
+
+
+document.getElementById("inf").innerHTML =
+sextant.inf;
+
+
+document.getElementById("shi").innerHTML =
+sextant.health;
+
+
+document.getElementById("risk").innerHTML =
+sextant.risk;
+
+
+
+if(sextant.health >=75){
+
+document.getElementById("system").innerHTML =
+"STABLE";
+
+}
+
+else if(sextant.health >=40){
+
+document.getElementById("system").innerHTML =
+"WARNING";
+
+}
+
+else{
+
+document.getElementById("system").innerHTML =
+"CRITICAL";
+
+}
+
+
+}
+
+
+
+
+function calculateRisk(){
+
+
+let impact =
+
+sextant.fx +
+sextant.dc +
+sextant.cyb +
+sextant.inf;
+
+
+
+sextant.health =
+Math.max(
+0,
+100 - Math.floor(impact/2)
+);
+
+
+
+if(sextant.health >=75){
+
+sextant.risk="LOW";
+
+}
+
+else if(sextant.health >=50){
+
+sextant.risk="MEDIUM";
+
+}
+
+else if(sextant.health >=25){
+
+sextant.risk="HIGH";
+
+}
+
+else{
+
+sextant.risk="CRITICAL";
+
+}
+
+
+}
+
+
+
+
+
+function injectScenario(type){
+
+
+
+resetValues();
+
+
+
+let scenario="";
+
+let cascade="";
+
+let solution="";
+
+
+
+
+
+if(type==="FX"){
+
+
+scenario="Financial Stress Injection";
+
+
+sextant.fx=80;
+
+sextant.dc=15;
+
+sextant.cyb=10;
+
+
+
+cascade=
+
+"FX volatility → Liquidity pressure → Confidence impact";
+
+
+solution=
+
+"Inject liquidity buffer<br>Stabilize financial layer<br>Reduce volatility exposure";
+
+
+}
+
+
+
+
+
+if(type==="INF"){
+
+
+scenario="Infrastructure Failure";
+
+
+sextant.inf=90;
+
+sextant.dc=60;
+
+sextant.cyb=20;
+
+
+
+cascade=
+
+"Power disruption → Data centre stress → Service degradation";
+
+
+solution=
+
+"Activate redundancy<br>Deploy backup capacity<br>Recover critical services";
+
+
+}
+
+
+
+
+
+if(type==="CYB"){
+
+
+scenario="Cyber Event";
+
+
+sextant.cyb=85;
+
+sextant.dc=30;
+
+sextant.inf=20;
+
+
+
+cascade=
+
+"Cyber intrusion → System isolation → Operational impact";
+
+
+solution=
+
+"Contain incident<br>Verify integrity<br>Restore protected operations";
+
+
+}
+
+
+
+
+
+calculateRisk();
+
+updateScreen();
+
+
+
+document.getElementById("riskOutput").innerHTML =
+
+
+`
+
+<b>SCENARIO PANEL</b><br>
+
+${scenario}
+
+<br><br>
+
+
+<b>CASCADE ANALYSIS</b><br>
+
+${cascade}
+
+<br><br>
+
+
+<b>RISK LEVEL</b><br>
+
+${sextant.risk}
+
+<br><br>
+
+
+<b>SOLUTION OPTIONS</b><br>
+
+${solution}
+
+<br><br>
+
+
+<b>ACTION SEQUENCE PROMPT</b><br>
+
+1. Detect anomaly<br>
+
+2. Apply risk model<br>
+
+3. Stabilize affected layer<br>
+
+4. Rebalance system
+
+<br><br>
+
+
+<b>> INJECT → ${scenario}</b>
+
+`;
+
+
+
+}
+
+
+
+
+function resetValues(){
+
+
+sextant.fx=0;
+
+sextant.dc=0;
+
+sextant.cyb=0;
+
+sextant.inf=0;
+
+
+sextant.health=100;
+
+sextant.risk="LOW";
+
+
+}
+
+
+
+
+
+function resetSystem(){
+
+
+resetValues();
+
+updateScreen();
+
+
+document.getElementById("riskOutput").innerHTML =
+
+"System reset complete. Awaiting scenario injection...";
+
+
+}
+
+
+
+updateScreen();
+
+
+</script>
+
 box-sizing:border-box;
 font-family:Arial,Helvetica,sans-serif;
 margin:0;
