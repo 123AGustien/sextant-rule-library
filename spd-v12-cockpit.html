@@ -363,6 +363,222 @@ LOW
 </div>
 
 </div>
+<!-- ==============================
+ SEXTANT CONTROL ROOM DASHBOARD
+ PART 2 - INTERFACE LAYER
+================================ -->
+
+
+<script>
+
+document.getElementById("stressPanel").innerHTML = `
+
+<div class="node-grid">
+
+<div class="node">
+<div class="node-name">FX PRESSURE</div>
+<div class="node-value" id="fxValue">0</div>
+</div>
+
+
+<div class="node">
+<div class="node-name">LIQUIDITY LOAD</div>
+<div class="node-value" id="liqValue">0</div>
+</div>
+
+
+<div class="node">
+<div class="node-name">CYBER EVENT</div>
+<div class="node-value" id="cyberValue">0</div>
+</div>
+
+
+<div class="node">
+<div class="node-name">INFRA STRAIN</div>
+<div class="node-value" id="infraValue">0</div>
+</div>
+
+</div>
+
+`;
+
+
+
+document.getElementById("riskPanel").innerHTML = `
+
+<div class="node-grid">
+
+
+<div class="node">
+<div class="node-name">
+RP-04 CORE NODE
+</div>
+
+<div class="node-value" id="rpValue">
+100
+</div>
+
+</div>
+
+
+
+<div class="node">
+<div class="node-name">
+CONFIDENCE
+</div>
+
+<div class="node-value" id="confValue">
+100
+</div>
+
+</div>
+
+
+
+</div>
+
+
+<br>
+
+
+<div class="panel-title">
+SCENARIO CONTROL
+</div>
+
+
+<button onclick="runScenario('FX_SHOCK')">
+Currency Shock
+</button>
+
+
+<button onclick="runScenario('BANK_STRESS')">
+Banking Stress
+</button>
+
+
+<button onclick="runScenario('INFRA_FAILURE')">
+Infrastructure Failure
+</button>
+
+
+<button onclick="runScenario('CYBER_EVENT')">
+Cyber Incident
+</button>
+
+
+<button onclick="resetSystem()">
+Reset Simulation
+</button>
+
+
+`;
+
+</script>
+
+
+
+<!-- SYSTEM NETWORK VISUAL -->
+
+<section class="panel" style="margin:15px;">
+
+
+<div class="panel-title">
+SYSTEM CONNECTIVITY MAP
+</div>
+
+
+
+<div class="node-grid">
+
+
+<div class="node">
+
+<div class="node-name">
+FX NODE
+</div>
+
+<div class="node-value">
+💱
+</div>
+
+</div>
+
+
+
+<div class="node">
+
+<div class="node-name">
+BANK NODE
+</div>
+
+<div class="node-value">
+🏦
+</div>
+
+</div>
+
+
+
+<div class="node">
+
+<div class="node-name">
+LIQUIDITY NODE
+</div>
+
+<div class="node-value">
+💧
+</div>
+
+</div>
+
+
+
+<div class="node">
+
+<div class="node-name">
+INFRA NODE
+</div>
+
+<div class="node-value">
+⚡
+</div>
+
+</div>
+
+
+
+<div class="node">
+
+<div class="node-name">
+CYBER NODE
+</div>
+
+<div class="node-value">
+🛡
+</div>
+
+</div>
+
+
+
+<div class="node">
+
+<div class="node-name">
+CONFIDENCE NODE
+</div>
+
+<div class="node-value">
+📊
+</div>
+
+</div>
+
+
+
+</div>
+
+
+</section>
 
 
 
@@ -377,3 +593,4 @@ SHI
 </div>
 
 </div>
+
