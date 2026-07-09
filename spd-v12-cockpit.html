@@ -593,4 +593,272 @@ SHI
 </div>
 
 </div>
+<!-- ==============================
+ SEXTANT SIMULATION CONTROLLER
+ PART 3 - JAVASCRIPT ENGINE
+================================ -->
+
+
+<script>
+
+
+const sextantState = {
+
+    health:100,
+
+    risk:"LOW",
+
+    fx:0,
+
+    liquidity:0,
+
+    cyber:0,
+
+    infrastructure:0,
+
+    confidence:100
+
+};
+
+
+
+function updateDashboard(){
+
+
+document.getElementById("shi").innerHTML =
+sextantState.health;
+
+
+
+document.getElementById("fxValue").innerHTML =
+sextantState.fx;
+
+
+
+document.getElementById("liqValue").innerHTML =
+sextantState.liquidity;
+
+
+
+document.getElementById("cyberValue").innerHTML =
+sextantState.cyber;
+
+
+
+document.getElementById("infraValue").innerHTML =
+sextantState.infrastructure;
+
+
+
+document.getElementById("confValue").innerHTML =
+sextantState.confidence;
+
+
+
+document.getElementById("rpValue").innerHTML =
+sextantState.health;
+
+
+
+document.getElementById("riskLevel").innerHTML =
+sextantState.risk;
+
+
+
+if(sextantState.health >=75){
+
+document.getElementById("systemStatus").innerHTML =
+"STABLE";
+
+}
+
+else if(sextantState.health >=45){
+
+document.getElementById("systemStatus").innerHTML =
+"WARNING";
+
+}
+
+else{
+
+document.getElementById("systemStatus").innerHTML =
+"CRITICAL";
+
+}
+
+
+}
+
+
+
+
+
+function calculateRisk(){
+
+
+let totalImpact =
+
+sextantState.fx +
+
+sextantState.liquidity +
+
+sextantState.cyber +
+
+sextantState.infrastructure;
+
+
+
+sextantState.health =
+Math.max(
+0,
+100 - Math.floor(totalImpact/2)
+);
+
+
+
+if(sextantState.health >=75){
+
+sextantState.risk="LOW";
+
+}
+
+else if(sextantState.health >=45){
+
+sextantState.risk="MEDIUM";
+
+}
+
+else if(sextantState.health >=25){
+
+sextantState.risk="HIGH";
+
+}
+
+else{
+
+sextantState.risk="CRITICAL";
+
+}
+
+
+
+sextantState.confidence =
+Math.max(
+0,
+100-totalImpact
+);
+
+
+}
+
+
+
+
+
+function runScenario(type){
+
+
+resetValues();
+
+
+
+if(type==="FX_SHOCK"){
+
+sextantState.fx=70;
+
+sextantState.liquidity=30;
+
+sextantState.confidence-=20;
+
+}
+
+
+
+if(type==="BANK_STRESS"){
+
+sextantState.liquidity=80;
+
+sextantState.fx=20;
+
+sextantState.confidence-=30;
+
+}
+
+
+
+if(type==="INFRA_FAILURE"){
+
+sextantState.infrastructure=90;
+
+sextantState.cyber=20;
+
+sextantState.confidence-=40;
+
+}
+
+
+
+if(type==="CYBER_EVENT"){
+
+sextantState.cyber=85;
+
+sextantState.infrastructure=30;
+
+sextantState.confidence-=25;
+
+}
+
+
+
+calculateRisk();
+
+updateDashboard();
+
+
+
+}
+
+
+
+
+function resetValues(){
+
+
+sextantState.fx=0;
+
+sextantState.liquidity=0;
+
+sextantState.cyber=0;
+
+sextantState.infrastructure=0;
+
+
+}
+
+
+
+function resetSystem(){
+
+
+sextantState.health=100;
+
+sextantState.risk="LOW";
+
+sextantState.confidence=100;
+
+
+resetValues();
+
+
+updateDashboard();
+
+
+}
+
+
+
+updateDashboard();
+
+
+</script>
 
