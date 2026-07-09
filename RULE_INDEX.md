@@ -7,7 +7,9 @@ This document is the master index of all rules within the Sextant Protocol Rule 
 It acts as the central routing layer between:
 - Scenario selection
 - Rule execution
+
 - Simulation engine processing
+
 - Risk and contingency output
 
 ---
@@ -18,6 +20,10 @@ It acts as the central routing layer between:
 Scenario Selection
         ↓
 RULE_INDEX.md (routing layer)
+EN — Energy Resilience
+
+BIO-001 Biodiesel Supply Stress
+BIO-002 Biodiesel Shortage Scenario
         ↓
 Rule File (e.g. FIN-001.md)
         ↓
