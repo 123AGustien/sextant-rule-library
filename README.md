@@ -1,4 +1,7 @@
-
+SPD v13 Governance Layer
+- Golden Rule Engine
+- Deterministic Cascade Control
+- Audit Decision Recording
 # 📘 Sextant Rule Library
 
 Governed decision layer for the **Sextant Protocol** resilience simulation framework.
