@@ -257,10 +257,26 @@ else{
 
 
 
-return s;
+return {
+
+    rule:this.rules,
+
+    blendRatio:s.blendRatio,
+
+    cpoStock:s.cpoStock,
+
+    importDependency:s.importDependency,
+
+    oilPrice:s.oilPrice,
+
+    riskScore:s.riskScore,
+
+    status:s.status
+
+};
 
 
-},
+
 
 
 
