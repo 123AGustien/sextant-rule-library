@@ -2,7 +2,7 @@
 =====================================================
 SEXTANT PROTOCOL
 ENGINE REGISTRY
-Version: 1.2
+Version: 1.3
 
 Purpose:
 Central module loader for Sextant simulation engines.
@@ -13,6 +13,8 @@ Connected Modules:
 - Cyber Resilience Engine
 - Infrastructure Resilience Engine
 - Energy Resilience Engine
+- Risk Classification Engine
+- Golden Rule Governance
 
 Governance:
 Sextant Golden Rule
@@ -20,13 +22,33 @@ Sextant Golden Rule
 */
 
 
-/* ENERGY MODULE */
+/*
+=====================================================
+CORE MODULES
+=====================================================
+*/
 
-const ENERGY_ENGINE = require("./energy-engine");
+
+const ENERGY_ENGINE =
+require("./energy-engine");
+
+
+const RISK_MODEL =
+require("./risk-model");
 
 
 
-/* FUTURE MODULE CONNECTIONS */
+const GOLDEN_RULE =
+require("../GOLDEN_RULE");
+
+
+
+/*
+=====================================================
+FUTURE MODULE CONNECTIONS
+=====================================================
+*/
+
 
 /*
 
@@ -48,6 +70,12 @@ require("./inf-engine");
 */
 
 
+/*
+=====================================================
+ENGINE REGISTRY
+=====================================================
+*/
+
 
 const ENGINE_REGISTRY = {
 
@@ -57,7 +85,18 @@ const ENGINE_REGISTRY = {
 
         ENERGY:
 
-        ENERGY_ENGINE
+        ENERGY_ENGINE,
+
+
+        RISK:
+
+        RISK_MODEL,
+
+
+        GOVERNANCE:
+
+        GOLDEN_RULE
+
 
 
         // FIN: FIN_ENGINE,
@@ -67,6 +106,7 @@ const ENGINE_REGISTRY = {
 
 
     },
+
 
 
 
@@ -91,11 +131,40 @@ const ENGINE_REGISTRY = {
 
             status:"ACTIVE"
 
+        },
+
+
+
+        {
+
+            id:"RISK",
+
+            name:"Multi Domain Risk Classification",
+
+            engine:"RISK",
+
+            rules:[
+
+                "FX",
+
+                "DC",
+
+                "CYB",
+
+                "INF",
+
+                "EN"
+
+            ],
+
+            status:"ACTIVE"
+
         }
 
 
 
     ],
+
 
 
 
@@ -107,6 +176,7 @@ const ENGINE_REGISTRY = {
 
 
     }
+
 
 
 
