@@ -1,12 +1,14 @@
 /*
 =====================================================
- SEXTANT PROTOCOL
- ENERGY RESILIENCE UI CONNECTOR
- Module: EN / BIO
- Version: 1.0
- Connects:
- energy-engine.js
- SPD v13 Cockpit
+SEXTANT PROTOCOL
+ENERGY RESILIENCE UI CONNECTOR
+Module: EN / BIO
+Version: 1.1
+
+Connects:
+energy-engine.js
+SPD v13 Cockpit
+Golden Rule Governance
 =====================================================
 */
 
@@ -17,30 +19,41 @@ const ENERGY_UI = {
     engine:null,
 
 
+
     init(engine){
 
+
         this.engine = engine;
+
 
         this.log(
             "ENERGY MODULE CONNECTED"
         );
 
+
     },
+
+
 
 
 
     runScenario(event){
 
 
+
         if(!this.engine){
+
 
             this.log(
             "ENERGY ENGINE NOT CONNECTED"
             );
 
+
             return;
 
+
         }
+
 
 
 
@@ -55,12 +68,16 @@ const ENERGY_UI = {
 
         return result;
 
+
     },
 
 
 
 
+
+
     updatePanel(data){
+
 
 
         const panel =
@@ -70,34 +87,58 @@ const ENERGY_UI = {
 
 
 
+
         if(panel){
+
 
 
             panel.innerHTML =
 
-            `
-            <b>ENERGY RESILIENCE STATUS</b><br><br>
 
-            Rule: BIO-001<br>
+            `
+
+            <b>ENERGY RESILIENCE STATUS</b>
+            <br><br>
+
+
+            Domain: EN<br>
+
+            Rule:
+            ${data.rule.join(", ")}
+            <br><br>
+
 
             Blend Ratio:
             ${data.blendRatio}%<br>
 
+
             CPO Stock:
             ${data.cpoStock}%<br>
+
 
             Import Dependency:
             ${data.importDependency}%<br>
 
-            Risk:
+
+            Oil Price:
+            ${data.oilPrice}<br>
+
+
+            Risk Score:
             ${data.riskScore}<br>
+
 
             Status:
             ${data.status}<br><br>
 
-            <b>GOLDEN RULE</b><br>
+
+
+            <b>SEXTANT GOLDEN RULE</b>
+            <br>
 
             Protect system stability before optimization.
+
+
             `;
 
 
@@ -105,9 +146,12 @@ const ENERGY_UI = {
 
 
 
+
         this.audit(data);
 
+
     },
+
 
 
 
@@ -116,24 +160,33 @@ const ENERGY_UI = {
     audit(data){
 
 
+
         console.log(
+
 
         "ENERGY AUDIT",
 
         {
 
+
         module:"EN",
 
-        rule:"BIO-001",
+
+        rule:data.rule,
+
 
         status:data.status,
 
+
         risk:data.riskScore,
+
 
         timestamp:
         new Date().toISOString()
 
+
         }
+
 
         );
 
@@ -144,11 +197,14 @@ const ENERGY_UI = {
 
 
 
+
     log(message){
+
 
 
         let logBox =
         document.getElementById("log");
+
 
 
         if(logBox){
@@ -156,8 +212,12 @@ const ENERGY_UI = {
 
             logBox.innerHTML =
 
-            "[ENERGY] "+message+
-            "<br>"+
+
+            "[ENERGY] "
+            + message
+            +
+            "<br>"
+            +
             logBox.innerHTML;
 
 
@@ -167,20 +227,24 @@ const ENERGY_UI = {
     }
 
 
+
 };
+
 
 
 
 
 /*
 =====================================================
- EXPORT
+EXPORT
 =====================================================
 */
 
 
 if(typeof module !== "undefined"){
 
-module.exports = ENERGY_UI;
+
+    module.exports = ENERGY_UI;
+
 
 }
