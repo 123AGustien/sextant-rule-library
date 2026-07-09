@@ -1,43 +1,65 @@
 /*
-=====================================
-SEXTANT PROTOCOL
-ENERGY RESILIENCE ENGINE
-Version: v1.0
-Module: Biodiesel / Fuel Security
-=====================================
+=====================================================
+ SEXTANT PROTOCOL
+ ENERGY RESILIENCE ENGINE
+ Module: EN / BIO
+ Version: 1.1
+ Purpose: Biodiesel & Fuel Security Simulation Layer
+ Governance: Sextant Golden Rule
+=====================================================
 */
 
 
 const ENERGY_ENGINE = {
 
 
+    module: "ENERGY RESILIENCE",
+
+    domain: "EN",
+
+    rules: [
+        "BIO-001",
+        "BIO-002"
+    ],
+
+
     state: {
 
         blendRatio: 35,
+
         cpoStock: 100,
+
         importDependency: 60,
 
         oilPrice: "NORMAL",
 
-        stability: "NORMAL"
+        riskScore: 0,
+
+        status: "NORMAL"
 
     },
 
 
-    scenarios: {
+/*
+=====================================================
+ SCENARIO LIBRARY
+=====================================================
+*/
 
 
-        BIO001: {
+    scenarios:{
 
-            id: "BIO-001",
 
-            name: "Biodiesel Supply Stress",
+        BIO001:{
+
+            id:"BIO-001",
+
+            name:"Biodiesel Supply Stress",
 
             trigger:
-
             "Reduction in biodiesel supply availability",
 
-            impact: [
+            impact:[
 
                 "Fuel security pressure",
 
@@ -47,30 +69,32 @@ const ENERGY_ENGINE = {
 
             ],
 
-            actions: [
+
+            actions:[
 
                 "Increase domestic biodiesel allocation",
 
-                "Activate fuel reserve monitoring",
+                "Monitor strategic reserves",
 
-                "Reduce unnecessary consumption"
+                "Protect critical infrastructure fuel supply"
 
             ]
 
         },
 
 
-        BIO002: {
 
-            id: "BIO-002",
+        BIO002:{
 
-            name: "Biodiesel Shortage Scenario",
+            id:"BIO-002",
+
+            name:"Biodiesel Shortage Scenario",
 
             trigger:
-
             "Critical biodiesel supply disruption",
 
-            impact: [
+
+            impact:[
 
                 "Energy availability reduction",
 
@@ -80,11 +104,12 @@ const ENERGY_ENGINE = {
 
             ],
 
-            actions: [
+
+            actions:[
 
                 "Activate emergency fuel planning",
 
-                "Prioritize critical infrastructure",
+                "Prioritize essential services",
 
                 "Deploy alternative energy sources"
 
@@ -96,100 +121,247 @@ const ENERGY_ENGINE = {
 
 
 
-    runScenario(type){
+/*
+=====================================================
+ EVENT INJECTION
+=====================================================
+*/
 
 
-        let scenario=this.scenarios[type];
+inject(event){
 
 
-        if(!scenario){
-
-            return {
-
-                status:"ERROR",
-
-                message:"Scenario not found"
-
-            };
-
-        }
+    switch(event){
 
 
+        case "OIL_HIGH":
 
-        this.state.stability="MONITOR";
+            this.state.oilPrice="HIGH";
 
+            this.state.riskScore +=25;
 
-        return {
-
-
-            rule:scenario.id,
-
-            scenario:scenario.name,
-
-            trigger:scenario.trigger,
-
-            impact:scenario.impact,
-
-            actions:scenario.actions,
-
-            status:this.state.stability
-
-
-        };
-
-    },
+            break;
 
 
 
-    evaluate(){
+        case "OIL_LOW":
 
+            this.state.oilPrice="LOW";
 
-        let risk="LOW";
+            this.state.riskScore -=10;
 
-
-        if(this.state.importDependency > 70){
-
-            risk="MEDIUM";
-
-        }
-
-
-        if(this.state.cpoStock < 30){
-
-            risk="HIGH";
-
-        }
-
-
-        if(
-            this.state.oilPrice==="HIGH" &&
-            this.state.cpoStock < 20
-        ){
-
-            risk="CRITICAL";
-
-        }
+            break;
 
 
 
-        return {
+        case "BIO_SHORTAGE":
 
-            energyRisk:risk,
+            this.state.cpoStock -=40;
 
-            stability:this.state.stability
+            this.state.riskScore +=40;
 
-        };
+            break;
+
+
+
+        case "IMPORT_PRESSURE":
+
+            this.state.importDependency +=20;
+
+            this.state.riskScore +=20;
+
+            break;
 
     }
 
+
+    return this.evaluate();
+
+},
+
+
+
+/*
+=====================================================
+ RULE EVALUATION ENGINE
+=====================================================
+*/
+
+
+evaluate(){
+
+
+let s=this.state;
+
+
+
+if(s.cpoStock < 50){
+
+    s.riskScore +=15;
+
+}
+
+
+
+if(s.importDependency >70){
+
+    s.riskScore +=15;
+
+}
+
+
+
+
+if(s.riskScore >=60){
+
+
+    s.status="CRITICAL";
+
+    this.goldenRule(
+    "CONTAINMENT REQUIRED"
+    );
+
+
+}
+
+
+else if(s.riskScore >=30){
+
+
+    s.status="DEGRADED";
+
+    this.goldenRule(
+    "STABILIZATION REQUIRED"
+    );
+
+
+}
+
+
+else{
+
+
+    s.status="NORMAL";
+
+    this.goldenRule(
+    "PASS"
+    );
+
+}
+
+
+
+return s;
+
+
+},
+
+
+
+
+/*
+=====================================================
+ SEXTANT GOLDEN RULE
+=====================================================
+*/
+
+
+goldenRule(action){
+
+
+console.log(
+
+"SEXTANT GOLDEN RULE | ENERGY | "+action
+
+);
+
+
+},
+
+
+
+
+/*
+=====================================================
+ CONTINGENCY ENGINE
+=====================================================
+*/
+
+
+contingency(){
+
+
+return [
+
+"Maintain strategic biodiesel reserve",
+
+"Reduce imported fuel dependency",
+
+"Increase domestic feedstock security",
+
+"Activate alternative energy sources",
+
+"Protect critical infrastructure supply"
+
+];
+
+
+},
+
+
+
+
+/*
+=====================================================
+ AUDIT ENGINE
+=====================================================
+*/
+
+
+audit(){
+
+
+return{
+
+
+module:this.module,
+
+domain:this.domain,
+
+rules:this.rules,
+
+blendRatio:this.state.blendRatio+"%",
+
+cpoStock:this.state.cpoStock,
+
+importDependency:
+this.state.importDependency+"%",
+
+risk:
+this.state.riskScore,
+
+status:
+this.state.status,
+
+timestamp:
+new Date().toISOString()
 
 
 };
 
 
+}
+
+};
+
+
+
 /*
-EXPORT MODULE
+=====================================================
+ EXPORT
+=====================================================
 */
+
 
 if(typeof module !== "undefined"){
 
