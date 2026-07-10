@@ -7,7 +7,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>SPD v13 // SEXTANT RESILIENCE COCKPIT PRO</title>
+<title>
+SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
+</title>
 
 
 <style>
@@ -195,9 +197,7 @@ width:40%;
 
 }
 
-
 </style>
-
 
 </head>
 
@@ -221,6 +221,7 @@ SYSTEM STATUS: INITIALIZED
 
 
 
+
 <div class="panel">
 
 
@@ -233,6 +234,7 @@ FX
 </div>
 
 
+
 <div class="card">
 
 DC
@@ -240,6 +242,7 @@ DC
 <div id="DC" class="value">0</div>
 
 </div>
+
 
 
 <div class="card">
@@ -251,6 +254,7 @@ CYB
 </div>
 
 
+
 <div class="card">
 
 INF
@@ -258,6 +262,7 @@ INF
 <div id="INF" class="value">0</div>
 
 </div>
+
 
 
 <div class="card">
@@ -273,62 +278,47 @@ EN
 
 
 
+
 <div class="buttons">
 
 
 <button onclick="inject('FX')">
-
 FX STRESS
-
 </button>
 
 
 <button onclick="inject('DC')">
-
 DC LOAD
-
 </button>
 
 
 <button onclick="inject('CYB')">
-
 CYBER EVENT
-
 </button>
 
 
 <button onclick="inject('INF')">
-
 INFRA STRAIN
-
 </button>
 
 
 <button onclick="injectEnergy('BIO_SHORTAGE')">
-
 BIODIESEL SHORTAGE
-
 </button>
 
 
 <button onclick="injectEnergy('IMPORT_PRESSURE')">
-
 IMPORT PRESSURE
-
 </button>
 
 
 <button onclick="injectEnergy('OIL_HIGH')">
-
 OIL PRICE HIGH
-
 </button>
 
 
 <button onclick="resetSystem()">
-
 RESET
-
 </button>
 
 
@@ -337,22 +327,19 @@ RESET
 
 
 
+
 <div class="box">
 
 <div class="title">
-
 SCENARIO PANEL
-
 </div>
-
 
 <div id="scenario">
-
 Idle
-
 </div>
 
 </div>
+
 
 
 
@@ -360,19 +347,15 @@ Idle
 <div class="box">
 
 <div class="title">
-
 RISK PANEL
-
 </div>
-
 
 <div id="risk">
-
 Risk: LOW
-
 </div>
 
 </div>
+
 
 
 
@@ -380,19 +363,15 @@ Risk: LOW
 <div class="box">
 
 <div class="title">
-
 SOLUTION OPTIONS
-
 </div>
-
 
 <div id="solutions">
-
 -
-
 </div>
 
 </div>
+
 
 
 
@@ -400,19 +379,15 @@ SOLUTION OPTIONS
 <div class="box">
 
 <div class="title">
-
 ACTION SEQUENCE PROMPT
-
 </div>
-
 
 <div id="sequence">
-
 -
-
 </div>
 
 </div>
+
 
 
 
@@ -420,19 +395,15 @@ ACTION SEQUENCE PROMPT
 <div class="box audit">
 
 <div class="title">
-
 SPD v13 AUDIT RECORD
-
 </div>
-
 
 <div id="audit">
-
 Waiting...
-
 </div>
 
 </div>
+
 
 
 
@@ -445,7 +416,10 @@ PIPELINE LOG ACTIVE
 
 
 
+
 <script>
+
+
 /* =====================================
    SPD v13 CORE STATE ENGINE
 ===================================== */
@@ -470,10 +444,6 @@ confidence:100
 
 
 const AUDIT=[];
-
-
-
-
 /* =====================================
    ENERGY RESILIENCE ENGINE
    EN / BIO MODULE
@@ -481,7 +451,6 @@ const AUDIT=[];
 
 
 const ENERGY = {
-
 
 blendRatio:35,
 
@@ -495,9 +464,8 @@ riskScore:0,
 
 status:"NORMAL"
 
-
-
 };
+
 
 
 
@@ -546,7 +514,6 @@ break;
 }
 
 
-
 evaluateEnergy();
 
 
@@ -581,37 +548,31 @@ ENERGY.status="CRITICAL";
 
 }
 
-
 else if(ENERGY.riskScore >=30){
 
 ENERGY.status="DEGRADED";
 
 }
 
-
 else{
-
 
 ENERGY.status="NORMAL";
 
-
 }
+
 
 
 
 STATE.EN = ENERGY.riskScore;
 
 
-document.getElementById("EN").innerText =
-
-STATE.EN.toFixed(1);
+render();
 
 
 
 document.getElementById("solutions").innerHTML =
 
-
-"<b>ENERGY ACTION:</b><br>"+
+"<b>ENERGY ACTION</b><br>"+
 
 "Protect fuel security<br>"+
 
@@ -623,7 +584,7 @@ document.getElementById("solutions").innerHTML =
 
 logEvent(
 
-"ENERGY "+event+" → "+ENERGY.status
+"ENERGY EVENT → "+ENERGY.status
 
 );
 
@@ -631,7 +592,7 @@ logEvent(
 
 addAudit(
 
-"ENERGY EVENT "+event
+"ENERGY "+event
 
 );
 
@@ -645,6 +606,7 @@ evaluateRisk();
 
 
 
+
 /* =====================================
    SCENARIO LIBRARY
 ===================================== */
@@ -654,42 +616,31 @@ const SCENARIOS = {
 
 
 FX:{
-
 name:"Financial Stress Injection",
-
 desc:"Market volatility event"
-
 },
 
 
 DC:{
-
 name:"Data Centre Load Spike",
-
 desc:"Compute saturation event"
-
 },
 
 
 CYB:{
-
 name:"Cyber Security Event",
-
 desc:"System integrity anomaly"
-
 },
 
 
 INF:{
-
 name:"Infrastructure Strain Event",
-
 desc:"Physical resilience stress"
-
 }
 
 
 };
+
 
 
 
@@ -712,7 +663,10 @@ STATE[type]+=10;
 
 document.getElementById("scenario").innerHTML =
 
-"<b>"+scenario.name+"</b><br>"+scenario.desc;
+"<b>"+
+scenario.name+
+"</b><br>"+
+scenario.desc;
 
 
 
@@ -738,134 +692,54 @@ render();
 
 
 
-/* =====================================
-   CAS
 
 /* =====================================
-   SPD v13 GOLDEN RULE GOVERNANCE LAYER
-   Version: 1.1
-
-   Principle:
-   Protect system stability before optimization.
-
-   Domains:
-   FX
-   DC
-   CYB
-   INF
-   EN
+   CASCADE ENGINE
 ===================================== */
 
 
-const GOLDEN_RULE = {
+function runCascade(type){
 
 
-    name:
-    "SEXTANT GOLDEN RULE",
+if(type==="FX"){
 
+STATE.DC+=3;
 
-    principle:
-    "Protect system stability before optimization.",
+STATE.CYB+=1;
 
+logEvent("CASCADE FX → DC");
 
-    checks:[
-
-        "Prevent uncontrolled risk propagation",
-
-        "Maintain critical system availability",
-
-        "Require human oversight",
-
-        "Prioritize containment before recovery",
-
-        "Record every decision path"
-
-    ]
-
-};
+}
 
 
 
+if(type==="DC"){
 
+STATE.INF+=3;
 
-function goldenRuleCheck(){
+logEvent("CASCADE DC → INF");
 
-
-    let risk = riskScore();
-
-
-    let status =
-    "PASS";
-
-
-    let action =
-    "System operating within resilience boundary";
+}
 
 
 
+if(type==="CYB"){
 
-    if(risk >= 60){
+STATE.INF+=2;
 
+logEvent("CASCADE CYB → INF");
 
-        status =
-        "WARNING";
-
-
-        action =
-        "Containment priority required";
-
-
-        logEvent(
-        "GOLDEN RULE → CONTAINMENT MODE"
-        );
-
-
-    }
+}
 
 
 
-    else if(risk >=30){
+if(type==="INF"){
 
+STATE.FX+=2;
 
-        status =
-        "MONITOR";
+logEvent("CASCADE INF → FX");
 
-
-        action =
-        "Stabilization measures recommended";
-
-
-        logEvent(
-        "GOLDEN RULE → STABILIZATION MODE"
-        );
-
-
-    }
-
-
-
-
-    addAudit(
-
-    "GOLDEN RULE "+
-    status+
-    " | "+
-    action
-
-    );
-
-
-
-    return {
-
-
-        status:status,
-
-
-        action:action
-
-
-    };
+}
 
 
 }
@@ -874,42 +748,137 @@ function goldenRuleCheck(){
 
 
 
+
 /* =====================================
-   GOLDEN RULE INTEGRATION
+   RISK MODEL
 ===================================== */
 
 
-const originalEvaluateRisk =
-evaluateRisk;
+function riskScore(){
+
+
+return (
+
+STATE.FX+
+
+STATE.DC+
+
+STATE.CYB+
+
+STATE.INF+
+
+STATE.EN
+
+)/5;
+
+
+}
 
 
 
-evaluateRisk = function(){
 
 
-    originalEvaluateRisk();
+function evaluateRisk(){
+
+
+let risk = riskScore();
+
+
+let level="LOW";
 
 
 
-    let golden =
-    goldenRuleCheck();
+if(risk>=75){
+
+level="CRITICAL";
+
+}
 
 
 
-    document.getElementById("solutions").innerHTML +=
+else if(risk>=50){
+
+level="HIGH";
+
+}
 
 
-    "<br><br><b>🛰 GOLDEN RULE</b><br>" +
+
+else if(risk>=30){
+
+level="MEDIUM";
+
+}
 
 
-    golden.status +
 
 
-    "<br>" +
+
+document.getElementById("risk").innerHTML =
+
+"Risk: "+level;
 
 
-    golden.action;
 
+document.getElementById("statusBar").innerHTML =
+
+"SYSTEM STATUS: "+level;
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   GOLDEN RULE GOVERNANCE
+===================================== */
+
+
+const GOLDEN_RULE = {
+
+
+name:"SEXTANT GOLDEN RULE",
+
+
+principle:
+
+"Protect system stability before optimization.",
+
+
+checks:[
+
+"Prevent uncontrolled risk propagation",
+
+"Maintain critical system availability",
+
+"Require human oversight",
+
+"Prioritize containment before recovery",
+
+"Record every decision path"
+
+]
 
 
 };
+
+
+
+
+
+
+function goldenRuleCheck(){
+
+
+let risk = riskScore();
+
+
+if(risk>=50){
+
+
+logEvent(
+
+"G
