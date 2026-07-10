@@ -111,7 +111,28 @@ function runScenario(type){
 
     }
 
+// Golden Rule Engine
 
+let golden = document.getElementById("golden");
+
+if(golden){
+
+    golden.innerHTML =
+    `
+    OBSERVE ✅
+    <br>
+    VERIFY ✅
+    <br>
+    ASSESS ✅
+    <br>
+    DECIDE ✅
+    <br>
+    ACT ⏳
+    <br>
+    UPDATE ✅
+    `;
+
+}
 
     // Audit Record
 
