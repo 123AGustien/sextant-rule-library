@@ -1,3 +1,5 @@
+Before any formal submission or presentation, I would only suggest cleaning the small UI issue (duplicate “ACTION SEQUENCE PROMPT”) and ensuring the documentation explains that it is a controlled simulation and decision-support framework, not a live production risk engine.
+
 For the Sextant Resilience Cockpit, the Golden Rule can be defined as:
 🛰 SPD GOLDEN RULE
 
