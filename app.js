@@ -2,8 +2,10 @@
 =====================================================
 🛰 SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
 Application Controller
+With Scenario Intensity Engine
 =====================================================
 */
+
 
 function runScenario(type){
 
@@ -15,26 +17,36 @@ function runScenario(type){
     }
 
 
+    // Apply intensity scaling
+
+    let FX  = applyIntensity(scenario.impact.FX);
+    let DC  = applyIntensity(scenario.impact.DC);
+    let CYB = applyIntensity(scenario.impact.CYB);
+    let INF = applyIntensity(scenario.impact.INF);
+    let EN  = applyIntensity(scenario.impact.EN);
+
+
+
     // Calculate total impact score
 
     let total =
-        scenario.impact.FX +
-        scenario.impact.DC +
-        scenario.impact.CYB +
-        scenario.impact.INF +
-        scenario.impact.EN;
+        FX +
+        DC +
+        CYB +
+        INF +
+        EN;
 
 
     let averageRisk = total / 5;
 
 
-    // Calculate risk classification
+    // Risk classification
 
     let risk = calculateRisk(averageRisk);
 
 
 
-    // Update Risk Panel
+    // Risk Panel
 
     document.getElementById("risk").innerHTML =
     `
@@ -45,39 +57,51 @@ function runScenario(type){
 
 
 
-    // Update Scenario Panel
+    // Scenario Panel
 
     document.getElementById("scenario").innerHTML =
     `
     Scenario:
     <br>
     ${scenario.name}
+    <br>
+    Intensity:
+    ${(scenarioIntensity * 100).toFixed(0)}%
     `;
 
 
 
-    // Update Solution Options
+    // Solution Options
 
     document.getElementById("solution").innerHTML =
-    `
-    ${scenario.solution.join("<br>")}
-    `;
+    scenario.solution
+    .map((s,i)=>`${i+1}. ${s}`)
+    .join("<br>");
 
 
-let action = document.getElementById("action");
 
-if(action){
+    // Action Sequence
 
-    action.innerHTML = scenario.solution
-        .map((step, index) => `${index + 1}. ${step}`)
+    let action = document.getElementById("action");
+
+    if(action){
+
+        action.innerHTML =
+        scenario.solution
+        .map((step,index)=>
+        `${index+1}. ${step}`)
         .join("<br>");
 
-}
-    // Update Audit Record
+    }
+
+
+
+    // Audit Record
 
     document.getElementById("audit").innerHTML =
     `
     SPD v13 AUDIT RECORD
+
     <br><br>
 
     SCENARIO:
@@ -85,28 +109,32 @@ if(action){
 
     <br><br>
 
+    INTENSITY:
+    ${(scenarioIntensity * 100).toFixed(0)}%
+
+    <br><br>
+
     SYSTEM IMPACT:
+
     <br>
-    FX: ${scenario.impact.FX}
+    FX: ${FX.toFixed(1)}
+
     <br>
-    DC: ${scenario.impact.DC}
+    DC: ${DC.toFixed(1)}
+
     <br>
-    CYB: ${scenario.impact.CYB}
+    CYB: ${CYB.toFixed(1)}
+
     <br>
-    INF: ${scenario.impact.INF}
+    INF: ${INF.toFixed(1)}
+
     <br>
-    EN: ${scenario.impact.EN}
+    EN: ${EN.toFixed(1)}
 
     <br><br>
 
     RISK:
     ${risk}
-
-    <br><br>
-
-    ACTION SEQUENCE:
-    <br>
-    ${scenario.solution.join("<br>")}
 
     <br><br>
 
@@ -127,11 +155,18 @@ if(action){
         <br>
         [SPD v13] Scenario Loaded:
         ${scenario.name}
+
+        <br>
+        [SPD v13] Intensity:
+        ${(scenarioIntensity * 100).toFixed(0)}%
+
         <br>
         [SPD v13] Risk Calculation Complete
+
         <br>
         [SPD v13] Decision Support Generated
         `;
+
     }
 
 }
@@ -158,6 +193,10 @@ function resetSystem(){
     "-";
 
 
+    document.getElementById("action").innerHTML =
+    "Awaiting scenario selection...";
+
+
     document.getElementById("audit").innerHTML =
     "Waiting...";
 
@@ -165,8 +204,10 @@ function resetSystem(){
     let log = document.getElementById("pipeline");
 
     if(log){
+
         log.innerHTML =
         "PIPELINE LOG ACTIVE";
+
     }
 
 }
