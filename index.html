@@ -26,136 +26,59 @@ font-family:Arial,Helvetica,sans-serif;
 
 .header{
 
-background:#09111d;
 padding:20px;
 text-align:center;
-border-bottom:1px solid #1d4f7a;
-
-}
-
-
-.header h1{
-
-margin:0;
 font-size:22px;
-
-}
-
-
-.status{
-
-margin-top:10px;
-color:#55ff99;
 font-weight:bold;
 
 }
-
-
-
-.container{
-
-padding:15px;
-
-}
-
 
 
 .panel{
 
-background:#0b1422;
-border:1px solid #214d70;
-border-radius:10px;
+margin:12px;
 padding:15px;
-margin-bottom:15px;
+background:#0b111a;
+border:1px solid #1b3550;
+border-radius:10px;
 
 }
-
 
 
 .title{
 
-font-size:14px;
-color:#79c8ff;
-margin-bottom:10px;
+font-size:16px;
 font-weight:bold;
+margin-bottom:10px;
 
 }
-
-
-
-.metrics{
-
-display:grid;
-grid-template-columns:repeat(5,1fr);
-gap:8px;
-
-}
-
-
-
-.metric{
-
-background:#101c2d;
-padding:10px;
-text-align:center;
-border-radius:8px;
-
-}
-
-
-
-.metric span{
-
-display:block;
-font-size:22px;
-margin-top:5px;
-
-}
-
 
 
 button{
 
-width:100%;
-padding:12px;
-margin:5px 0;
-background:#102a44;
-color:#ffffff;
-border:1px solid #2c6b9d;
-border-radius:8px;
-font-weight:bold;
+margin:5px;
+padding:10px;
+background:#12263a;
+color:#cfe8ff;
+border:1px solid #31577a;
+border-radius:6px;
 
 }
-
-
-
-button:hover{
-
-background:#17466d;
-
-}
-
 
 
 .output{
 
-background:#050b14;
-padding:12px;
-border-radius:8px;
-min-height:40px;
+padding:10px;
+min-height:30px;
 
 }
-
 
 
 .audit{
 
-font-family:monospace;
 font-size:13px;
-line-height:1.5;
 
 }
-
 
 </style>
 
@@ -167,21 +90,14 @@ line-height:1.5;
 
 <div class="header">
 
-<h1>
 🛰 SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
-</h1>
 
+<br>
 
-<div class="status">
 SYSTEM STATUS: INITIALIZED
-</div>
-
 
 </div>
 
-
-
-<div class="container">
 
 
 <div class="panel">
@@ -191,38 +107,21 @@ SYSTEM DOMAIN MONITOR
 </div>
 
 
-<div class="metrics">
+<div class="output">
 
+FX <span id="fx">0</span>
+<br>
 
-<div class="metric">
-FX
-<span>0</span>
-</div>
+DC <span id="dc">0</span>
+<br>
 
+CYB <span id="cyb">0</span>
+<br>
 
-<div class="metric">
-DC
-<span>0</span>
-</div>
+INF <span id="inf">0</span>
+<br>
 
-
-<div class="metric">
-CYB
-<span>0</span>
-</div>
-
-
-<div class="metric">
-INF
-<span>0</span>
-</div>
-
-
-<div class="metric">
-EN
-<span>0</span>
-</div>
-
+EN <span id="en">0</span>
 
 </div>
 
@@ -268,7 +167,33 @@ RESET
 
 
 </div>
-<!-- SECTION 2/2 -->
+
+<div class="panel">
+
+<div class="title">
+SCENARIO INTENSITY CONTROL
+</div>
+
+
+<input
+type="range"
+id="intensitySlider"
+min="0"
+max="1"
+step="0.1"
+value="1"
+oninput="setIntensity(this.value)"
+>
+
+
+<div id="intensityValue" class="output">
+
+Intensity: 100%
+
+</div>
+
+</div>
+
 
 
 <div class="panel">
@@ -277,8 +202,11 @@ RESET
 SCENARIO PANEL
 </div>
 
+
 <div id="scenario" class="output">
+
 Idle
+
 </div>
 
 </div>
@@ -291,8 +219,11 @@ Idle
 RISK PANEL
 </div>
 
+
 <div id="risk" class="output">
+
 Risk: LOW
+
 </div>
 
 </div>
@@ -305,8 +236,11 @@ Risk: LOW
 SOLUTION OPTIONS
 </div>
 
+
 <div id="solution" class="output">
+
 -
+
 </div>
 
 </div>
@@ -317,23 +251,30 @@ SOLUTION OPTIONS
 
 <div class="title">
 ACTION SEQUENCE PROMPT
+</div>
+
+
+<div id="action" class="output">
+
+Awaiting scenario selection...
+
+</div>
+
+</div>
+
+
 
 <div class="panel">
 
-  <div class="title">
-    ACTION SEQUENCE PROMPT
-  </div>
-
-  <div id="action" class="output">
-    Awaiting scenario selection...
-  </div>
-
-</div>
+<div class="title">
 SPD v13 AUDIT RECORD
 </div>
 
+
 <div id="audit" class="output audit">
+
 Waiting...
+
 </div>
 
 </div>
@@ -346,14 +287,16 @@ Waiting...
 PIPELINE LOG
 </div>
 
+
 <div id="pipeline" class="output audit">
+
 PIPELINE LOG ACTIVE
-</div>
 
 </div>
 
-
 </div>
+
+
 
 <script src="intensity.js"></script>
 
@@ -363,5 +306,7 @@ PIPELINE LOG ACTIVE
 
 <script src="app.js"></script>
 
+
 </body>
+
 </html>
