@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
+</title>
+
+
+<style>
+
+body{
+margin:0;
+background:#05070b;
+color:#cfe8ff;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+
+.header{
+
+background:#0b1220;
+padding:15px;
+text-align:center;
+font-weight:bold;
+font-size:16px;
+border-bottom:1px solid #1f3b5c;
+
+}
+
+
+#statusBar{
+
+text-align:center;
+padding:10px;
+background:#0a0f18;
+
+}
+
+
+.panel{
+
+display:flex;
+justify-content:space-around;
+flex-wrap:wrap;
+padding:12px;
+
+}
+
+
+.card{
+
+background:#0e1a2b;
+width:18%;
+min-width:120px;
+margin:5px;
+padding:12px;
+text-align:center;
+border-radius:8px;
+border:1px solid #1f3b5c;
+
+}
+
+
+.value{
+
+font-size:28px;
+font-weight:bold;
+
+}
+
+
+.buttons{
+
+text-align:center;
+padding:10px;
+
+}
+
+
+button{
+
+background:#1f3b5c;
+color:white;
+border:none;
+padding:10px;
+margin:4px;
+border-radius:5px;
+cursor:pointer;
+
+}
+
+
+button:hover{
+
+background:#28557f;
+
+}
+
+
+.box{
+
+margin:10px;
+padding:12px;
+background:#0a0f18;
+border-left:3px solid #1f3b5c;
+font-size:13px;
+
+}
+
+
+.title{
+
+font-weight:bold;
+color:#79b7ff;
+margin-bottom:8px;
+
+}
+
+
+#log{
+
+margin:10px;
+height:220px;
+overflow:auto;
+background:#05070b;
+padding:10px;
+font-size:11px;
+border:1px solid #1f3b5c;
+
+}
+
+
+.audit{
+
+color:#9fc8ff;
+
+}
+
+
+@media(max-width:700px){
+
+.card{
+
+width:40%;
+
+}
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+🛰 SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
+
+</div>
+
+
+<div id="statusBar">
+
+SYSTEM STATUS: INITIALIZED
+
+</div>
+
+
+
+<div class="panel">
+
+
+<div class="card">
+FX
+<div id="FX" class="value">0</div>
+</div>
+
+
+<div class="card">
+DC
+<div id="DC" class="value">0</div>
+</div>
+
+
+<div class="card">
+CYB
+<div id="CYB" class="value">0</div>
+</div>
+
+
+<div class="card">
+INF
+<div id="INF" class="value">0</div>
+</div>
+
+
+<div class="card">
+EN
+<div id="EN" class="value">0</div>
+</div>
+
+
+</div>
+
+
+
+<div class="buttons">
+
+
+<button onclick="inject('FX')">
+FX STRESS
+</button>
+
+
+<button onclick="inject('DC')">
+DC LOAD
+</button>
+
+
+<button onclick="inject('CYB')">
+CYBER EVENT
+</button>
+
+
+<button onclick="inject('INF')">
+INFRA STRAIN
+</button>
+
+
+<button onclick="injectEnergy('BIO_SHORTAGE')">
+BIODIESEL SHORTAGE
+</button>
+
+
+<button onclick="injectEnergy('IMPORT_PRESSURE')">
+IMPORT PRESSURE
+</button>
+
+
+<button onclick="injectEnergy('OIL_HIGH')">
+OIL PRICE HIGH
+</button>
+
+
+<button onclick="resetSystem()">
+RESET
+</button>
+
+
+</div>
+
+
+
+<div class="box">
+
+<div class="title">
+SCENARIO PANEL
+</div>
+
+<div id="scenario">
+Idle
+</div>
+
+</div>
+
+
+
+<div class="box">
+
+<div class="title">
+RISK PANEL
+</div>
+
+<div id="risk">
+Risk: LOW
+</div>
+
+</div>
+
+
+
+<div class="box">
+
+<div class="title">
+SOLUTION OPTIONS
+</div>
+
+<div id="solutions">
+-
+</div>
+
+</div>
+
+
+
+<div class="box">
+
+<div class="title">
+ACTION SEQUENCE PROMPT
+</div>
+
+<div id="sequence">
+-
+</div>
+
+</div>
+
+
+
+<div class="box audit">
+
+<div class="title">
+SPD v13 AUDIT RECORD
+</div>
+
+<div id="audit">
+Waiting...
+</div>
+
+</div>
+
+
+
+<div id="log">
+
+PIPELINE LOG ACTIVE
+
+</div>
+
+
+<script>
