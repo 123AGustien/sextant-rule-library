@@ -879,6 +879,139 @@ let risk = riskScore();
 if(risk>=50){
 
 
-logEvent(
 
-"G
+function goldenRuleCheck(){
+
+let risk = riskScore();
+
+if(risk >= 50){
+
+logEvent(
+"GREATER RISK DETECTED → GOLDEN RULE ACTIVE"
+);
+
+return false;
+
+}
+
+else{
+
+logEvent(
+"GOLDEN RULE CHECK → NORMAL"
+);
+
+return true;
+
+}
+
+}
+
+
+/* =====================================
+   EVENT LOG ENGINE
+===================================== */
+
+function logEvent(message){
+
+let log = document.getElementById("log");
+
+log.innerHTML += "<br>" + message;
+
+log.scrollTop = log.scrollHeight;
+
+}
+
+
+/* =====================================
+   AUDIT ENGINE
+===================================== */
+
+function addAudit(message){
+
+AUDIT.push({
+
+time: new Date().toLocaleTimeString(),
+
+event: message
+
+});
+
+
+document.getElementById("audit").innerHTML =
+
+AUDIT.map(a =>
+
+a.time+" | "+a.event
+
+).join("<br>");
+
+}
+
+
+
+/* =====================================
+   UI RENDER ENGINE
+===================================== */
+
+function render(){
+
+document.getElementById("FX").innerHTML = STATE.FX;
+
+document.getElementById("DC").innerHTML = STATE.DC;
+
+document.getElementById("CYB").innerHTML = STATE.CYB;
+
+document.getElementById("INF").innerHTML = STATE.INF;
+
+document.getElementById("EN").innerHTML = STATE.EN;
+
+
+}
+
+
+
+/* =====================================
+   RESET SYSTEM
+===================================== */
+
+function resetSystem(){
+
+STATE.FX=0;
+STATE.DC=0;
+STATE.CYB=0;
+STATE.INF=0;
+STATE.EN=0;
+
+
+ENERGY.cpoStock=100;
+ENERGY.importDependency=60;
+ENERGY.oilPrice="NORMAL";
+ENERGY.riskScore=0;
+ENERGY.status="NORMAL";
+
+
+AUDIT.length=0;
+
+
+document.getElementById("scenario").innerHTML="Idle";
+
+document.getElementById("risk").innerHTML="Risk: LOW";
+
+document.getElementById("solutions").innerHTML="-";
+
+document.getElementById("sequence").innerHTML="-";
+
+document.getElementById("audit").innerHTML="Waiting...";
+
+document.getElementById("log").innerHTML=
+"System Reset<br>Pipeline Ready";
+
+
+document.getElementById("statusBar").innerHTML=
+"SYSTEM STATUS: INITIALIZED";
+
+
+render();
+
+
+}
