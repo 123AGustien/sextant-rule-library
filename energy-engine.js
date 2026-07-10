@@ -2,10 +2,21 @@
 =====================================================
 SEXTANT PROTOCOL
 ENERGY RESILIENCE ENGINE
+
 Module: EN / BIO
-Version: 1.1
-Purpose: Biodiesel & Fuel Security Simulation Layer
-Governance: Sextant Golden Rule
+Version: 1.2
+
+Purpose:
+Biodiesel & Fuel Security Simulation Layer
+
+Governance:
+Sextant Golden Rule
+
+Connected:
+SPD v13 Cockpit
+Energy UI Connector
+Risk Model
+Audit Engine
 =====================================================
 */
 
@@ -13,32 +24,45 @@ Governance: Sextant Golden Rule
 const ENERGY_ENGINE = {
 
 
-    module: "ENERGY RESILIENCE",
+    module:"ENERGY RESILIENCE",
 
-    domain: "EN",
+    domain:"EN",
 
-    rules: [
+
+    rules:[
+
         "BIO-001",
         "BIO-002"
+
     ],
 
 
 
-    state: {
+/*
+=====================================================
+INITIAL STATE
+=====================================================
+*/
 
-        blendRatio: 35,
 
-        cpoStock: 100,
+state:{
 
-        importDependency: 60,
 
-        oilPrice: "NORMAL",
+    blendRatio:35,
 
-        riskScore: 0,
+    cpoStock:100,
 
-        status: "NORMAL"
+    importDependency:60,
 
-    },
+    oilPrice:"NORMAL",
+
+    riskScore:0,
+
+    status:"NORMAL"
+
+
+},
+
 
 
 
@@ -49,74 +73,87 @@ SCENARIO LIBRARY
 */
 
 
-    scenarios:{
-
-
-        BIO001:{
-
-            id:"BIO-001",
-
-            name:"Biodiesel Supply Stress",
-
-            trigger:
-            "Reduction in biodiesel supply availability",
-
-            impact:[
-
-                "Fuel security pressure",
-
-                "Import dependency increase",
-
-                "Operational resilience risk"
-
-            ],
-
-            actions:[
-
-                "Increase domestic biodiesel allocation",
-
-                "Monitor strategic reserves",
-
-                "Protect critical infrastructure fuel supply"
-
-            ]
-
-        },
+scenarios:{
 
 
 
-        BIO002:{
+BIO001:{
 
-            id:"BIO-002",
 
-            name:"Biodiesel Shortage Scenario",
+    id:"BIO-001",
 
-            trigger:
-            "Critical biodiesel supply disruption",
+    name:"Biodiesel Supply Stress",
 
-            impact:[
+    trigger:
+    "Reduction in biodiesel supply availability",
 
-                "Energy availability reduction",
 
-                "Infrastructure operational risk",
+    impact:[
 
-                "Economic pressure"
+        "Fuel security pressure",
 
-            ],
+        "Import dependency increase",
 
-            actions:[
+        "Operational resilience risk"
 
-                "Activate emergency fuel planning",
+    ],
 
-                "Prioritize essential services",
 
-                "Deploy alternative energy sources"
+    actions:[
 
-            ]
+        "Increase domestic biodiesel allocation",
 
-        }
+        "Monitor strategic reserves",
 
-    },
+        "Protect critical infrastructure fuel supply"
+
+    ]
+
+
+},
+
+
+
+
+BIO002:{
+
+
+    id:"BIO-002",
+
+    name:"Biodiesel Shortage Scenario",
+
+
+    trigger:
+    "Critical biodiesel supply disruption",
+
+
+    impact:[
+
+        "Energy availability reduction",
+
+        "Infrastructure operational risk",
+
+        "Economic pressure"
+
+    ],
+
+
+    actions:[
+
+        "Activate emergency fuel planning",
+
+        "Prioritize essential services",
+
+        "Deploy alternative energy sources"
+
+    ]
+
+
+}
+
+
+
+},
 
 
 
@@ -131,72 +168,83 @@ EVENT INJECTION
 inject(event){
 
 
-    switch(event){
+switch(event){
 
 
 
-        case "OIL_HIGH":
+case "OIL_HIGH":
 
 
-            this.state.oilPrice="HIGH";
+this.state.oilPrice="HIGH";
 
-            this.state.riskScore +=25;
-
-            break;
+this.state.riskScore +=25;
 
 
-
-
-        case "OIL_LOW":
-
-
-            this.state.oilPrice="LOW";
-
-            this.state.riskScore -=10;
-
-
-            if(this.state.riskScore < 0){
-
-                this.state.riskScore = 0;
-
-            }
-
-
-            break;
+break;
 
 
 
 
-        case "BIO_SHORTAGE":
+case "OIL_LOW":
 
 
-            this.state.cpoStock -=40;
+this.state.oilPrice="LOW";
 
-            this.state.riskScore +=40;
-
-            break;
+this.state.riskScore -=10;
 
 
-
-
-        case "IMPORT_PRESSURE":
-
-
-            this.state.importDependency +=20;
-
-            this.state.riskScore +=20;
-
-            break;
-
-
-    }
+break;
 
 
 
-    return this.evaluate();
+
+case "BIO_SHORTAGE":
+
+
+this.state.cpoStock -=40;
+
+this.state.riskScore +=40;
+
+
+break;
+
+
+
+
+case "IMPORT_PRESSURE":
+
+
+this.state.importDependency +=20;
+
+this.state.riskScore +=20;
+
+
+break;
+
+
+default:
+
+
+break;
+
+
+}
+
+
+
+if(this.state.riskScore < 0){
+
+this.state.riskScore=0;
+
+}
+
+
+
+return this.evaluate();
 
 
 },
+
 
 
 
@@ -211,91 +259,112 @@ RULE EVALUATION ENGINE
 evaluate(){
 
 
-    let s=this.state;
+let s=this.state;
 
 
 
-    if(s.cpoStock < 50){
-
-        s.riskScore +=15;
-
-    }
+let additionalRisk=0;
 
 
 
+if(s.cpoStock < 50){
 
-    if(s.importDependency >70){
+additionalRisk +=15;
 
-        s.riskScore +=15;
-
-    }
-
+}
 
 
 
-    if(s.riskScore >=60){
+if(s.importDependency >70){
 
+additionalRisk +=15;
 
-        s.status="CRITICAL";
-
-
-        this.goldenRule(
-        "CONTAINMENT REQUIRED"
-        );
-
-
-    }
-
-
-    else if(s.riskScore >=30){
-
-
-        s.status="DEGRADED";
-
-
-        this.goldenRule(
-        "STABILIZATION REQUIRED"
-        );
-
-
-    }
-
-
-    else{
-
-
-        s.status="NORMAL";
-
-
-        this.goldenRule(
-        "PASS"
-        );
-
-
-    }
+}
 
 
 
-
-    return {
-
-
-        rule:this.rules,
-
-        blendRatio:s.blendRatio,
-
-        cpoStock:s.cpoStock,
-
-        importDependency:s.importDependency,
-
-        oilPrice:s.oilPrice,
-
-        riskScore:s.riskScore,
-
-        status:s.status
+let finalRisk =
+s.riskScore + additionalRisk;
 
 
-    };
+
+if(finalRisk >=60){
+
+
+s.status="CRITICAL";
+
+
+this.goldenRule(
+"CONTAINMENT REQUIRED"
+);
+
+
+}
+
+
+
+else if(finalRisk >=30){
+
+
+s.status="DEGRADED";
+
+
+this.goldenRule(
+"STABILIZATION REQUIRED"
+);
+
+
+}
+
+
+
+else{
+
+
+s.status="NORMAL";
+
+
+this.goldenRule(
+"PASS"
+);
+
+
+}
+
+
+
+return {
+
+
+domain:this.domain,
+
+rule:this.rules,
+
+
+blendRatio:s.blendRatio,
+
+
+cpoStock:s.cpoStock,
+
+
+importDependency:
+s.importDependency,
+
+
+oilPrice:
+s.oilPrice,
+
+
+riskScore:
+finalRisk,
+
+
+status:
+s.status
+
+
+};
+
 
 
 },
@@ -314,12 +383,13 @@ SEXTANT GOLDEN RULE
 goldenRule(action){
 
 
-    console.log(
+console.log(
 
-    "SEXTANT GOLDEN RULE | ENERGY | "
-    + action
+"SEXTANT GOLDEN RULE | ENERGY | "
++
+action
 
-    );
+);
 
 
 },
@@ -338,21 +408,59 @@ CONTINGENCY ENGINE
 contingency(){
 
 
-    return [
+return [
 
 
-        "Maintain strategic biodiesel reserve",
+"Maintain strategic biodiesel reserve",
 
-        "Reduce imported fuel dependency",
+"Reduce imported fuel dependency",
 
-        "Increase domestic feedstock security",
+"Increase domestic feedstock security",
 
-        "Activate alternative energy sources",
+"Activate alternative energy sources",
 
-        "Protect critical infrastructure supply"
+"Protect critical infrastructure supply"
 
 
-    ];
+];
+
+
+},
+
+
+
+
+
+/*
+=====================================================
+RESET ENGINE
+=====================================================
+*/
+
+
+reset(){
+
+
+this.state={
+
+
+blendRatio:35,
+
+cpoStock:100,
+
+importDependency:60,
+
+oilPrice:"NORMAL",
+
+riskScore:0,
+
+status:"NORMAL"
+
+
+};
+
+
+return this.state;
 
 
 },
@@ -371,38 +479,51 @@ AUDIT ENGINE
 audit(){
 
 
-    return {
+return {
 
 
-        module:this.module,
-
-        domain:this.domain,
-
-        rules:this.rules,
-
-        blendRatio:this.state.blendRatio+"%",
-
-        cpoStock:this.state.cpoStock+"%",
-
-        importDependency:
-        this.state.importDependency+"%",
-
-        oilPrice:this.state.oilPrice,
-
-        risk:
-        this.state.riskScore,
-
-        status:
-        this.state.status,
-
-        timestamp:
-        new Date().toISOString()
+module:this.module,
 
 
-    };
+domain:this.domain,
+
+
+rules:this.rules,
+
+
+blendRatio:
+this.state.blendRatio+"%",
+
+
+cpoStock:
+this.state.cpoStock+"%",
+
+
+importDependency:
+this.state.importDependency+"%",
+
+
+oilPrice:
+this.state.oilPrice,
+
+
+risk:
+this.state.riskScore,
+
+
+status:
+this.state.status,
+
+
+timestamp:
+new Date().toISOString()
+
+
+};
 
 
 }
+
 
 
 };
@@ -421,7 +542,7 @@ EXPORT
 if(typeof module !== "undefined"){
 
 
-    module.exports = ENERGY_ENGINE;
+module.exports = ENERGY_ENGINE;
 
 
 }
