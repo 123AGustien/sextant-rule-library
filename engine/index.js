@@ -34,8 +34,7 @@ require("./energy-engine");
 
 
 const RISK_MODEL =
-require("./risk-model");
-
+require("../risk-model");
 
 
 const GOLDEN_RULE =
@@ -70,6 +69,7 @@ require("./inf-engine");
 */
 
 
+
 /*
 =====================================================
 ENGINE REGISTRY
@@ -98,7 +98,6 @@ const ENGINE_REGISTRY = {
         GOLDEN_RULE
 
 
-
         // FIN: FIN_ENGINE,
         // DC: DC_ENGINE,
         // CYB: CYB_ENGINE,
@@ -106,6 +105,7 @@ const ENGINE_REGISTRY = {
 
 
     },
+
 
 
 
@@ -135,6 +135,7 @@ const ENGINE_REGISTRY = {
 
 
 
+
         {
 
             id:"RISK",
@@ -154,6 +155,31 @@ const ENGINE_REGISTRY = {
                 "INF",
 
                 "EN"
+
+            ],
+
+            status:"ACTIVE"
+
+        },
+
+
+
+
+        {
+
+            id:"GOV",
+
+            name:"Sextant Golden Rule Governance",
+
+            engine:"GOVERNANCE",
+
+            rules:[
+
+                "CONTAINMENT",
+
+                "STABILITY",
+
+                "AUDIT"
 
             ],
 
@@ -182,6 +208,7 @@ const ENGINE_REGISTRY = {
 
 
 };
+
 
 
 
