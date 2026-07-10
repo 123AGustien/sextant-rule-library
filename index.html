@@ -1,1 +1,884 @@
-g
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>
+SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
+</title>
+
+
+<style>
+
+body{
+
+margin:0;
+
+background:#05070b;
+
+color:#cfe8ff;
+
+font-family:Arial,Helvetica,sans-serif;
+
+}
+
+
+.header{
+
+background:#0b1220;
+
+padding:15px;
+
+text-align:center;
+
+font-weight:bold;
+
+font-size:16px;
+
+border-bottom:1px solid #1f3b5c;
+
+}
+
+
+#statusBar{
+
+text-align:center;
+
+padding:10px;
+
+background:#0a0f18;
+
+color:#7fb3ff;
+
+}
+
+
+.panel{
+
+display:flex;
+
+justify-content:space-around;
+
+flex-wrap:wrap;
+
+padding:12px;
+
+}
+
+
+.card{
+
+background:#0e1a2b;
+
+width:18%;
+
+min-width:120px;
+
+margin:5px;
+
+padding:12px;
+
+text-align:center;
+
+border-radius:8px;
+
+border:1px solid #1f3b5c;
+
+}
+
+
+.value{
+
+font-size:28px;
+
+font-weight:bold;
+
+}
+
+
+.buttons{
+
+text-align:center;
+
+padding:10px;
+
+}
+
+
+button{
+
+background:#1f3b5c;
+
+color:white;
+
+border:none;
+
+padding:10px;
+
+margin:4px;
+
+border-radius:5px;
+
+cursor:pointer;
+
+}
+
+
+button:hover{
+
+background:#28557f;
+
+}
+
+
+.box{
+
+margin:10px;
+
+padding:12px;
+
+background:#0a0f18;
+
+border-left:3px solid #1f3b5c;
+
+font-size:13px;
+
+}
+
+
+.title{
+
+font-weight:bold;
+
+color:#79b7ff;
+
+margin-bottom:8px;
+
+}
+
+
+#log{
+
+margin:10px;
+
+height:220px;
+
+overflow:auto;
+
+background:#05070b;
+
+padding:10px;
+
+font-size:11px;
+
+border:1px solid #1f3b5c;
+
+}
+
+
+.audit{
+
+color:#9fc8ff;
+
+}
+
+
+@media(max-width:700px){
+
+.card{
+
+width:40%;
+
+}
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+🛰 SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
+
+</div>
+
+
+
+<div id="statusBar">
+
+SYSTEM STATUS: INITIALIZED
+
+</div>
+
+
+
+
+<div class="panel">
+
+
+<div class="card">
+
+FX
+
+<div id="FX" class="value">0</div>
+
+</div>
+
+
+
+<div class="card">
+
+DC
+
+<div id="DC" class="value">0</div>
+
+</div>
+
+
+
+<div class="card">
+
+CYB
+
+<div id="CYB" class="value">0</div>
+
+</div>
+
+
+
+<div class="card">
+
+INF
+
+<div id="INF" class="value">0</div>
+
+</div>
+
+
+
+<div class="card">
+
+EN
+
+<div id="EN" class="value">0</div>
+
+</div>
+
+
+</div>
+
+
+
+
+<div class="buttons">
+
+
+<button onclick="inject('FX')">
+FX STRESS
+</button>
+
+
+<button onclick="inject('DC')">
+DC LOAD
+</button>
+
+
+<button onclick="inject('CYB')">
+CYBER EVENT
+</button>
+
+
+<button onclick="inject('INF')">
+INFRA STRAIN
+</button>
+
+
+<button onclick="injectEnergy('BIO_SHORTAGE')">
+BIODIESEL SHORTAGE
+</button>
+
+
+<button onclick="injectEnergy('IMPORT_PRESSURE')">
+IMPORT PRESSURE
+</button>
+
+
+<button onclick="injectEnergy('OIL_HIGH')">
+OIL PRICE HIGH
+</button>
+
+
+<button onclick="resetSystem()">
+RESET
+</button>
+
+
+</div>
+
+
+
+
+
+<div class="box">
+
+<div class="title">
+SCENARIO PANEL
+</div>
+
+<div id="scenario">
+Idle
+</div>
+
+</div>
+
+
+
+
+
+<div class="box">
+
+<div class="title">
+RISK PANEL
+</div>
+
+<div id="risk">
+Risk: LOW
+</div>
+
+</div>
+
+
+
+
+
+<div class="box">
+
+<div class="title">
+SOLUTION OPTIONS
+</div>
+
+<div id="solutions">
+-
+</div>
+
+</div>
+
+
+
+
+
+<div class="box">
+
+<div class="title">
+ACTION SEQUENCE PROMPT
+</div>
+
+<div id="sequence">
+-
+</div>
+
+</div>
+
+
+
+
+
+<div class="box audit">
+
+<div class="title">
+SPD v13 AUDIT RECORD
+</div>
+
+<div id="audit">
+Waiting...
+</div>
+
+</div>
+
+
+
+
+
+<div id="log">
+
+PIPELINE LOG ACTIVE
+
+</div>
+
+
+
+
+<script>
+
+
+/* =====================================
+   SPD v13 CORE STATE ENGINE
+===================================== */
+
+
+const STATE = {
+
+FX:0,
+
+DC:0,
+
+CYB:0,
+
+INF:0,
+
+EN:0,
+
+confidence:100
+
+};
+
+
+
+const AUDIT=[];
+/* =====================================
+   ENERGY RESILIENCE ENGINE
+   EN / BIO MODULE
+===================================== */
+
+
+const ENERGY = {
+
+blendRatio:35,
+
+cpoStock:100,
+
+importDependency:60,
+
+oilPrice:"NORMAL",
+
+riskScore:0,
+
+status:"NORMAL"
+
+};
+
+
+
+
+
+function injectEnergy(event){
+
+
+document.getElementById("scenario").innerHTML =
+
+"<b>ENERGY RESILIENCE</b><br>"+event;
+
+
+
+switch(event){
+
+
+case "BIO_SHORTAGE":
+
+ENERGY.cpoStock -=40;
+
+ENERGY.riskScore +=40;
+
+break;
+
+
+
+case "IMPORT_PRESSURE":
+
+ENERGY.importDependency +=20;
+
+ENERGY.riskScore +=20;
+
+break;
+
+
+
+case "OIL_HIGH":
+
+ENERGY.oilPrice="HIGH";
+
+ENERGY.riskScore +=25;
+
+break;
+
+
+}
+
+
+evaluateEnergy();
+
+
+}
+
+
+
+
+function evaluateEnergy(){
+
+
+if(ENERGY.cpoStock <50){
+
+ENERGY.riskScore +=15;
+
+}
+
+
+
+if(ENERGY.importDependency >70){
+
+ENERGY.riskScore +=15;
+
+}
+
+
+
+
+if(ENERGY.riskScore >=60){
+
+ENERGY.status="CRITICAL";
+
+}
+
+else if(ENERGY.riskScore >=30){
+
+ENERGY.status="DEGRADED";
+
+}
+
+else{
+
+ENERGY.status="NORMAL";
+
+}
+
+
+
+
+STATE.EN = ENERGY.riskScore;
+
+
+render();
+
+
+
+document.getElementById("solutions").innerHTML =
+
+"<b>ENERGY ACTION</b><br>"+
+
+"Protect fuel security<br>"+
+
+"Maintain strategic reserve<br>"+
+
+"Reduce dependency exposure";
+
+
+
+logEvent(
+
+"ENERGY EVENT → "+ENERGY.status
+
+);
+
+
+
+addAudit(
+
+"ENERGY "+event
+
+);
+
+
+
+evaluateRisk();
+
+
+}
+
+
+
+
+
+/* =====================================
+   SCENARIO LIBRARY
+===================================== */
+
+
+const SCENARIOS = {
+
+
+FX:{
+name:"Financial Stress Injection",
+desc:"Market volatility event"
+},
+
+
+DC:{
+name:"Data Centre Load Spike",
+desc:"Compute saturation event"
+},
+
+
+CYB:{
+name:"Cyber Security Event",
+desc:"System integrity anomaly"
+},
+
+
+INF:{
+name:"Infrastructure Strain Event",
+desc:"Physical resilience stress"
+}
+
+
+};
+
+
+
+
+
+
+/* =====================================
+   MAIN INJECTION ENGINE
+===================================== */
+
+
+function inject(type){
+
+
+let scenario = SCENARIOS[type];
+
+
+STATE[type]+=10;
+
+
+
+document.getElementById("scenario").innerHTML =
+
+"<b>"+
+scenario.name+
+"</b><br>"+
+scenario.desc;
+
+
+
+runCascade(type);
+
+
+evaluateRisk();
+
+
+addAudit(
+
+"INJECT → "+type
+
+);
+
+
+render();
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   CASCADE ENGINE
+===================================== */
+
+
+function runCascade(type){
+
+
+if(type==="FX"){
+
+STATE.DC+=3;
+
+STATE.CYB+=1;
+
+logEvent("CASCADE FX → DC");
+
+}
+
+
+
+if(type==="DC"){
+
+STATE.INF+=3;
+
+logEvent("CASCADE DC → INF");
+
+}
+
+
+
+if(type==="CYB"){
+
+STATE.INF+=2;
+
+logEvent("CASCADE CYB → INF");
+
+}
+
+
+
+if(type==="INF"){
+
+STATE.FX+=2;
+
+logEvent("CASCADE INF → FX");
+
+}
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   RISK MODEL
+===================================== */
+
+
+function riskScore(){
+
+
+return (
+
+STATE.FX+
+
+STATE.DC+
+
+STATE.CYB+
+
+STATE.INF+
+
+STATE.EN
+
+)/5;
+
+
+}
+
+
+
+
+
+function evaluateRisk(){
+
+
+let risk = riskScore();
+
+
+let level="LOW";
+
+
+
+if(risk>=75){
+
+level="CRITICAL";
+
+}
+
+
+
+else if(risk>=50){
+
+level="HIGH";
+
+}
+
+
+
+else if(risk>=30){
+
+level="MEDIUM";
+
+}
+
+
+
+
+
+document.getElementById("risk").innerHTML =
+
+"Risk: "+level;
+
+
+
+document.getElementById("statusBar").innerHTML =
+
+"SYSTEM STATUS: "+level;
+
+
+}
+
+
+
+
+
+
+/* =====================================
+   GOLDEN RULE GOVERNANCE
+===================================== */
+
+
+const GOLDEN_RULE = {
+
+
+name:"SEXTANT GOLDEN RULE",
+
+
+principle:
+
+"Protect system stability before optimization.",
+
+
+checks:[
+
+"Prevent uncontrolled risk propagation",
+
+"Maintain critical system availability",
+
+"Require human oversight",
+
+"Prioritize containment before recovery",
+
+"Record every decision path"
+
+]
+
+
+};
+
+
+
+
+
+
+function goldenRuleCheck(){
+
+
+let risk = riskScore();
+
+
+if(risk>=50){
+
+
+logEvent(
+
+"
