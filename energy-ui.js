@@ -1,14 +1,18 @@
 /*
 =====================================================
 SEXTANT PROTOCOL
+
 ENERGY RESILIENCE UI CONNECTOR
+
 Module: EN / BIO
-Version: 1.1
+Version: 1.2
 
 Connects:
 energy-engine.js
 SPD v13 Cockpit
 Golden Rule Governance
+Audit Layer
+
 =====================================================
 */
 
@@ -16,219 +20,321 @@ Golden Rule Governance
 const ENERGY_UI = {
 
 
-    engine:null,
 
+engine:null,
 
 
-    init(engine){
 
 
-        this.engine = engine;
 
+/*
+=====================================================
+INITIALIZE ENGINE CONNECTION
+=====================================================
+*/
 
-        this.log(
-            "ENERGY MODULE CONNECTED"
-        );
 
+init(engine){
 
-    },
 
+this.engine = engine;
 
 
+this.log(
+"ENERGY MODULE CONNECTED"
+);
 
 
-    runScenario(event){
+},
 
 
 
-        if(!this.engine){
 
 
-            this.log(
-            "ENERGY ENGINE NOT CONNECTED"
-            );
 
+/*
+=====================================================
+RUN ENERGY SCENARIO
+=====================================================
+*/
 
-            return;
 
+runScenario(event){
 
-        }
 
 
+if(!this.engine){
 
 
-        let result =
-        this.engine.inject(event);
+this.log(
+"ENERGY ENGINE NOT CONNECTED"
+);
 
 
+return null;
 
-        this.updatePanel(result);
 
+}
 
 
-        return result;
 
 
-    },
+let result =
 
+this.engine.inject(event);
 
 
 
 
+this.updatePanel(result);
 
-    updatePanel(data){
 
 
+return result;
 
-        const panel =
-        document.getElementById(
-        "energyPanel"
-        );
 
 
+},
 
 
-        if(panel){
 
 
 
-            panel.innerHTML =
 
+/*
+=====================================================
+UPDATE ENERGY PANEL
+=====================================================
+*/
 
-            `
 
-            <b>ENERGY RESILIENCE STATUS</b>
-            <br><br>
+updatePanel(data){
 
 
-            Domain: EN<br>
 
-            Rule:
-            ${data.rule.join(", ")}
-            <br><br>
+const panel =
 
+document.getElementById(
+"energyPanel"
+);
 
-            Blend Ratio:
-            ${data.blendRatio}%<br>
 
 
-            CPO Stock:
-            ${data.cpoStock}%<br>
 
 
-            Import Dependency:
-            ${data.importDependency}%<br>
+if(panel){
 
 
-            Oil Price:
-            ${data.oilPrice}<br>
 
+panel.innerHTML =
 
-            Risk Score:
-            ${data.riskScore}<br>
 
 
-            Status:
-            ${data.status}<br><br>
+`
 
+<b>ENERGY RESILIENCE STATUS</b>
 
+<br><br>
 
-            <b>SEXTANT GOLDEN RULE</b>
-            <br>
 
-            Protect system stability before optimization.
+Domain:
+${data.domain}
 
+<br>
 
-            `;
 
+Rules:
+${data.rule.join(", ")}
 
-        }
 
+<br><br>
 
 
+Blend Ratio:
 
-        this.audit(data);
+${data.blendRatio}%
 
 
-    },
+<br>
 
 
+CPO Stock:
 
+${data.cpoStock}%
 
 
+<br>
 
-    audit(data){
 
+Import Dependency:
 
+${data.importDependency}%
 
-        console.log(
 
+<br>
 
-        "ENERGY AUDIT",
 
-        {
+Oil Price:
 
+${data.oilPrice}
 
-        module:"EN",
 
+<br>
 
-        rule:data.rule,
 
+Risk Score:
 
-        status:data.status,
+${data.riskScore}
 
 
-        risk:data.riskScore,
+<br>
 
 
-        timestamp:
-        new Date().toISOString()
+Status:
 
+${data.status}
 
-        }
 
+<br><br>
 
-        );
 
 
-    },
+<b>SEXTANT GOLDEN RULE</b>
 
+<br>
 
 
+Protect system stability before optimization.
 
 
+`;
 
-    log(message){
 
 
+}
 
-        let logBox =
-        document.getElementById("log");
 
 
 
-        if(logBox){
+this.audit(data);
 
 
-            logBox.innerHTML =
 
+},
 
-            "[ENERGY] "
-            + message
-            +
-            "<br>"
-            +
-            logBox.innerHTML;
 
 
-        }
 
 
-    }
+
+
+/*
+=====================================================
+AUDIT CONNECTION
+=====================================================
+*/
+
+
+audit(data){
+
+
+
+console.log(
+
+
+"ENERGY AUDIT",
+
+{
+
+
+module:"EN",
+
+
+rules:data.rule,
+
+
+status:data.status,
+
+
+risk:data.riskScore,
+
+
+timestamp:
+
+new Date().toISOString()
+
+
+}
+
+
+
+);
+
+
+
+},
+
+
+
+
+
+
+
+
+/*
+=====================================================
+LOG CONNECTOR
+=====================================================
+*/
+
+
+log(message){
+
+
+
+const logBox =
+
+document.getElementById(
+"log"
+);
+
+
+
+
+
+if(logBox){
+
+
+
+logBox.innerHTML =
+
+
+"[ENERGY] "
+
++
+
+message
+
++
+
+"<br>"
+
++
+
+logBox.innerHTML;
+
+
+
+}
+
+
+
+}
 
 
 
 };
+
 
 
 
@@ -244,7 +350,7 @@ EXPORT
 if(typeof module !== "undefined"){
 
 
-    module.exports = ENERGY_UI;
+module.exports = ENERGY_UI;
 
 
 }
