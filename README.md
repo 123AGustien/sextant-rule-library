@@ -1,4 +1,60 @@
+For the Sextant Resilience Cockpit, the Golden Rule can be defined as:
+🛰 SPD GOLDEN RULE
 
+OBSERVE → VERIFY → ASSESS → DECIDE → ACT → UPDATE
+Meaning:
+OBSERVE
+Monitor FX, DC, CYB, INF, EN signals.
+No action before understanding the event.
+VERIFY
+Confirm the scenario is real or simulated.
+Check data quality and avoid false alarms.
+ASSESS
+Calculate:
+Impact intensity
+Risk index
+System domain stress
+Cascade possibility
+DECIDE
+Select the safest proportional response.
+Avoid overreaction.
+ACT
+Execute the recommended mitigation sequence.
+UPDATE
+Record results in:
+Audit Record
+Pipeline Log
+Risk state
+For your current example:
+Scenario: FX Market Stress
+Intensity: 40%
+
+Observe:
+FX pressure detected
+
+Verify:
+Scenario confirmed
+
+Assess:
+SPD Risk Index: 8.4
+
+Decide:
+Activate monitoring
+
+Act:
+Review liquidity buffer
+
+Update:
+Audit record completed
+A good next upgrade for SPD v13 would be adding a GOLDEN RULE STATUS PANEL:
+GOLDEN RULE ENGINE
+
+OBSERVE     ✅
+VERIFY      ✅
+ASSESS      ✅
+DECIDE      ✅
+ACT         ⏳
+UPDATE      ✅
 # 📘 Sextant Rule Library
 
 Governed decision layer for the **Sextant Protocol** resilience simulation framework.
