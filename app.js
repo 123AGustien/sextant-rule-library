@@ -2,7 +2,7 @@
 =====================================================
 🛰 SPD v13 // SEXTANT RESILIENCE COCKPIT PRO
 Application Controller
-With Scenario Intensity Engine
+Full Simulation Engine
 =====================================================
 */
 
@@ -27,7 +27,21 @@ function runScenario(type){
 
 
 
-    // Calculate total impact score
+    // Update System Domain Monitor
+
+    document.getElementById("fx").innerHTML = FX.toFixed(1);
+
+    document.getElementById("dc").innerHTML = DC.toFixed(1);
+
+    document.getElementById("cyb").innerHTML = CYB.toFixed(1);
+
+    document.getElementById("inf").innerHTML = INF.toFixed(1);
+
+    document.getElementById("en").innerHTML = EN.toFixed(1);
+
+
+
+    // Calculate Risk Index
 
     let total =
         FX +
@@ -40,7 +54,8 @@ function runScenario(type){
     let averageRisk = total / 5;
 
 
-    // Risk classification
+
+    // Risk Classification
 
     let risk = calculateRisk(averageRisk);
 
@@ -64,7 +79,9 @@ function runScenario(type){
     Scenario:
     <br>
     ${scenario.name}
-    <br>
+
+    <br><br>
+
     Intensity:
     ${(scenarioIntensity * 100).toFixed(0)}%
     `;
@@ -80,7 +97,7 @@ function runScenario(type){
 
 
 
-    // Action Sequence
+    // Action Sequence Prompt
 
     let action = document.getElementById("action");
 
@@ -161,6 +178,9 @@ function runScenario(type){
         ${(scenarioIntensity * 100).toFixed(0)}%
 
         <br>
+        [SPD v13] Domain Impact Updated
+
+        <br>
         [SPD v13] Risk Calculation Complete
 
         <br>
@@ -173,13 +193,29 @@ function runScenario(type){
 
 
 
+
+
 /*
 =====================================================
 RESET FUNCTION
 =====================================================
 */
 
+
 function resetSystem(){
+
+
+    document.getElementById("fx").innerHTML = "0";
+
+    document.getElementById("dc").innerHTML = "0";
+
+    document.getElementById("cyb").innerHTML = "0";
+
+    document.getElementById("inf").innerHTML = "0";
+
+    document.getElementById("en").innerHTML = "0";
+
+
 
     document.getElementById("risk").innerHTML =
     "Risk: LOW";
@@ -199,6 +235,7 @@ function resetSystem(){
 
     document.getElementById("audit").innerHTML =
     "Waiting...";
+
 
 
     let log = document.getElementById("pipeline");
