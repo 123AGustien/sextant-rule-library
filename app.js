@@ -64,7 +64,15 @@ function runScenario(type){
     `;
 
 
+let action = document.getElementById("action");
 
+if(action){
+
+    action.innerHTML = scenario.solution
+        .map((step, index) => `${index + 1}. ${step}`)
+        .join("<br>");
+
+}
     // Update Audit Record
 
     document.getElementById("audit").innerHTML =
