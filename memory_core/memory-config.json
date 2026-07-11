@@ -1,0 +1,63 @@
+{
+  "system": "SPD v13 SEXTANT RESILIENCE COCKPIT PRO",
+  "module": "SEXTANT MEMORY CORE",
+  "version": "SMC-v1.0",
+
+  "environment": "OJK-SANDBOX-TEST",
+
+  "storage": {
+    "mode": "local",
+    "type": "browser-storage",
+    "persistent": true
+  },
+
+  "memory": {
+    "eventHistoryLimit": 1000,
+    "scenarioHistoryLimit": 200,
+    "auditRecordLimit": 5000
+  },
+
+  "modules": {
+    "memoryCore": true,
+    "eventMemory": true,
+    "scenarioMemory": true,
+    "auditMemory": true,
+    "learningEngine": true
+  },
+
+  "spd13Domains": {
+    "FX": true,
+    "DC": true,
+    "CYB": true,
+    "INF": true,
+    "EN": true
+  },
+
+  "goldenRuleEngine": {
+    "observe": true,
+    "verify": true,
+    "assess": true,
+    "decide": true,
+    "act": true,
+    "update": true
+  },
+
+  "audit": {
+    "enabled": true,
+    "timestamp": true,
+    "traceability": true,
+    "immutableMode": true
+  },
+
+  "learning": {
+    "enabled": true,
+    "patternDetection": true,
+    "ruleModification": false,
+    "explainableOutput": true
+  },
+
+  "deployment": {
+    "branch": "ojk-sandbox-unified",
+    "status": "DEMONSTRATION"
+  }
+}
