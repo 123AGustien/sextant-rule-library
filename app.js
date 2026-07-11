@@ -182,7 +182,7 @@ if(golden){
 
 
 
-    // Pipeline Log
+        // Pipeline Log
 
     let log = document.getElementById("pipeline");
 
@@ -210,7 +210,42 @@ if(golden){
 
     }
 
-}
+
+
+    // 🧠 MEMORY CORE BRIDGE
+
+    if(typeof SPD13MemoryBridge !== "undefined"){
+
+        SPD13MemoryBridge.captureScenario(
+
+            scenario.name,
+
+            {
+                fx: FX,
+                dc: DC,
+                cyb: CYB,
+                inf: INF,
+                en: EN
+            },
+
+            risk,
+
+            scenario.solution
+
+        );
+
+
+        if(log){
+
+            log.innerHTML +=
+            `
+            <br>
+            [SPD v13] Memory Core Event Stored
+            `;
+
+        }
+
+    }
 
 
 
