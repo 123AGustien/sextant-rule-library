@@ -76,7 +76,7 @@ const SPD13MemoryBridge = {
     },
 
 
-    resetSystem() {
+        resetSystem() {
 
         return this.captureScenario(
 
@@ -96,13 +96,10 @@ const SPD13MemoryBridge = {
 
         );
 
-    }
+    },
 
-};
 
-    saveScenario(
-        data
-    ){
+    saveScenario(data){
 
         return this.captureScenario(
             data.name,
@@ -112,6 +109,10 @@ const SPD13MemoryBridge = {
         );
 
     }
+
+};
+
+
 if (typeof module !== "undefined") {
 
     module.exports = SPD13MemoryBridge;
