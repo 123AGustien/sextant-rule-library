@@ -100,7 +100,18 @@ const SPD13MemoryBridge = {
 
 };
 
+    saveScenario(
+        data
+    ){
 
+        return this.captureScenario(
+            data.name,
+            data.impact,
+            data.risk,
+            data.action
+        );
+
+    }
 if (typeof module !== "undefined") {
 
     module.exports = SPD13MemoryBridge;
