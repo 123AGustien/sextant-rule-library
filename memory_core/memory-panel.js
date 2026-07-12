@@ -61,7 +61,33 @@ const MemoryPanel = {
                 : "WAITING"
 
         };
+const display =
+document.getElementById("memory-core-panel");
 
+if(display){
+
+    display.innerHTML =
+    `
+    Events Stored:
+    ${panel.eventsStored}
+
+    <br><br>
+
+    Last Scenario:
+    ${panel.lastScenario}
+
+    <br>
+
+    Risk:
+    ${panel.lastRisk}
+
+    <br>
+
+    Status:
+    ${panel.auditStatus}
+    `;
+
+}
 
         return panel;
 
